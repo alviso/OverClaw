@@ -1,0 +1,111 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Production builds
+/build
+dist/
+
+# Environment files — NEVER commit real keys
+*.env
+*.env.*
+!*.env.example
+
+# Credentials
+*token.json*
+*credentials.json*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb
+
+# System
+.DS_Store
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+
+# Workspace (agent-generated projects, runtime state)
+workspace/
+
+# PIDs and local logs (from start.sh)
+.pids/
+.logs/
+
+# Archives and large assets
+*.zip
+*.tar.gz
+*.tar
+*.tgz
+*.pack
+*.deb
+*.dylib
+
+# Misc
+.cache/
+.vercel
+chainlit.md
+.chainlit
+.ipynb_checkpoints/
+frontend/node_modules/.cache/default-development/0.pack
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*

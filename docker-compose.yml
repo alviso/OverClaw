@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+  app:
+    build:
+      context: .
+      args:
+        REACT_APP_BACKEND_URL: ""  # empty = same origin (relative /api)
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    env_file:
+      - backend/.env
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - DB_NAME=overclaw
+    volumes:
+      - workspace_data:/app/workspace
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
+  workspace_data:

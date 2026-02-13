@@ -1,0 +1,207 @@
+{
+  "project_name": "OverClaw",
+  "identity": {
+    "archetype": "The Executive Terminal",
+    "tone": "Precision, Authority, High-Density",
+    "core_metaphor": "Cockpit for AI Operations",
+    "logo_text": "OVERCLAW",
+    "version": "1.0.0"
+  },
+  "typography": {
+    "font_family_headings": "Space Grotesk, sans-serif",
+    "font_family_body": "Inter, sans-serif",
+    "font_family_code": "JetBrains Mono, monospace",
+    "font_weights": {
+      "light": 300,
+      "regular": 400,
+      "medium": 500,
+      "bold": 700
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-2xl md:text-3xl font-semibold tracking-tight",
+      "h3": "text-xl font-medium tracking-tight",
+      "body": "text-sm leading-relaxed",
+      "caption": "text-xs text-zinc-500 uppercase tracking-wider",
+      "mono": "font-mono text-xs"
+    }
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": {
+        "default": "#09090b",
+        "subtle": "#121215",
+        "surface": "#18181b",
+        "overlay": "#27272a"
+      },
+      "border": {
+        "default": "#27272a",
+        "active": "#3f3f46",
+        "highlight": "#52525b"
+      },
+      "text": {
+        "primary": "#fafafa",
+        "secondary": "#a1a1aa",
+        "muted": "#71717a",
+        "inverted": "#09090b"
+      },
+      "brand": {
+        "primary": "#6366f1",
+        "primary_hover": "#4f46e5",
+        "secondary": "#10b981",
+        "accent": "#8b5cf6"
+      },
+      "functional": {
+        "success": "#10b981",
+        "warning": "#f59e0b",
+        "error": "#f43f5e",
+        "info": "#3b82f6"
+      }
+    },
+    "gradients": {
+      "brand_glow": "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+      "glass": "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+      "surface_shine": "linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.03) 50%, transparent 75%)"
+    }
+  },
+  "layout_system": {
+    "container": {
+      "max_width": "max-w-[1920px]",
+      "padding_x": "px-4 md:px-6 lg:px-8",
+      "padding_y": "py-6 md:py-8"
+    },
+    "spacing": {
+      "section_gap": "gap-8",
+      "item_gap": "gap-4",
+      "panel_padding": "p-6"
+    },
+    "grid": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6",
+      "auto_fit": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    },
+    "z_index": {
+      "toast": 9999,
+      "modal": 50,
+      "dropdown": 40,
+      "header": 30,
+      "sidebar": 20
+    }
+  },
+  "components": {
+    "DashboardLayout": {
+      "structure": "Sidebar (Fixed Left) + Header (Fixed Top) + Main Content (Scrollable)",
+      "sidebar_width": "w-64",
+      "sidebar_collapsed_width": "w-16",
+      "header_height": "h-16",
+      "bg_color": "bg-zinc-950"
+    },
+    "Card": {
+      "base": "bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden backdrop-blur-sm",
+      "hover": "hover:border-zinc-700 transition-colors duration-200",
+      "header": "px-6 py-4 border-b border-zinc-800/50 flex items-center justify-between",
+      "body": "p-6"
+    },
+    "Button": {
+      "primary": "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20",
+      "secondary": "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700",
+      "ghost": "hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-100",
+      "danger": "bg-rose-950/50 text-rose-400 border border-rose-900/50 hover:bg-rose-900/50",
+      "size_default": "h-9 px-4 py-2",
+      "size_icon": "h-9 w-9",
+      "radius": "rounded-lg"
+    },
+    "Input": {
+      "base": "bg-zinc-950 border border-zinc-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 rounded-lg placeholder:text-zinc-600"
+    },
+    "Badge": {
+      "base": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
+      "success": "bg-emerald-950/30 text-emerald-400 border-emerald-900/50",
+      "warning": "bg-amber-950/30 text-amber-400 border-amber-900/50",
+      "error": "bg-rose-950/30 text-rose-400 border-rose-900/50",
+      "neutral": "bg-zinc-800 text-zinc-400 border-zinc-700"
+    },
+    "ChatBubble": {
+      "user": "bg-zinc-800 text-zinc-100 rounded-2xl rounded-tr-sm",
+      "agent": "bg-indigo-950/30 border border-indigo-500/20 text-indigo-50 rounded-2xl rounded-tl-sm",
+      "tool": "bg-zinc-900/80 border border-zinc-800 font-mono text-xs rounded-lg p-3 my-2"
+    }
+  },
+  "assets": {
+    "icons": {
+      "provider": "lucide-react",
+      "mappings": {
+        "dashboard": "LayoutDashboard",
+        "chat": "MessageSquare",
+        "agents": "Bot",
+        "skills": "Zap",
+        "memory": "Brain",
+        "settings": "Settings",
+        "notifications": "Bell",
+        "email": "Mail",
+        "slack": "Hash",
+        "tasks": "Calendar",
+        "logout": "LogOut",
+        "menu": "Menu",
+        "close": "X",
+        "send": "Send",
+        "attach": "Paperclip",
+        "search": "Search",
+        "plus": "Plus",
+        "check": "Check",
+        "error": "AlertCircle",
+        "loading": "Loader2"
+      }
+    },
+    "images": {
+      "hero_bg": "linear-gradient(to bottom right, #1e1b4b, #000000)",
+      "logo_placeholder": "https://placehold.co/40x40/6366f1/ffffff?text=WC",
+      "avatar_user": "https://placehold.co/100x100/27272a/ffffff?text=ME",
+      "avatar_agent": "https://placehold.co/100x100/6366f1/ffffff?text=AI"
+    }
+  },
+  "motion": {
+    "default_transition": "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+    "sidebar_transition": "width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+    "fade_in": "animate-in fade-in duration-300",
+    "slide_in_right": "animate-in slide-in-from-right duration-300",
+    "slide_in_bottom": "animate-in slide-in-from-bottom duration-300"
+  },
+  "accessibility": {
+    "focus_ring": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
+    "screen_reader_only": "sr-only",
+    "aria_labels_required": true
+  },
+  "instructions_to_main_agent": {
+    "primary_goal": "Refactor the Dashboard to use a Sidebar Layout and enhance the Chat interface.",
+    "steps": [
+      "1. Refactor 'Dashboard.js' to move the layout (header/sidebar) into a reusable 'DashboardLayout' component.",
+      "2. Create a 'Sidebar' component that handles navigation for the Dashboard sections (Health, Agents, etc.).",
+      "3. Update 'ChatPage' to use the same 'DashboardLayout' but with the chat sidebar embedded or handled separately (Chat often needs full width, so maybe keep Chat layout distinct but visually consistent).",
+      "4. Apply the 'Space Grotesk' font for headings (import from Google Fonts in index.css).",
+      "5. Apply the 'JetBrains Mono' font for code blocks and logs.",
+      "6. Enhance the 'AgentManager' and 'SkillsManager' with the new Card and Badge styles.",
+      "7. Ensure the 'ChatView' bubbles use the new distinction styles."
+    ],
+    "critical_constraints": [
+      "DO NOT break the WebSocket connection logic (useGatewayWs).",
+      "Keep all 'data-testid' attributes.",
+      "Ensure mobile responsiveness (collapsible sidebar).",
+      "Use 'lucide-react' for all icons."
+    ],
+    "file_structure_changes": {
+      "new_components": [
+        "/app/frontend/src/components/layout/DashboardLayout.js",
+        "/app/frontend/src/components/layout/Sidebar.js",
+        "/app/frontend/src/components/ui/Badge.js"
+      ]
+    }
+  },
+  "universal_guidelines": [
+    "Dark mode only - no light mode toggle needed for this 'Terminal' aesthetic.",
+    "Use 'zinc-950' for backgrounds, never pure black unless for contrast.",
+    "Use 'indigo-500' as the primary action color.",
+    "Always provide visual feedback (hover states, focus rings).",
+    "Keep text density high but readable (use 'relaxed' leading for body)."
+  ]
+}

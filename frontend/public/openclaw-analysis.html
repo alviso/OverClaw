@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw — Deep Architectural Analysis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #1a2234;
+    --bg-code: #0d1320;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #f97316;
+    --accent-dim: #f9731620;
+    --accent-secondary: #06b6d4;
+    --accent-green: #22c55e;
+    --border: #1e293b;
+    --border-bright: #334155;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1a2e 50%, var(--bg-primary) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 40px 60px;
+    text-align: left;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .hero h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, #fb923c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    max-width: 700px;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .toc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 48px;
+  }
+
+  .toc h2 {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .toc ul {
+    list-style: none;
+    columns: 2;
+    column-gap: 32px;
+  }
+
+  .toc li { margin-bottom: 6px; }
+
+  .toc a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--accent); }
+
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 56px 0 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent-dim);
+    color: var(--text-primary);
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 40px 0 16px;
+    color: var(--accent);
+  }
+
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--accent-secondary);
+  }
+
+  p { margin-bottom: 16px; color: var(--text-secondary); }
+
+  strong { color: var(--text-primary); font-weight: 600; }
+
+  a { color: var(--accent-secondary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88em;
+    background: var(--bg-code);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent-secondary);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 0.92rem;
+  }
+
+  th {
+    background: var(--bg-card);
+    color: var(--accent);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  td {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  tr:hover td {
+    background: var(--bg-card);
+  }
+
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    margin: 16px 0 24px;
+    background: var(--accent-dim);
+    border-radius: 0 8px 8px 0;
+    color: var(--text-primary);
+    font-style: italic;
+  }
+
+  ul, ol {
+    margin: 8px 0 16px 24px;
+    color: var(--text-secondary);
+  }
+
+  li { margin-bottom: 6px; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .stat-card .label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .stat-card .value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-card .desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .phase-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 16px 0;
+    position: relative;
+    border-left: 3px solid var(--accent);
+  }
+
+  .phase-card h4 {
+    margin-top: 0;
+    color: var(--accent);
+  }
+
+  .phase-card .effort {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+
+  .tag-essential { background: #22c55e20; color: #22c55e; }
+  .tag-skip { background: #ef444420; color: #ef4444; }
+  .tag-later { background: #eab30820; color: #eab308; }
+
+  .callout {
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .separator {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  @media (max-width: 768px) {
+    .hero { padding: 40px 20px 30px; }
+    .hero h1 { font-size: 2rem; }
+    .container { padding: 20px; }
+    .toc ul { columns: 1; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .phase-card .effort { position: static; margin-bottom: 12px; display: inline-block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>OpenClaw &mdash; Deep Architectural Analysis</h1>
+  <p class="subtitle">For building a controlled corporate work assistant. Subsystem-by-subsystem breakdown with a phased build plan.</p>
+</div>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ============================================================ -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ul>
+    <li><a href="#summary">1. Executive Summary</a></li>
+    <li><a href="#architecture">2. High-Level Architecture</a></li>
+    <li><a href="#gateway">3.1 Gateway (Control Plane)</a></li>
+    <li><a href="#agent">3.2 Agent Runtime</a></li>
+    <li><a href="#autoreply">3.3 Auto-Reply Engine</a></li>
+    <li><a href="#channels">3.4 Channel Abstraction</a></li>
+    <li><a href="#plugins">3.5 Plugin System</a></li>
+    <li><a href="#extensions">3.6 Extensions</a></li>
+    <li><a href="#config">3.7 Configuration System</a></li>
+    <li><a href="#cli">3.8 CLI Surface</a></li>
+    <li><a href="#webui">3.9 Web UI</a></li>
+    <li><a href="#memory">3.10 Memory / RAG</a></li>
+    <li><a href="#browser">3.11 Browser Control</a></li>
+    <li><a href="#media">3.12 Media Understanding</a></li>
+    <li><a href="#routing">3.13 Routing &amp; Sessions</a></li>
+    <li><a href="#hooks">3.14 Hooks System</a></li>
+    <li><a href="#voice">3.15 TTS / Voice</a></li>
+    <li><a href="#mobile">3.16 Mobile Apps</a></li>
+    <li><a href="#skills">3.17 Skills Platform</a></li>
+    <li><a href="#security">3.18 Security Layer</a></li>
+    <li><a href="#patterns">4. Key Design Patterns</a></li>
+    <li><a href="#bloat">5. Bloat vs. Essential</a></li>
+    <li><a href="#buildplan">6. Build Plan</a></li>
+    <li><a href="#depgraph">7. Phase Dependency Graph</a></li>
+    <li><a href="#matrix">8. Blueprint Comparison Matrix</a></li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- EXECUTIVE SUMMARY -->
+<!-- ============================================================ -->
+<h2 id="summary">1. Executive Summary</h2>
+
+<p><strong>OpenClaw</strong> is a ~270k LOC TypeScript monorepo implementing a <strong>personal AI assistant</strong> with a local-first architecture. Its core insight is the <strong>Gateway pattern</strong>: a single WebSocket control plane that sits between messaging channels and an AI agent runtime, routing messages bidirectionally.</p>
+
+<blockquote>A <strong>WebSocket gateway</strong> receives messages from <strong>channel adapters</strong>, resolves them through a <strong>routing layer</strong> to an <strong>agent session</strong>, runs the agent with <strong>tools</strong> in a <strong>sandboxed environment</strong>, and delivers replies back through the originating channel &mdash; all configured via a <strong>single JSON file</strong> and managed via <strong>CLI, Web UI, or companion apps</strong>.</blockquote>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="label">Total Files</div>
+    <div class="value">5,268</div>
+    <div class="desc">TypeScript monorepo</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Non-Test LOC</div>
+    <div class="value">~270k</div>
+    <div class="desc">Production code</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Channels</div>
+    <div class="value">15+</div>
+    <div class="desc">WhatsApp, Telegram, Slack, Discord, Teams, ...</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Agent Tools</div>
+    <div class="value">20+</div>
+    <div class="desc">bash, browser, web, cron, canvas, ...</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Bundled Skills</div>
+    <div class="value">50+</div>
+    <div class="desc">GitHub, Slack, Jira, Notion, ...</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Platforms</div>
+    <div class="value">6</div>
+    <div class="desc">macOS, iOS, Android, Linux, Windows, Web</div>
+  </div>
+</div>
+
+<table>
+  <tr><th>Subsystem</th><th>Non-test LOC</th><th>Purpose</th></tr>
+  <tr><td>Extensions</td><td>68,909</td><td>Channel plugins (Telegram, Discord, Slack, etc.)</td></tr>
+  <tr><td>Agents</td><td>48,277</td><td>AI agent runtime, tools, model management</td></tr>
+  <tr><td>Gateway</td><td>26,860</td><td>WebSocket control plane</td></tr>
+  <tr><td>Web UI</td><td>25,997</td><td>Lit-based Control UI + WebChat</td></tr>
+  <tr><td>Auto-Reply</td><td>22,435</td><td>Inbound &rarr; agent &rarr; outbound pipeline</td></tr>
+  <tr><td>CLI</td><td>21,335</td><td>Commander.js CLI with 30+ subcommands</td></tr>
+  <tr><td>Config</td><td>15,887</td><td>Zod schema-validated JSON config</td></tr>
+  <tr><td>Browser</td><td>11,012</td><td>Playwright-based browser automation</td></tr>
+  <tr><td>Channels</td><td>9,373</td><td>Channel abstraction layer</td></tr>
+  <tr><td>Memory</td><td>7,236</td><td>sqlite-vec RAG with embeddings</td></tr>
+  <tr><td>Plugins</td><td>5,861</td><td>Plugin runtime, loader, hooks</td></tr>
+  <tr><td>Hooks</td><td>3,599</td><td>Lifecycle hook system</td></tr>
+  <tr><td>Media</td><td>3,536</td><td>Image/audio/video processing</td></tr>
+  <tr><td>TTS</td><td>1,583</td><td>Text-to-speech</td></tr>
+  <tr><td>Routing</td><td>646</td><td>Channel &rarr; agent session resolution</td></tr>
+  <tr><td>Sessions</td><td>417</td><td>Session metadata, send policy</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<!-- HIGH-LEVEL ARCHITECTURE -->
+<!-- ============================================================ -->
+<h2 id="architecture">2. High-Level Architecture</h2>
+
+<pre>
+                    +----------------------------------+
+                    |       Messaging Channels          |
+                    |  WhatsApp | Telegram | Slack | .. |
+                    +---------------+------------------+
+                                    | Inbound messages
+                                    v
++----------------------------------------------------------+
+|                 GATEWAY (WS Control Plane)                 |
+|  +------------+  +-------------+  +-----------------+    |
+|  |  HTTP/WS   |  |  Protocol   |  |   Auth Layer    |    |
+|  |  Server    |  |  (JSON-RPC) |  |  (token/pass)   |    |
+|  +-----+------+  +------+------+  +-----------------+    |
+|        |                 |                                 |
+|  +-----v-----------------v-----------------------------+  |
+|  |          Server Methods (RPC handlers)               |  |
+|  |  chat.send | sessions.patch | config.get | ...       |  |
+|  +----------------------------+------------------------+  |
+|                               |                           |
+|  +----------------------------v------------------------+  |
+|  |         Channel Manager + Plugin Registry            |  |
+|  +----------------------------+------------------------+  |
++------------------------------|----------------------------+
+                               |
+                               v
++----------------------------------------------------------+
+|                   AUTO-REPLY ENGINE                        |
+|  Envelope -> Command Detection -> Routing -> Queue        |
+|                     |                                      |
+|                     v                                      |
+|          Reply Runner (Agent Turn + Dispatch)              |
++------------------------------|----------------------------+
+                               |
+                               v
++----------------------------------------------------------+
+|                  AGENT RUNTIME (Pi)                        |
+|  Model Selection -> System Prompt -> LLM API Call         |
+|  Stream Processing -> Tool Execution -> Session Persist   |
+|                                                            |
+|  TOOLS: bash | browser | web_search | cron | memory | ... |
+|  SANDBOX: Docker isolation for non-main sessions          |
++----------------------------------------------------------+
+
+                    +----------------------------------+
+                    |       PERSISTENCE LAYER           |
+                    |  ~/.openclaw/                     |
+                    |  +-- openclaw.json  (config)      |
+                    |  +-- sessions/      (JSONL)       |
+                    |  +-- credentials/   (OAuth)       |
+                    |  +-- workspace/     (skills)      |
+                    |  +-- memory/        (sqlite-vec)  |
+                    +----------------------------------+
+</pre>
+
+<h3>Data Flow (Single Message)</h3>
+<ol>
+  <li>WhatsApp message arrives via Baileys WebSocket connection</li>
+  <li>Channel adapter normalizes it into an <strong>Envelope</strong></li>
+  <li>Envelope hits Auto-Reply engine</li>
+  <li>Auto-Reply checks: is it a /command? Allowed group? DM policy?</li>
+  <li>Routing resolves: <code>channel + peer &rarr; agentId + sessionKey</code></li>
+  <li>Message queued (debounce for fast-typing)</li>
+  <li>Agent runner loads session history (JSONL file)</li>
+  <li>Pi embedded runner calls LLM API with system prompt + history + tools</li>
+  <li>LLM streams back: text blocks + tool calls</li>
+  <li>Tool calls executed (bash, browser, web_search, etc.)</li>
+  <li>Response chunked per channel limits (2000 chars Discord, 4096 Telegram)</li>
+  <li>Chunks sent back through channel adapter</li>
+  <li>Session history appended to JSONL file</li>
+</ol>
+
+<div class="separator"></div>
+
+<!-- ============================================================ -->
+<!-- SUBSYSTEM DEEP DIVES -->
+<!-- ============================================================ -->
+<h2>3. Subsystem Deep Dives</h2>
+
+<!-- GATEWAY -->
+<h3 id="gateway">3.1 Gateway (Control Plane) &mdash; 26,860 LOC</h3>
+<p><strong>The beating heart.</strong> An Express + WebSocket server acting as a message bus and control plane.</p>
+
+<h4>Key Files</h4>
+<ul>
+  <li><code>server.impl.ts</code> &mdash; Main <code>startGatewayServer()</code> (663 LOC), wires everything</li>
+  <li><code>server-methods/</code> &mdash; Individual RPC handler files (chat, sessions, config, agents)</li>
+  <li><code>protocol/</code> &mdash; JSON-RPC protocol schema (TypeBox + AJV validation)</li>
+  <li><code>server-ws-runtime.ts</code> &mdash; WebSocket connection lifecycle</li>
+  <li><code>server-channels.ts</code> &mdash; Channel manager (load/start/stop plugins)</li>
+  <li><code>server-chat.ts</code> &mdash; Agent event handling</li>
+</ul>
+
+<h4>Protocol Pattern</h4>
+<pre>// JSON-RPC over WebSocket
+{ "method": "chat.send", "params": { "sessionKey": "...", "text": "Hello" } }
+// Streams back:
+{ "method": "chat.event", "params": { "type": "text.delta", "text": "Hi there" } }</pre>
+
+<h4>Key Patterns</h4>
+<ul>
+  <li><strong>Method registry</strong>: All RPC methods registered with handler + schema pairs</li>
+  <li><strong>Broadcast</strong>: Events broadcast to all connected WS clients</li>
+  <li><strong>Health cache</strong>: Periodic snapshots with versioning for efficient polling</li>
+  <li><strong>Config reload</strong>: Hot-reloading without gateway restart</li>
+</ul>
+
+<div class="callout">
+  <div class="callout-title">Corporate Relevance</div>
+  <p>The gateway pattern is excellent for enterprise &mdash; a single control point with auth, audit, and health checks. This should be your core.</p>
+</div>
+
+<!-- AGENT RUNTIME -->
+<h3 id="agent">3.2 Agent Runtime &mdash; 48,277 LOC</h3>
+<p>The <strong>largest subsystem</strong>. Manages AI model interaction, tool execution, session persistence, and sandboxing.</p>
+
+<h4>Model Management</h4>
+<ul>
+  <li>Model catalog with aliases (<code>anthropic/claude-opus-4-6</code>, <code>openai/gpt-5.2</code>)</li>
+  <li>Per-session model overrides, directive-based switching</li>
+  <li>Auth profile rotation: multiple API keys/OAuth sessions with failover</li>
+  <li>Providers: Anthropic, OpenAI, Google, Bedrock, OpenRouter, Ollama</li>
+</ul>
+
+<h4>Agent Loop (Pi Embedded Runner)</h4>
+<pre>1. Build system prompt (AGENTS.md + SOUL.md + TOOLS.md + skills)
+2. Load session history from JSONL
+3. Sanitize history for target model (Google needs different turn ordering)
+4. Call LLM API with streaming
+5. Process stream: text blocks -> tool calls -> text blocks
+6. Execute tool calls (with policy checks)
+7. Persist to session transcript</pre>
+
+<h4>Built-in Tools</h4>
+<table>
+  <tr><th>Tool</th><th>Purpose</th></tr>
+  <tr><td><code>bash</code></td><td>Shell execution with PTY, background processes</td></tr>
+  <tr><td><code>browser</code></td><td>Playwright browser automation</td></tr>
+  <tr><td><code>web_fetch</code> / <code>web_search</code></td><td>Web content retrieval</td></tr>
+  <tr><td><code>canvas</code></td><td>Visual workspace (A2UI)</td></tr>
+  <tr><td><code>cron</code></td><td>Schedule recurring tasks</td></tr>
+  <tr><td><code>message</code></td><td>Send messages to channels</td></tr>
+  <tr><td><code>sessions_send</code></td><td>Cross-session communication</td></tr>
+  <tr><td><code>memory</code></td><td>RAG search across memory</td></tr>
+</table>
+
+<h4>Sandbox (Docker per-session)</h4>
+<p>Non-main sessions run in Docker containers with tool allowlist/denylist, workspace mounting, and automatic pruning.</p>
+
+<div class="callout">
+  <div class="callout-title">Corporate Relevance</div>
+  <p>Keep model management + failover (reliability), tool execution with policy (security), skills system (customization). Drop sandbox complexity initially.</p>
+</div>
+
+<!-- AUTO-REPLY -->
+<h3 id="autoreply">3.3 Auto-Reply Engine &mdash; 22,435 LOC</h3>
+<p>The middleware between inbound messages and the agent. Business logic layer.</p>
+
+<pre>Inbound Message
+    |
+    v
+Envelope normalization
+    |
+    v
+Command detection (/status, /reset, /think, /model)
+    |  -> If command: execute immediately
+    |
+    v
+Group activation check (mention-only? always?)
+    |
+    v
+DM pairing check (is sender approved?)
+    |
+    v
+Directive parsing (@opus, /think high)
+    |
+    v
+Queue (debounce rapid messages)
+    |
+    v
+Agent runner -> LLM call -> Block streaming -> Chunking
+    |
+    v
+Reply dispatch (route to channel + format)</pre>
+
+<div class="callout">
+  <div class="callout-title">Corporate Relevance</div>
+  <p>Good pattern, simplify. Keep: command detection (admin controls), queue/debounce (prevents flooding), reply routing (multi-channel). Drop: inline directives (use config instead).</p>
+</div>
+
+<!-- CHANNELS -->
+<h3 id="channels">3.4 Channel Abstraction &mdash; 9,373 LOC</h3>
+<p>Defines the contract all messaging channels must implement.</p>
+
+<pre>type ChannelPlugin = {
+  id: ChannelId;
+  meta: ChannelMeta;                  // Display name, icon
+  capabilities: ChannelCapabilities;  // Threading? Reactions?
+  config: ChannelConfigAdapter;       // Read config, resolve accounts
+  setup?: ChannelSetupAdapter;        // Start/stop the channel
+  pairing?: ChannelPairingAdapter;    // DM approval flow
+  security?: ChannelSecurityAdapter;  // Allowlists, DM policy
+  groups?: ChannelGroupAdapter;       // Group message handling
+  mentions?: ChannelMentionAdapter;   // @mention detection
+  outbound?: ChannelOutboundAdapter;  // Send messages out
+  streaming?: ChannelStreamingAdapter;
+  threading?: ChannelThreadingAdapter;
+  messaging?: ChannelMessagingAdapter;
+  // ... 15+ adapter interfaces
+};</pre>
+
+<div class="callout">
+  <div class="callout-title">Corporate Relevance</div>
+  <p>The adapter pattern is the <strong>most reusable pattern</strong> in the codebase. Start with 1-2 channels (Slack + WebChat) and add more without touching core. Simplify to 5-6 adapters instead of 15+.</p>
+</div>
+
+<!-- PLUGINS -->
+<h3 id="plugins">3.5 Plugin System &mdash; 5,861 LOC</h3>
+<pre>type OpenClawPluginApi = {
+  runtime: PluginRuntime;
+  registerChannel(opts: { plugin: ChannelPlugin }): void;
+  registerTool(tool: AnyAgentTool): void;
+  registerHook(event: string, handler: Function): void;
+  registerHttpRoute(path: string, handler: Function): void;
+  registerService(service: OpenClawPluginService): void;
+};</pre>
+<p>Clean plugin contract. Discovery &rarr; Load (jiti) &rarr; Register &rarr; Lifecycle management.</p>
+
+<!-- EXTENSIONS -->
+<h3 id="extensions">3.6 Extensions &mdash; 68,909 LOC</h3>
+<p>Each channel is a self-contained extension:</p>
+<pre>extensions/slack/
++-- package.json              // Plugin metadata
++-- openclaw.plugin.json      // Manifest: { id, channels, configSchema }
++-- index.ts                  // register(api) -> api.registerChannel(...)
++-- src/
+    +-- channel.ts            // ChannelPlugin implementation
+    +-- runtime.ts            // Runtime context</pre>
+<p>15+ channels implemented. For corporate, you only need <strong>Slack + Teams + WebChat</strong>.</p>
+
+<!-- CONFIG -->
+<h3 id="config">3.7 Configuration System &mdash; 15,887 LOC</h3>
+<p>Single-file JSON config with Zod validation, migration, and hot-reload.</p>
+<pre>{
+  "agent": { "model": "anthropic/claude-opus-4-6" },
+  "gateway": { "port": 18789, "bind": "loopback", "auth": { "mode": "token" } },
+  "channels": {
+    "slack": { "botToken": "xoxb-...", "appToken": "xapp-..." }
+  },
+  "tools": { "bash": { "enabled": true } }
+}</pre>
+
+<div class="callout">
+  <div class="callout-title">Corporate Relevance</div>
+  <p>Essential. Validated JSON config is perfect for enterprise (auditable, version-controllable). OpenClaw has 100+ keys; you'll need ~20.</p>
+</div>
+
+<!-- CLI -->
+<h3 id="cli">3.8 CLI Surface &mdash; 21,335 LOC</h3>
+<p>Commander.js-based with 30+ subcommands. Key: <code>gateway</code>, <code>agent</code>, <code>config</code>, <code>doctor</code>, <code>channels status</code>, <code>onboard</code>.</p>
+
+<!-- WEB UI -->
+<h3 id="webui">3.9 Web UI &mdash; 25,997 LOC</h3>
+<p>Lit-based Web Components served directly from the Gateway. <strong>Control UI</strong> (dashboard) + <strong>WebChat</strong> (chat interface).</p>
+
+<!-- MEMORY -->
+<h3 id="memory">3.10 Memory / RAG &mdash; 7,236 LOC</h3>
+<pre>Session Transcripts (JSONL)
+    | (periodic sync)
+    v
+Embedding Pipeline (OpenAI / Gemini / Voyage / local)
+    |
+    v
+sqlite-vec (vector database)
+    |
+    v
+Hybrid Search (vector similarity + keyword)</pre>
+
+<!-- BROWSER -->
+<h3 id="browser">3.11 Browser Control &mdash; 11,012 LOC</h3>
+<p>Playwright-based browser automation. Agent can navigate, click, fill forms, screenshot.</p>
+<p><span class="tag tag-later">Phase 4+</span> Powerful but risky for enterprise. Heavy guardrails needed.</p>
+
+<!-- MEDIA -->
+<h3 id="media">3.12 Media Understanding &mdash; 3,536 LOC</h3>
+<p>Processes image/audio/video attachments. Multi-provider (Anthropic vision, Google, OpenAI, Deepgram).</p>
+
+<!-- ROUTING -->
+<h3 id="routing">3.13 Routing &amp; Sessions &mdash; 1,063 LOC</h3>
+<p>Maps incoming messages to agent sessions via a <strong>session key</strong>:</p>
+<pre>channel:accountId:agentId:peerKind:peerId
+e.g.: "slack:default:main:group:C012345"
+
+Resolution priority:
+1. Explicit peer binding
+2. Guild/team binding
+3. Account binding
+4. Channel binding
+5. Default agent</pre>
+
+<!-- HOOKS -->
+<h3 id="hooks">3.14 Hooks System &mdash; 3,599 LOC</h3>
+<p>Lifecycle hooks: <code>before-tool-call</code>, <code>after-tool-call</code>, <code>message-received</code>, <code>session-start</code>, <code>session-end</code>, <code>compaction</code>, <code>gateway-start/stop</code>.</p>
+<p><span class="tag tag-essential">Essential</span> Great for audit logging and compliance hooks.</p>
+
+<!-- VOICE -->
+<h3 id="voice">3.15 TTS / Voice &mdash; 1,583 LOC</h3>
+<p>ElevenLabs + Edge TTS. Voice Wake for always-on listening.</p>
+<p><span class="tag tag-skip">Skip</span> Phase 5+ at earliest.</p>
+
+<!-- MOBILE -->
+<h3 id="mobile">3.16 Mobile Apps</h3>
+<p>iOS (SwiftUI), Android (Kotlin/Compose), macOS (menu bar). All pair as "nodes" to the gateway.</p>
+<p><span class="tag tag-skip">Skip</span> WebChat + Slack covers corporate needs.</p>
+
+<!-- SKILLS -->
+<h3 id="skills">3.17 Skills Platform</h3>
+<pre>skills/github/
++-- SKILL.md       // Prompt content (injected into system prompt)
++-- config.json    // Metadata, required env vars</pre>
+<p>50+ bundled skills. Teams write markdown files that customize agent behavior per domain.</p>
+<p><span class="tag tag-essential">Essential</span> Perfect for enterprise customization per team/role.</p>
+
+<!-- SECURITY -->
+<h3 id="security">3.18 Security Layer</h3>
+<ol>
+  <li><strong>DM Pairing</strong>: Unknown senders must be approved via code</li>
+  <li><strong>Allowlists</strong>: Per-channel sender restrictions</li>
+  <li><strong>Tool Policy</strong>: Allowlist/denylist per session type</li>
+  <li><strong>Sandbox</strong>: Docker isolation for non-main sessions</li>
+  <li><strong>Gateway Auth</strong>: Token or password</li>
+  <li><strong>SSRF Protection</strong>: URL validation for web tools</li>
+</ol>
+<p>For corporate, you'll need: SSO/OIDC, RBAC, audit logging, tool approval workflows, data classification.</p>
+
+<div class="separator"></div>
+
+<!-- ============================================================ -->
+<!-- DESIGN PATTERNS -->
+<!-- ============================================================ -->
+<h2 id="patterns">4. Key Design Patterns</h2>
+
+<table>
+  <tr><th>Pattern</th><th>Where</th><th>Why It Matters</th></tr>
+  <tr><td><strong>Adapter Pattern</strong></td><td>Channels</td><td>Add channels without touching core. Most reusable pattern.</td></tr>
+  <tr><td><strong>JSON-RPC over WS</strong></td><td>Gateway</td><td>Strong typing, introspection, clean separation.</td></tr>
+  <tr><td><strong>Session-Per-Conversation</strong></td><td>Routing</td><td>Isolated history per DM/group/channel.</td></tr>
+  <tr><td><strong>DI via createDefaultDeps()</strong></td><td>CLI, Server</td><td>All external deps injected. Easy testing.</td></tr>
+  <tr><td><strong>Config-Driven Everything</strong></td><td>Config</td><td>No hardcoded behavior. Ops-friendly, auditable.</td></tr>
+  <tr><td><strong>Plugin + Extension</strong></td><td>Plugins</td><td>Core vs. extensions cleanly separated.</td></tr>
+  <tr><td><strong>Block Streaming + Chunking</strong></td><td>Auto-Reply</td><td>Long responses split per channel limits.</td></tr>
+  <tr><td><strong>Auth Profile Rotation</strong></td><td>Agents</td><td>Multiple API keys with failover. Rate limit resilience.</td></tr>
+</table>
+
+<div class="separator"></div>
+
+<!-- ============================================================ -->
+<!-- BLOAT VS ESSENTIAL -->
+<!-- ============================================================ -->
+<h2 id="bloat">5. What's Bloat vs. What's Essential</h2>
+
+<h3>Essential for Corporate</h3>
+<table>
+  <tr><th>Component</th><th>Why</th></tr>
+  <tr><td>Gateway (WS control plane)</td><td>Central control, auth, health</td></tr>
+  <tr><td>Channel abstraction</td><td>Multi-channel support</td></tr>
+  <tr><td>Agent runtime (simplified)</td><td>Core LLM interaction</td></tr>
+  <tr><td>Tool execution with policy</td><td>Controlled capabilities</td></tr>
+  <tr><td>Config system</td><td>Ops-friendly, auditable</td></tr>
+  <tr><td>Session management</td><td>Conversation state</td></tr>
+  <tr><td>Skills platform</td><td>Customizable behavior</td></tr>
+  <tr><td>Memory/RAG</td><td>Cross-conversation context</td></tr>
+  <tr><td>WebChat</td><td>Browser-based access</td></tr>
+  <tr><td>Hooks</td><td>Audit logging, compliance</td></tr>
+</table>
+
+<h3>Bloat (Skip)</h3>
+<table>
+  <tr><th>Component</th><th>Why Skip</th></tr>
+  <tr><td>15+ channel plugins</td><td>Start with Slack + WebChat + Teams</td></tr>
+  <tr><td>macOS/iOS/Android apps</td><td>Not needed for corporate</td></tr>
+  <tr><td>Browser control</td><td>High risk, low initial value</td></tr>
+  <tr><td>Voice/TTS/Voice Wake</td><td>Niche use case</td></tr>
+  <tr><td>Canvas/A2UI</td><td>Specialized visual workspace</td></tr>
+  <tr><td>Device pairing/nodes</td><td>Consumer feature</td></tr>
+  <tr><td>iMessage/WhatsApp/Signal</td><td>Personal messaging, not corporate</td></tr>
+</table>
+
+<div class="separator"></div>
+
+<!-- ============================================================ -->
+<!-- BUILD PLAN -->
+<!-- ============================================================ -->
+<h2 id="buildplan">6. Step-by-Step Build Plan</h2>
+
+<div class="phase-card">
+  <span class="effort">2-3 days</span>
+  <h4>Phase 0: Foundation (Skeleton)</h4>
+  <p><strong>Goal</strong>: Runnable gateway with no channels, no agent. Just the bones.</p>
+  <ul>
+    <li>Express + WebSocket server with JSON-RPC protocol</li>
+    <li>Token-based auth middleware</li>
+    <li>Health endpoint (<code>/health</code>)</li>
+    <li>Config loader (Zod-validated JSON)</li>
+    <li>CLI entry point: <code>assistant gateway --port 18789</code></li>
+    <li>Structured JSON logging</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/gateway/server.impl.ts</code>, <code>src/gateway/protocol/</code>, <code>src/gateway/auth.ts</code>, <code>src/config/config.ts</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">3-5 days</span>
+  <h4>Phase 1: Agent Runtime (Core Loop)</h4>
+  <p><strong>Goal</strong>: Send a message via WS, get an AI response back.</p>
+  <ul>
+    <li>LLM provider abstraction (OpenAI + Anthropic)</li>
+    <li>System prompt construction</li>
+    <li>Session persistence (JSONL append-only)</li>
+    <li><code>chat.send</code> &rarr; agent turn &rarr; <code>chat.event</code> stream</li>
+    <li>Context window guard</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/agents/pi-embedded-runner/</code>, <code>src/agents/model-selection.ts</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">2-3 days</span>
+  <h4>Phase 2: Tool Framework</h4>
+  <p><strong>Goal</strong>: Agent can execute tools.</p>
+  <ul>
+    <li>Tool definition interface (name, schema, handler)</li>
+    <li>Tool policy engine (allowlist per session type)</li>
+    <li>Starter tools: <code>web_search</code>, <code>execute_command</code>, <code>read_file</code></li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/agents/tools/</code>, <code>src/agents/pi-tools.ts</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">2-3 days</span>
+  <h4>Phase 3: WebChat UI</h4>
+  <p><strong>Goal</strong>: Browser-based chat interface.</p>
+  <ul>
+    <li>React/Lit chat component</li>
+    <li>WebSocket connection to gateway</li>
+    <li>Markdown rendering, session selection</li>
+    <li>Served from gateway HTTP server</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>ui/src/</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">2-3 days</span>
+  <h4>Phase 4: First Channel &mdash; Slack</h4>
+  <p><strong>Goal</strong>: Assistant responds in Slack DMs and channels.</p>
+  <ul>
+    <li>Simplified channel adapter interface (~6 adapters)</li>
+    <li>Slack implementation via @slack/bolt</li>
+    <li>Inbound &rarr; normalize &rarr; route &rarr; agent &rarr; reply</li>
+    <li>Threading + mention-based activation</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>extensions/slack/</code>, <code>src/channels/plugins/types.plugin.ts</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">1-2 days</span>
+  <h4>Phase 5: Routing &amp; Multi-Agent</h4>
+  <p><strong>Goal</strong>: Different Slack channels &rarr; different agent personas.</p>
+  <ul>
+    <li>Routing table: channel + workspace &rarr; agent config</li>
+    <li>Per-agent: system prompts, tool allowlists, model preferences</li>
+    <li>Session isolation per agent</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/routing/</code>, <code>src/agents/agent-scope.ts</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">2-3 days</span>
+  <h4>Phase 6: Skills Platform</h4>
+  <p><strong>Goal</strong>: Teams customize agent via markdown files.</p>
+  <ul>
+    <li>Skill loader (SKILL.md &rarr; system prompt injection)</li>
+    <li>CLI: <code>assistant skills list|enable|disable</code></li>
+    <li>Starter skills: jira, github, confluence</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/agents/skills/</code>, <code>skills/</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">3-4 days</span>
+  <h4>Phase 7: Memory / RAG</h4>
+  <p><strong>Goal</strong>: Assistant remembers past conversations.</p>
+  <ul>
+    <li>Embedding pipeline (OpenAI text-embedding-3-small)</li>
+    <li>Vector storage (sqlite-vec or pgvector)</li>
+    <li>Hybrid search (vector + keyword)</li>
+    <li>Memory tool for agent</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/memory/</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">2-3 days</span>
+  <h4>Phase 8: Microsoft Teams Channel</h4>
+  <p><strong>Goal</strong>: Same assistant in Teams.</p>
+  <ul>
+    <li>Teams adapter via Bot Framework</li>
+    <li>Adaptive Cards formatting</li>
+    <li>Azure AD app registration</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>extensions/msteams/</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">3-4 days</span>
+  <h4>Phase 9: Admin &amp; Observability</h4>
+  <p><strong>Goal</strong>: Production-ready admin controls.</p>
+  <ul>
+    <li>Admin CLI: doctor, config, sessions</li>
+    <li>Web dashboard: sessions, usage stats, health</li>
+    <li>Structured logging with correlation IDs</li>
+    <li>Usage tracking (tokens/cost per user/team)</li>
+    <li>Full audit log</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/cli/</code>, <code>src/gateway/server-methods/usage.ts</code></p>
+</div>
+
+<div class="phase-card">
+  <span class="effort">3-5 days</span>
+  <h4>Phase 10: Security Hardening</h4>
+  <p><strong>Goal</strong>: Enterprise-grade security.</p>
+  <ul>
+    <li>OIDC/SSO authentication</li>
+    <li>RBAC: admin, user, viewer roles</li>
+    <li>Tool execution approval workflow (human-in-the-loop)</li>
+    <li>PII detection + sensitive data redaction</li>
+    <li>Rate limiting per user</li>
+  </ul>
+  <p><strong>OpenClaw ref</strong>: <code>src/security/</code>, <code>src/gateway/exec-approval-manager.ts</code></p>
+</div>
+
+<div class="separator"></div>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCY GRAPH -->
+<!-- ============================================================ -->
+<h2 id="depgraph">7. Phase Dependency Graph</h2>
+
+<pre>
+Phase 0: Foundation -----------------------------------------.
+    |                                                         |
+    v                                                         |
+Phase 1: Agent Runtime -----------------------------------.  |
+    |                                                      |  |
+    +-------------------.                                  |  |
+    v                   v                                  |  |
+Phase 2: Tools    Phase 3: WebChat                         |  |
+    |                   |                                  |  |
+    +-------------------+                                  |  |
+    v                                                      |  |
+Phase 4: Slack                                             |  |
+    |                                                      |  |
+    v                                                      |  |
+Phase 5: Routing & Multi-Agent                             |  |
+    |                                                      |  |
+    +-------------------.                                  |  |
+    v                   v                                  |  |
+Phase 6: Skills   Phase 7: Memory/RAG                      |  |
+    |                   |                                  |  |
+    +-------------------+                                  |  |
+    v                                                      |  |
+Phase 8: Teams                                             |  |
+    |                                                      |  |
+    v                                                      |  |
+Phase 9: Admin & Observability <---------------------------'  |
+    |                                                         |
+    v                                                         |
+Phase 10: Security Hardening <--------------------------------'
+</pre>
+
+<h3>Estimated Effort</h3>
+<table>
+  <tr><th>Phase</th><th>Effort</th><th>Cumulative</th><th>Demoable?</th></tr>
+  <tr><td>0: Foundation</td><td>2-3 days</td><td>3 days</td><td>Health endpoint</td></tr>
+  <tr><td>1: Agent Runtime</td><td>3-5 days</td><td>8 days</td><td>WS chat works</td></tr>
+  <tr><td>2: Tools</td><td>2-3 days</td><td>11 days</td><td>Agent uses tools</td></tr>
+  <tr><td>3: WebChat</td><td>2-3 days</td><td>14 days</td><td>Browser chat</td></tr>
+  <tr><td>4: Slack</td><td>2-3 days</td><td>17 days</td><td>Slack bot works</td></tr>
+  <tr><td>5: Multi-Agent</td><td>1-2 days</td><td>19 days</td><td>Different bots per channel</td></tr>
+  <tr><td>6: Skills</td><td>2-3 days</td><td>22 days</td><td>Custom behavior</td></tr>
+  <tr><td>7: Memory/RAG</td><td>3-4 days</td><td>26 days</td><td>Remembers context</td></tr>
+  <tr><td>8: Teams</td><td>2-3 days</td><td>29 days</td><td>Teams bot works</td></tr>
+  <tr><td>9: Admin</td><td>3-4 days</td><td>33 days</td><td>Dashboard</td></tr>
+  <tr><td>10: Security</td><td>3-5 days</td><td>38 days</td><td>SSO login</td></tr>
+</table>
+
+<div class="separator"></div>
+
+<!-- ============================================================ -->
+<!-- BLUEPRINT COMPARISON MATRIX -->
+<!-- ============================================================ -->
+<h2 id="matrix">8. Blueprint Comparison Matrix</h2>
+
+<p>This matrix maps each build phase to exact OpenClaw files you should study before implementing. It shows what OpenClaw does, what you'd build instead, and what complexity you're shedding.</p>
+
+<!-- PHASE 0 MATRIX -->
+<h3>Phase 0: Foundation (Gateway Skeleton)</h3>
+<table>
+  <tr><th>Aspect</th><th>OpenClaw Blueprint</th><th>Your Equivalent</th><th>What to Drop</th></tr>
+  <tr>
+    <td><strong>HTTP + WS Server</strong></td>
+    <td><code>src/gateway/server.impl.ts</code> (663 LOC) wires 20+ subsystems. <code>server/http-listen.ts</code> for HTTP. <code>server/ws-connection.ts</code> for WS lifecycle.</td>
+    <td>Express + <code>ws</code>. Single file ~150 LOC. Wire: auth, health, RPC handler.</td>
+    <td>Tailscale, Bonjour/mDNS, Canvas host, TLS self-cert, restart sentinel</td>
+  </tr>
+  <tr>
+    <td><strong>Protocol</strong></td>
+    <td><code>protocol/schema.ts</code> defines 60+ methods with TypeBox + AJV. <code>server-methods-list.ts</code> registers handlers.</td>
+    <td>~8 methods: <code>health.get</code>, <code>chat.send</code>, <code>chat.abort</code>, <code>sessions.list</code>, <code>sessions.patch</code>, <code>config.get</code>, <code>config.set</code>, <code>connect</code>. Zod schemas.</td>
+    <td>50+ RPC methods (agents.*, cron.*, nodes.*, browser.*, wizard.*, etc.)</td>
+  </tr>
+  <tr>
+    <td><strong>Auth</strong></td>
+    <td><code>src/gateway/auth.ts</code> &mdash; token/password. <code>device-auth.ts</code> &mdash; device pairing. <code>origin-check.ts</code> &mdash; CORS.</td>
+    <td>Token auth only. Single middleware. ~40 LOC.</td>
+    <td>Device auth, password mode, Tailscale identity headers</td>
+  </tr>
+  <tr>
+    <td><strong>Config</strong></td>
+    <td><code>src/config/config.ts</code>, <code>zod-schema.ts</code> (100+ keys), <code>io.ts</code>, 3 migration files, <code>env-vars.ts</code>, 20+ type files.</td>
+    <td>Single Zod schema, ~20 keys. Load, validate, hot-reload. ~200 LOC.</td>
+    <td>Legacy migrations, Nix mode, 80+ config keys, config patch protocol, UI hints</td>
+  </tr>
+  <tr>
+    <td><strong>Logging</strong></td>
+    <td><code>src/logging/subsystem.ts</code> &mdash; tslog with child contexts. <code>diagnostic.ts</code> &mdash; diagnostic heartbeat.</td>
+    <td><code>pino</code> or <code>tslog</code> with subsystem prefixes. ~30 LOC.</td>
+    <td>Diagnostic heartbeat, OpenTelemetry extension</td>
+  </tr>
+  <tr>
+    <td><strong>Health</strong></td>
+    <td><code>server/health-state.ts</code> &mdash; cached snapshots with versioning. <code>probe.ts</code> &mdash; deep probe.</td>
+    <td><code>/health</code> returning <code>{ status, uptime, version }</code>. ~20 LOC.</td>
+    <td>Health versioning, deep probes, memory/disk stats</td>
+  </tr>
+</table>
+<p><strong>Study order</strong>: <code>server.impl.ts</code> &rarr; <code>protocol/schema.ts</code> &rarr; <code>auth.ts</code> &rarr; <code>config/config.ts</code></p>
+<p><strong>Reduction</strong>: OpenClaw Gateway ~26,860 LOC &rarr; Your skeleton ~500 LOC (<strong>98%</strong>)</p>
+
+<!-- PHASE 1 MATRIX -->
+<h3>Phase 1: Agent Runtime (Core Loop)</h3>
+<table>
+  <tr><th>Aspect</th><th>OpenClaw Blueprint</th><th>Your Equivalent</th><th>What to Drop</th></tr>
+  <tr>
+    <td><strong>LLM Providers</strong></td>
+    <td><code>models-config.ts</code> + <code>models-config.providers.ts</code> &mdash; 10+ providers. <code>auth-profiles/</code> &mdash; OAuth rotation, cooldowns.</td>
+    <td>2 providers: OpenAI + Anthropic. Direct SDK. ~100 LOC/provider.</td>
+    <td>8+ providers, OAuth rotation, cooldowns, health scoring</td>
+  </tr>
+  <tr>
+    <td><strong>Agent Loop</strong></td>
+    <td><code>pi-embedded-runner/run.ts</code> &mdash; main turn. <code>system-prompt.ts</code> &mdash; prompt construction. <code>history.ts</code> &mdash; session loading. <code>pi-embedded-subscribe.ts</code> &mdash; stream handling.</td>
+    <td>Single <code>runAgentTurn(sessionId, message)</code>. Build prompt, call LLM, stream, persist. ~300 LOC.</td>
+    <td>Overflow compaction, Google sanitization, cache TTL, lane concurrency, CLI runner</td>
+  </tr>
+  <tr>
+    <td><strong>Session Persistence</strong></td>
+    <td><code>config/sessions/transcript.ts</code> &mdash; JSONL. <code>store.ts</code> &mdash; metadata + pruning. <code>session-file-repair.ts</code>, <code>session-write-lock.ts</code>.</td>
+    <td>JSONL append-only. One file per session. ~80 LOC.</td>
+    <td>Write locks, file repair, metadata store, pruning</td>
+  </tr>
+  <tr>
+    <td><strong>Model Selection</strong></td>
+    <td><code>model-selection.ts</code>, <code>model-fallback.ts</code>, <code>model-catalog.ts</code>, <code>model-compat.ts</code>.</td>
+    <td>Config-driven default. Per-agent override. ~40 LOC.</td>
+    <td>Failover chain, fuzzy matching, directive switching, capability detection</td>
+  </tr>
+  <tr>
+    <td><strong>Context Mgmt</strong></td>
+    <td><code>context-window-guard.ts</code>, <code>compaction.ts</code> (LLM summarization), <code>context-pruning.ts</code>.</td>
+    <td>Count messages, drop oldest when &gt; N. ~30 LOC.</td>
+    <td>LLM compaction, token-precise counting, per-model limits</td>
+  </tr>
+  <tr>
+    <td><strong>Streaming</strong></td>
+    <td><code>pi-embedded-subscribe.ts</code>, <code>pi-embedded-block-chunker.ts</code>, <code>block-reply-pipeline.ts</code>.</td>
+    <td>Forward SSE chunks to WS client. ~50 LOC.</td>
+    <td>Block detection, paragraph splitting, fence-block reopening</td>
+  </tr>
+</table>
+<p><strong>Study order</strong>: <code>pi-embedded-runner/run.ts</code> &rarr; <code>system-prompt.ts</code> &rarr; <code>pi-embedded-subscribe.ts</code> &rarr; <code>sessions/transcript.ts</code></p>
+<p><strong>Reduction</strong>: OpenClaw Agents ~48,277 LOC &rarr; Your runtime ~600 LOC (<strong>99%</strong>)</p>
+
+<!-- PHASE 2 MATRIX -->
+<h3>Phase 2: Tool Framework</h3>
+<table>
+  <tr><th>Aspect</th><th>OpenClaw Blueprint</th><th>Your Equivalent</th><th>What to Drop</th></tr>
+  <tr>
+    <td><strong>Tool Interface</strong></td>
+    <td><code>pi-tools.schema.ts</code>, <code>pi-tools.ts</code> (40 tools), <code>pi-tool-definition-adapter.ts</code>.</td>
+    <td><code>{ name, description, inputSchema, handler }</code>. ~30 LOC interface.</td>
+    <td>Provider-specific schema adaptation, SDK tool splitting</td>
+  </tr>
+  <tr>
+    <td><strong>Tool Policy</strong></td>
+    <td><code>tool-policy.ts</code>, <code>tool-policy.conformance.ts</code>, <code>sandbox/tool-policy.ts</code>.</td>
+    <td>Simple allowlist per agent config. ~50 LOC.</td>
+    <td>Sandbox policy, conformance, plugin-only allowlists</td>
+  </tr>
+  <tr>
+    <td><strong>Web Search</strong></td>
+    <td><code>tools/web-search.ts</code> (multi-provider), <code>web-fetch.ts</code> (Readability), <code>web-fetch-utils.ts</code> (SSRF).</td>
+    <td>Single provider (Brave/Perplexity). ~80 LOC.</td>
+    <td>Multi-provider, Readability, SSRF allowlist, Firecrawl</td>
+  </tr>
+  <tr>
+    <td><strong>Exec</strong></td>
+    <td><code>bash-tools.exec.ts</code> (PTY), <code>bash-tools.process.ts</code> (background), <code>bash-process-registry.ts</code>.</td>
+    <td><code>child_process.exec()</code> with timeout. Allowlisted commands. ~60 LOC.</td>
+    <td>PTY, background processes, process registry, send-keys</td>
+  </tr>
+</table>
+<p><strong>Study order</strong>: <code>pi-tools.ts</code> &rarr; <code>tools/web-search.ts</code> &rarr; <code>tool-policy.ts</code> &rarr; <code>bash-tools.exec.ts</code></p>
+<p><strong>Reduction</strong>: OpenClaw Tools ~5,000 LOC &rarr; Your 3 tools ~300 LOC (<strong>94%</strong>)</p>
+
+<!-- PHASE 3 MATRIX -->
+<h3>Phase 3: WebChat UI</h3>
+<table>
+  <tr><th>Aspect</th><th>OpenClaw Blueprint</th><th>Your Equivalent</th><th>What to Drop</th></tr>
+  <tr>
+    <td><strong>Framework</strong></td>
+    <td><code>ui/src/</code> &mdash; Lit 3.x Web Components. <code>app.ts</code>, <code>app-render.ts</code>, <code>app-chat.ts</code>.</td>
+    <td>React. Single-page chat app.</td>
+    <td>Lit, Web Components lifecycle</td>
+  </tr>
+  <tr>
+    <td><strong>WS Client</strong></td>
+    <td><code>ui/src/ui/gateway.ts</code> &mdash; WS with reconnect, auth, event routing.</td>
+    <td>Simple WS client with reconnect + JSON-RPC. ~80 LOC.</td>
+    <td>Device identity, settings sync, polling fallback</td>
+  </tr>
+  <tr>
+    <td><strong>Chat Rendering</strong></td>
+    <td><code>markdown.ts</code>, <code>chat/</code> (bubbles, tool output, streaming), <code>app-scroll.ts</code>.</td>
+    <td>React: <code>&lt;ChatMessage&gt;</code>, <code>&lt;ToolOutput&gt;</code>, <code>&lt;StreamingIndicator&gt;</code>. ~200 LOC.</td>
+    <td>Focus mode, theme transitions, tool display JSON, screenshots</td>
+  </tr>
+  <tr>
+    <td><strong>Config UI</strong></td>
+    <td><code>components/</code>, <code>controllers/</code>, <code>views/</code> &mdash; full config editor + multi-view nav.</td>
+    <td>Skip entirely. Admin via CLI.</td>
+    <td>All of it (defer to Phase 9)</td>
+  </tr>
+</table>
+<p><strong>Study order</strong>: <code>gateway.ts</code> (WS client) &rarr; <code>app-chat.ts</code> (chat logic) &rarr; <code>markdown.ts</code> (rendering)</p>
+<p><strong>Reduction</strong>: OpenClaw UI ~25,997 LOC &rarr; Your WebChat ~500 LOC (<strong>98%</strong>)</p>
+
+<!-- PHASE 4 MATRIX -->
+<h3>Phase 4: Slack Channel</h3>
+<table>
+  <tr><th>Aspect</th><th>OpenClaw Blueprint</th><th>Your Equivalent</th><th>What to Drop</th></tr>
+  <tr>
+    <td><strong>Channel Interface</strong></td>
+    <td><code>channels/plugins/types.plugin.ts</code> &mdash; 15+ adapters. <code>types.core.ts</code>, <code>types.adapters.ts</code>.</td>
+    <td><code>{ id, setup, teardown, onMessage, sendMessage, capabilities }</code>. ~60 LOC.</td>
+    <td>10+ adapters (pairing, heartbeat, resolver, directory, elevated, etc.)</td>
+  </tr>
+  <tr>
+    <td><strong>Slack Impl</strong></td>
+    <td><code>extensions/slack/src/channel.ts</code>, <code>runtime.ts</code>. <code>channels/plugins/slack.actions.ts</code>.</td>
+    <td>Listen, send, thread support. <code>@slack/bolt</code>. ~200 LOC.</td>
+    <td>Slack actions tool, interactive components, slash commands</td>
+  </tr>
+  <tr>
+    <td><strong>Normalization</strong></td>
+    <td><code>auto-reply/envelope.ts</code>, <code>channels/plugins/normalize/</code>, <code>sender-identity.ts</code>.</td>
+    <td><code>{ channel, sender, text, threadId?, attachments? }</code>. ~30 LOC.</td>
+    <td>Complex sender resolution, conversation labels</td>
+  </tr>
+  <tr>
+    <td><strong>Mention/Activation</strong></td>
+    <td><code>channels/mention-gating.ts</code>, <code>auto-reply/group-activation.ts</code>.</td>
+    <td>DMs always, channels only @mentioned. ~30 LOC.</td>
+    <td>Activation mode toggling, custom mention patterns</td>
+  </tr>
+</table>
+<p><strong>Study order</strong>: <code>types.plugin.ts</code> &rarr; <code>extensions/slack/</code> &rarr; <code>envelope.ts</code> &rarr; <code>chunk.ts</code></p>
+<p><strong>Reduction</strong>: OpenClaw Slack ~3,000 LOC &rarr; Your adapter ~400 LOC (<strong>87%</strong>)</p>
+
+<!-- PHASE 5-10 COMPACT -->
+<h3>Phases 5-10: Compact Reference</h3>
+<table>
+  <tr><th>Phase</th><th>Key OpenClaw Files to Study</th><th>Your LOC</th><th>Key Simplification</th></tr>
+  <tr>
+    <td><strong>5: Routing</strong></td>
+    <td><code>routing/resolve-route.ts</code>, <code>routing/session-key.ts</code>, <code>agents/agent-scope.ts</code></td>
+    <td>~200</td>
+    <td>Simple lookup table vs. 5-level priority resolution</td>
+  </tr>
+  <tr>
+    <td><strong>6: Skills</strong></td>
+    <td><code>agents/skills.ts</code>, <code>agents/skills/workspace.ts</code>, <code>skills/github/SKILL.md</code></td>
+    <td>~250</td>
+    <td>Scan + concat vs. bundled/managed/workspace tiers + ClawHub</td>
+  </tr>
+  <tr>
+    <td><strong>7: Memory</strong></td>
+    <td><code>memory/manager.ts</code>, <code>memory/sqlite-vec.ts</code>, <code>memory/embeddings.ts</code>, <code>agents/tools/memory-tool.ts</code></td>
+    <td>~400</td>
+    <td>1 embedding provider vs. 4, vector-only vs. hybrid search</td>
+  </tr>
+  <tr>
+    <td><strong>8: Teams</strong></td>
+    <td><code>extensions/msteams/</code> (full impl), reuse your Slack adapter patterns</td>
+    <td>~300</td>
+    <td>Plain text first vs. Adaptive Cards, skip proactive messaging</td>
+  </tr>
+  <tr>
+    <td><strong>9: Admin</strong></td>
+    <td><code>gateway/server-methods/usage.ts</code>, <code>cli/program/</code>, <code>commands/doctor/</code></td>
+    <td>~1,000</td>
+    <td>5 CLI commands vs. 30+, minimal dashboard vs. full control UI</td>
+  </tr>
+  <tr>
+    <td><strong>10: Security</strong></td>
+    <td><code>gateway/auth.ts</code>, <code>gateway/exec-approval-manager.ts</code>, <code>security/</code></td>
+    <td>~800</td>
+    <td>SSO replaces tokens, RBAC replaces allowlists. More corporate-appropriate.</td>
+  </tr>
+</table>
+
+<div class="separator"></div>
+
+<!-- SUMMARY TABLE -->
+<h3>Summary: Your Codebase vs. OpenClaw</h3>
+<table>
+  <tr><th>Phase</th><th>OpenClaw LOC</th><th>Your LOC</th><th>Reduction</th><th>Key Insight</th></tr>
+  <tr><td>0: Foundation</td><td>26,860</td><td>~500</td><td>98%</td><td>Drop discovery, Tailscale, Canvas, 50+ RPC methods</td></tr>
+  <tr><td>1: Agent Runtime</td><td>48,277</td><td>~600</td><td>99%</td><td>Drop 8 providers, sandbox, CLI runners, compaction</td></tr>
+  <tr><td>2: Tools</td><td>~5,000</td><td>~300</td><td>94%</td><td>3 tools not 20+, no PTY, no browser</td></tr>
+  <tr><td>3: WebChat</td><td>25,997</td><td>~500</td><td>98%</td><td>Chat only, no control UI, React not Lit</td></tr>
+  <tr><td>4: Slack</td><td>~3,000</td><td>~400</td><td>87%</td><td>5 adapters not 15, no pairing, no actions tool</td></tr>
+  <tr><td>5: Multi-Agent</td><td>~2,000</td><td>~200</td><td>90%</td><td>Simple lookup, no guild/team bindings</td></tr>
+  <tr><td>6: Skills</td><td>~3,500</td><td>~250</td><td>93%</td><td>No ClawHub, no managed skills</td></tr>
+  <tr><td>7: Memory</td><td>7,236</td><td>~400</td><td>94%</td><td>1 provider, vector-only initially</td></tr>
+  <tr><td>8: Teams</td><td>~1,500</td><td>~300</td><td>80%</td><td>Teams is inherently complex</td></tr>
+  <tr><td>9: Admin</td><td>~10,000</td><td>~1,000</td><td>90%</td><td>5 CLI commands, minimal dashboard</td></tr>
+  <tr><td>10: Security</td><td>~3,000</td><td>~800</td><td>73%</td><td>SSO &gt; tokens, RBAC &gt; allowlists</td></tr>
+  <tr style="font-weight: 700; color: var(--accent);"><td>TOTAL</td><td>~270,000</td><td>~5,250</td><td>98%</td><td>Corporate-focused, zero bloat</td></tr>
+</table>
+
+<div class="callout">
+  <div class="callout-title">Bottom Line</div>
+  <p>A fully-featured corporate work assistant in <strong>~5,250 LOC</strong> &mdash; about 2% of OpenClaw's codebase, covering 100% of what matters for enterprise adoption.</p>
+</div>
+
+<p style="margin-top: 32px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+  Analysis generated from OpenClaw repository &mdash; ~270k LOC, 5,268 files
+</p>
+
+</div>
+</body>
+</html>
