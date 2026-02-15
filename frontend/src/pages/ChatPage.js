@@ -118,6 +118,8 @@ export default function ChatPage() {
             authenticated={authenticated}
             sessionId={currentSession}
             connected={connected}
+            onEvent={onEvent}
+            offEvent={offEvent}
           />
         </div>
       </div>
