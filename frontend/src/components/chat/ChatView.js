@@ -198,8 +198,26 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
         }
       }).catch(() => {});
     }, 2000);
-    return () => clearInterval(interval);
-  }, [authenticated, sessionId, rpc, scrollToBottom]);
+
+    // Listen for real-time Slack/cross-channel events
+    const handleChatEvent = (params) => {
+      if (params?.session_id === sessionId) {
+        // Immediate refresh when activity on the current session
+        rpc("chat.history", { session_id: sessionId }).then((r) => {
+          if (r?.messages) {
+            setMessages(r.messages);
+            setTimeout(scrollToBottom, 50);
+          }
+        }).catch(() => {});
+      }
+    };
+    if (onEvent) onEvent("chat.event", handleChatEvent);
+
+    return () => {
+      clearInterval(interval);
+      if (offEvent) offEvent("chat.event", handleChatEvent);
+    };
+  }, [authenticated, sessionId, rpc, scrollToBottom, onEvent, offEvent]);
 
   useEffect(scrollToBottom, [messages, scrollToBottom]);
 
