@@ -431,6 +431,11 @@ class AgentRunner:
                 _safe_extract_profile(self.db, user_text)
             )
 
+            # Extract relationship mentions (fire-and-forget)
+            asyncio.create_task(
+                _safe_extract_relationships(self.db, user_text)
+            )
+
             logger.info(f"Agent turn complete: session={session_id} agent={agent_id} tools={len(tool_calls)} response_len={len(response_text)}")
             return response_text, tool_calls
 
