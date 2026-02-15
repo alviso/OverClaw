@@ -19,7 +19,10 @@ import { TasksPanel } from "@/components/dashboard/TasksPanel";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GmailPanel } from "@/components/dashboard/GmailPanel";
 import { WorkspacePanel } from "@/components/dashboard/WorkspacePanel";
+import { SetupWizard } from "@/components/setup/SetupWizard";
 import ChatPage from "@/pages/ChatPage";
+
+const API = process.env.REACT_APP_BACKEND_URL || "";
 
 function AdminLayout() {
   const { connected, authenticated, reconnecting, gatewayInfo, rpc, onEvent, offEvent } = useGatewayWs();
