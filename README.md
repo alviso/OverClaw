@@ -1,6 +1,6 @@
 # OverClaw
 
-A multi-agent work assistant built from the ground up, inspired by [OpenClaw](https://github.com/nicepkg/openclaw)'s architecture. An orchestrator agent delegates tasks to specialist agents — each with their own tools, context, and capabilities — creating a system that can browse the web, manage email, write and deploy code, search memory, and integrate with Slack.
+A multi-agent work assistant built from the ground up, inspired by [OpenClaw](https://github.com/openclaw/openclaw)'s architecture. An orchestrator agent delegates tasks to specialist agents — each with their own tools, context, and capabilities — creating a system that can browse the web, manage email, write and deploy code, search memory, and integrate with Slack.
 
 ## Demo
 
