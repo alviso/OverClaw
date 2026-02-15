@@ -219,7 +219,8 @@ export function SetupWizard({ onComplete }) {
   };
 
   const handleFinish = () => {
-    if (onComplete) onComplete();
+    // Reload the page so the WebSocket reconnects with the new gateway token
+    window.location.reload();
   };
 
   const handleBack = () => {
