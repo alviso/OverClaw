@@ -336,9 +336,9 @@ This is a **personal/workplace tool**, not a public SaaS. The security model ref
 
 - **`exec()` for tool creation**: The developer agent can write arbitrary Python that gets executed. This is the point — it's a power-user feature. Don't expose the gateway to untrusted users.
 - **Shell access**: The `execute_command` tool runs shell commands. Same caveat.
-- **Gateway token**: Set `GATEWAY_TOKEN` in `.env` to require authentication on WebSocket connections. Without it, the gateway is open.
+- **Gateway token**: Set `GATEWAY_TOKEN` in `.env` or through the setup wizard on first launch. This secures WebSocket connections. Without it, the gateway is open.
 - **No user system**: There's one operator. If you need multi-tenancy, this isn't the right tool.
-- **API keys**: All secrets live in `backend/.env`, which is gitignored. The `.env.example` contains only placeholders.
+- **API keys**: All secrets live in `backend/.env` or in the database (via the setup wizard). The `.env.example` contains only placeholders.
 
 ---
 
