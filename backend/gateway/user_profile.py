@@ -65,7 +65,7 @@ async def extract_profile_facts(db, user_message: str):
             max_tokens=512,
             messages=[{
                 "role": "user",
-                "content": EXTRACTION_PROMPT.format(user_message=user_message),
+                "content": EXTRACTION_PROMPT.replace("{user_message}", user_message),
             }],
         )
 
