@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://static.prod-images.emergentagent.com/jobs/3c2da5f3-799b-45fb-934f-4ddb79b97551/images/e42988262d3e337e322096ee07e3b499e86cb4e275c6eba3342411e0a3006e43.png" alt="OverClaw Banner" width="100%"/>
+  <img src="assets/overclaw-banner.png" alt="OverClaw Banner" width="100%"/>
 </p>
 
 # OverClaw
