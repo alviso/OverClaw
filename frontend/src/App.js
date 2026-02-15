@@ -106,6 +106,16 @@ function AdminLayout() {
               </main>
             </>
           } />
+          <Route path="/people" element={
+            <>
+              <DashboardHeader title="People" subtitle="Discovered relationships">
+                <ConnectionIndicator connected={connected} authenticated={authenticated} reconnecting={reconnecting} />
+              </DashboardHeader>
+              <main className="flex-1 overflow-y-auto p-6">
+                <RelationshipsPanel rpc={rpc} authenticated={authenticated} />
+              </main>
+            </>
+          } />
           <Route path="/tasks" element={
             <>
               <DashboardHeader title="Tasks" subtitle="Scheduled automation">
