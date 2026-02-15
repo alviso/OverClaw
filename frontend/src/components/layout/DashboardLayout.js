@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Bot, Zap, Brain, Calendar, Bell,
   Mail, Hash, Settings, ChevronLeft, ChevronRight,
-  Activity, MessageSquare, Shield, FolderCode,
+  Activity, MessageSquare, Shield, FolderCode, Users,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { id: "agents", label: "Agents", icon: Bot, path: "/admin/agents" },
   { id: "skills", label: "Skills", icon: Zap, path: "/admin/skills" },
   { id: "memory", label: "Memory", icon: Brain, path: "/admin/memory" },
+  { id: "relationships", label: "People", icon: Users, path: "/admin/people" },
   { id: "tasks", label: "Tasks", icon: Calendar, path: "/admin/tasks" },
   { id: "notifications", label: "Notifications", icon: Bell, path: "/admin/notifications" },
   { id: "gmail", label: "Gmail", icon: Mail, path: "/admin/gmail" },
