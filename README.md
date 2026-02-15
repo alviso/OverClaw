@@ -4,7 +4,7 @@
 
 # OverClaw
 
-A multi-agent work assistant built from the ground up, inspired by [OpenClaw](https://github.com/openclaw/openclaw)'s architecture. An orchestrator agent delegates tasks to specialist agents — each with their own tools, context, and capabilities — creating a system that can browse the web, manage email, write and deploy code, search memory, and integrate with Slack.
+An AI-powered workplace assistant that actually gets work done. OverClaw uses a multi-agent architecture — one orchestrator delegating to specialist agents — to handle the tasks that eat up your team's day: triaging email, researching competitors, drafting reports, building internal tools, and keeping Slack organized. Built for teams that want an always-on coworker, not another chatbot.
 
 ## Demo
 
