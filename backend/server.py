@@ -247,6 +247,19 @@ async def shutdown():
 
 
 # ── HTTP Endpoints ───────────────────────────────────────────────────────
+@api_router.get("/setup/status")
+async def setup_status():
+    from gateway.setup import get_setup_status
+    return await get_setup_status(db)
+
+
+@api_router.post("/setup/save")
+async def setup_save(request: Request):
+    from gateway.setup import save_setup
+    data = await request.json()
+    return await save_setup(db, data)
+
+
 @api_router.get("/health")
 async def http_health():
     snapshot = get_health_snapshot()
