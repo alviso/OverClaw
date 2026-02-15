@@ -205,6 +205,10 @@ export function SetupWizard({ onComplete }) {
             setSaving(false);
             return;
           }
+          // Store gateway token in localStorage for WebSocket auth
+          if (payload.gateway_token) {
+            localStorage.setItem("overclaw_gateway_token", payload.gateway_token);
+          }
         }
         setStepIndex(STEPS.length - 1); // Go to "done" step
       } catch (err) {
