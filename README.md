@@ -133,6 +133,9 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │   │   ├── auth.py                    # Token-based gateway authentication
 │   │   ├── config_schema.py           # Pydantic config model (validated, stored in MongoDB)
 │   │   ├── memory.py                  # Embedding-based long-term memory (RAG)
+│   │   ├── user_profile.py            # Passive user preference extraction
+│   │   ├── relationship_memory.py     # People/relationship discovery from conversations
+│   │   ├── setup.py                   # First-run setup wizard backend
 │   │   ├── methods.py                 # JSON-RPC method registry and handlers
 │   │   ├── notifications.py           # Notification manager (WebSocket + persistence)
 │   │   ├── protocol.py                # JSON-RPC 2.0 message helpers
