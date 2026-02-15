@@ -6,7 +6,7 @@ import { SessionSidebar } from "@/components/chat/SessionSidebar";
 import { Shield, Settings, PanelLeftClose, PanelLeft, Bell } from "lucide-react";
 
 export default function ChatPage() {
-  const { connected, authenticated, reconnecting, gatewayInfo, rpc, latestNotification } = useGatewayWs();
+  const { connected, authenticated, reconnecting, gatewayInfo, rpc, latestNotification, onEvent, offEvent } = useGatewayWs();
   const [currentSession, setCurrentSession] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hasUnread, setHasUnread] = useState(false);
