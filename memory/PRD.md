@@ -55,6 +55,14 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 - Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
 - Updated README.md with centered banner referencing local asset path
 
+## Completed (Feb 16, 2026) — User Profile (Passive Extraction)
+- New module: `gateway/user_profile.py` — passively extracts personal facts from user messages using Anthropic Claude Haiku (fire-and-forget, background task)
+- Facts stored in MongoDB `user_profiles` collection with upsert semantics (new facts merge, same keys update)
+- Profile context injected into orchestrator's system prompt before each turn
+- Categories: name, role, company, communication style, recurring events, projects, tools, timezone, people
+- Admin RPC method `profile.get` for debugging
+- No UI needed — fully automatic and seamless
+
 ## Completed (Feb 15, 2026) — Open Source Prep
 - Comprehensive README.md with motivation, architecture diagram, OpenClaw comparison table, setup instructions (Docker/macOS/manual), usage guide, security considerations
 - **Security audit**: removed `backend/.env` and `frontend/.env` from git tracking (contained real API keys); cleaned up `.gitignore` (removed duplicates, malformed entries); updated `.env.example` with all current vars
