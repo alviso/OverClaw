@@ -42,6 +42,8 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 | **Code & deploy** | Write projects, install deps, run them as managed processes with live preview |
 | **Self-extending** | Create new tools at runtime (Python code → registered tool) |
 | **Memory** | Long-term RAG with OpenAI embeddings, cosine similarity search |
+| **User profiling** | Passively learns your name, role, preferences, and communication style from conversations |
+| **Relationship map** | Automatically discovers people you mention and builds a network of names, roles, and context |
 | **Scheduled tasks** | Cron-like agent turns with change-detection notifications |
 | **Slack** | Socket Mode bidirectional messaging |
 | **Monitoring** | URL monitoring with screenshot diffing and alerting |
