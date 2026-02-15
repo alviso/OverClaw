@@ -350,6 +350,12 @@ class AgentRunner:
         if memory_context:
             system_prompt += memory_context
 
+        # Inject user profile into system prompt
+        from gateway.user_profile import build_profile_context
+        profile_context = await build_profile_context(self.db)
+        if profile_context:
+            system_prompt += profile_context
+
         provider, model_id, env_key = resolve_model(model_str)
         api_key = get_api_key(env_key)
 
