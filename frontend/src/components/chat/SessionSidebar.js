@@ -125,6 +125,9 @@ export function SessionSidebar({ rpc, authenticated, currentSession, onSelectSes
             const agent = agentMap[agentId];
             const agentName = agent?.name || agentId;
             const lastTime = timeAgo(s.last_active || s.created_at);
+            const parsed = parseSessionId(s.session_id);
+            const isSlack = parsed.type === "slack";
+            const displayName = isSlack ? parsed.label : s.session_id.replace("chat-", "").slice(0, 8);
 
             return (
               <div
@@ -140,15 +143,25 @@ export function SessionSidebar({ rpc, authenticated, currentSession, onSelectSes
                 {isActive && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-r bg-indigo-500" />
                 )}
-                <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-indigo-400" : "text-zinc-700"}`} />
+                {isSlack ? (
+                  <Hash className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-emerald-400" : "text-emerald-700"}`} />
+                ) : (
+                  <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-indigo-400" : "text-zinc-700"}`} />
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
                     <span className={`text-xs truncate ${isActive ? "text-zinc-100 font-medium" : "text-zinc-400"}`}>
-                      {s.session_id}
+                      {displayName}
                     </span>
                     <span className="text-[9px] text-zinc-700 flex-shrink-0 tabular-nums font-mono">{lastTime}</span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
+                    {isSlack && (
+                      <>
+                        <span className="text-[9px] text-emerald-600">Slack</span>
+                        <span className="text-[9px] text-zinc-800">|</span>
+                      </>
+                    )}
                     <span className="text-[9px] text-zinc-600">{agentName}</span>
                     <span className="text-[9px] text-zinc-800">|</span>
                     <span className="text-[9px] text-zinc-700">{s.messages} msgs</span>
