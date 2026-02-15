@@ -32,7 +32,7 @@ Categories to look for:
 
 RULES:
 - Only extract CLEAR, EXPLICIT facts — do not infer or guess.
-- If the message contains no personal facts, return exactly: {}
+- If the message contains no personal facts, return exactly an empty JSON object.
 - Keep values concise (under 20 words each).
 - Use snake_case keys that describe the fact.
 
