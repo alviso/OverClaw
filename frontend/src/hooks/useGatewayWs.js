@@ -12,7 +12,10 @@ function buildWsUrl() {
 }
 
 const WS_URL = buildWsUrl();
-const GATEWAY_TOKEN = "dev-token-change-me";
+
+function getGatewayToken() {
+  return localStorage.getItem("overclaw_gateway_token") || "dev-token-change-me";
+}
 
 export function useGatewayWs() {
   const [connected, setConnected] = useState(false);
