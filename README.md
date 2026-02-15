@@ -211,15 +211,18 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 
 ```bash
 git clone https://github.com/your-username/overclaw.git && cd overclaw
-
-# Configure API keys
-cp backend/.env.example backend/.env
-# Edit backend/.env — add OPENAI_API_KEY and ANTHROPIC_API_KEY
-
 docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The Dockerfile builds the React frontend, bundles it with nginx, and runs the FastAPI backend behind it.
+Open [http://localhost:3000](http://localhost:3000). On first launch, a **setup wizard** walks you through entering your API keys (Anthropic, OpenAI, gateway token). Keys are stored in the database and persist across container restarts — no need to edit `.env` files.
+
+Alternatively, you can pre-configure keys before building:
+
+```bash
+cp backend/.env.example backend/.env
+# Edit backend/.env with your keys
+docker compose up -d
+```
 
 ### Option 2: Local Development (macOS)
 
