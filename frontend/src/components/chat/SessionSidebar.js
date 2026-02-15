@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, MessageSquare, Trash2, Bot, ChevronDown } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Bot, ChevronDown, Hash } from "lucide-react";
 
 function timeAgo(isoString) {
   if (!isoString) return "";
@@ -15,6 +15,18 @@ function timeAgo(isoString) {
   } catch {
     return "";
   }
+}
+
+function parseSessionId(sessionId) {
+  if (sessionId.startsWith("slack:")) {
+    const parts = sessionId.split(":");
+    return {
+      type: "slack",
+      label: `#${parts[1]?.slice(-4) || "chan"}`,
+      sublabel: `Slack`,
+    };
+  }
+  return { type: "webchat", label: null, sublabel: null };
 }
 
 export function SessionSidebar({ rpc, authenticated, currentSession, onSelectSession, onNewSession }) {
