@@ -1,6 +1,6 @@
 anthropic>=0.40.0
 browser-use>=0.2.0
-dotenv-vault>=0.6.0
+python-dotenv>=1.0.0
 fastapi>=0.110.0
 google-api-python-client>=2.0.0
 google-auth-oauthlib>=1.0.0
