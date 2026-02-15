@@ -55,6 +55,16 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 - Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
 - Updated README.md with centered banner referencing local asset path
 
+## Completed (Feb 16, 2026) — Relationship Memory + README Review
+- New module: `gateway/relationship_memory.py` — passively extracts people (name, role, team, relationship, context) from conversations
+- Stores in MongoDB `relationships` collection with upsert semantics, keeps last 5 context notes per person
+- Relationship context injected into orchestrator system prompt alongside user profile and memories
+- New admin panel: `/admin/people` — "Discovered Relationships" view with cards grouped by relationship type (manager, report, peer, colleague, etc.)
+- Color-coded cards with mention counts, last-seen times, and latest context
+- Added `relationships.list` RPC method for the admin panel
+- Updated sidebar navigation with "People" entry (Users icon)
+- README updated: setup wizard mentions, user profiling & relationship map in capabilities table, People in admin dashboard table, new files in project structure, architecture diagram updated, env vars section clarified
+
 ## Completed (Feb 16, 2026) — Webchat/Slack Sync (P1) + Slack Regression Prep (P2)
 - Backend now broadcasts `chat.event` to all WebSocket clients when Slack messages arrive and when the agent responds to Slack
 - ChatView listens for `chat.event` via `onEvent`/`offEvent` and triggers immediate message refresh (no waiting for 2s poll)
