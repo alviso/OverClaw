@@ -1307,6 +1307,15 @@ async def handle_profile_get(params: dict, client, ctx: MethodContext) -> dict:
 
 
 
+@register_method("relationships.list")
+async def handle_relationships_list(params: dict, client, ctx: MethodContext) -> dict:
+    """Get all discovered relationships."""
+    from gateway.relationship_memory import get_relationships
+    people = await get_relationships(ctx.db)
+    return {"people": people}
+
+
+
 
 def cleanup_client_streams(client_id: str):
     """Cancel all stream subscriptions for a disconnected client."""
