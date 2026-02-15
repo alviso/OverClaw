@@ -300,6 +300,7 @@ The main interface. Type a message and the orchestrator decides how to handle it
 | **Workspace** | Project dashboard — see all agent-created projects, run/stop/preview them |
 | **Skills** | Inject custom instructions into agent prompts (like OpenClaw's skills) |
 | **Memory** | Browse long-term memory entries, search by similarity |
+| **People** | View discovered relationships — names, roles, teams, and context from conversations |
 | **Tasks** | Create scheduled agent tasks (e.g., "check this URL every 30s") |
 | **Notifications** | View alerts from scheduled tasks and monitors |
 | **Gmail** | Connect/disconnect Gmail OAuth |
