@@ -50,6 +50,10 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 ## Pending Issues
 - **P2**: Webchat not in sync with Slack conversations (session_id mismatch)
 
+## Completed (Feb 16, 2026) — Banner Image
+- Generated OverClaw banner image (red crayfish mascot, black background, bold OVER/CLAW typography) inspired by OpenClaw's banner style
+- Updated README.md with centered banner at the top
+
 ## Completed (Feb 15, 2026) — Open Source Prep
 - Comprehensive README.md with motivation, architecture diagram, OpenClaw comparison table, setup instructions (Docker/macOS/manual), usage guide, security considerations
 - **Security audit**: removed `backend/.env` and `frontend/.env` from git tracking (contained real API keys); cleaned up `.gitignore` (removed duplicates, malformed entries); updated `.env.example` with all current vars
