@@ -100,6 +100,10 @@ async def _extract_with_openai(db, user_message: str, api_key: str):
             }],
         )
         text = response.choices[0].message.content.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+            if text.endswith("```"):
+                text = text[:-3].strip()
         facts = json.loads(text)
 
         if not facts or not isinstance(facts, dict):
