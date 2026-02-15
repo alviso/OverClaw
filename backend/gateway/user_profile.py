@@ -91,7 +91,7 @@ async def _extract_with_openai(db, user_message: str, api_key: str):
             max_tokens=512,
             messages=[{
                 "role": "user",
-                "content": EXTRACTION_PROMPT.format(user_message=user_message),
+                "content": EXTRACTION_PROMPT.replace("{user_message}", user_message),
             }],
         )
         text = response.choices[0].message.content.strip()
