@@ -101,7 +101,8 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │  ┌──────────────────────────────────────────────────────────────┐ │
 │  │                     MongoDB                                   │ │
 │  │  sessions · chat_messages · agents · skills · memories ·      │ │
-│  │  tasks · notifications · gateway_config · gmail_tokens        │ │
+│  │  tasks · notifications · gateway_config · gmail_tokens ·     │ │
+│  │  user_profiles · relationships · setup_secrets               │ │
 │  └──────────────────────────────────────────────────────────────┘ │
 └───────────────────────────────────────────────────────────────────┘
 ```
