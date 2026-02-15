@@ -55,6 +55,13 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 - Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
 - Updated README.md with centered banner referencing local asset path
 
+## Completed (Feb 16, 2026) — Webchat/Slack Sync (P1) + Slack Regression Prep (P2)
+- Backend now broadcasts `chat.event` to all WebSocket clients when Slack messages arrive and when the agent responds to Slack
+- ChatView listens for `chat.event` via `onEvent`/`offEvent` and triggers immediate message refresh (no waiting for 2s poll)
+- SessionSidebar distinguishes Slack sessions from webchat sessions: green `#` icon + "Slack" label vs blue chat icon
+- Slack session IDs parsed for friendly display (channel suffix instead of raw `slack:C06ABCD:U01XYZ`)
+- Cross-channel viewing works: clicking a Slack session in webchat shows full conversation history
+
 ## Completed (Feb 16, 2026) — Onboarding Setup Wizard
 - Web-based setup wizard shown on first launch when API keys are missing or placeholder
 - Multi-step flow: Welcome → LLM Keys (Anthropic/OpenAI) → Gateway Security Token → Optional Integrations (Gmail, Slack)
