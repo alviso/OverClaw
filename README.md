@@ -98,6 +98,11 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │  │          │  │          │  │           │  │  reverse proxy) │  │
 │  └──────────┘  └──────────┘  └───────────┘  └────────────────┘  │
 │                                                                   │
+│  ┌────────────────────┐  ┌────────────────────────────────────┐  │
+│  │  User Profile       │  │  Relationship Memory               │  │
+│  │  (passive learning) │  │  (people discovery from chat)      │  │
+│  └────────────────────┘  └────────────────────────────────────┘  │
+│                                                                   │
 │  ┌──────────────────────────────────────────────────────────────┐ │
 │  │                     MongoDB                                   │ │
 │  │  sessions · chat_messages · agents · skills · memories ·      │ │
