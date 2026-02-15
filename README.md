@@ -171,11 +171,13 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │       ├── hooks/useGatewayWs.js      # WebSocket hook (connect, auth, rpc, reconnect)
 │       ├── pages/ChatPage.js          # Chat interface
 │       └── components/
-│           ├── chat/                  # ChatView, SessionSidebar
-│           ├── dashboard/             # All admin panels (15 components)
+│           ├── chat/                  # ChatView, SessionSidebar (cross-channel sync)
+│           ├── setup/                 # First-run onboarding wizard
+│           ├── dashboard/             # All admin panels
 │           │   ├── WorkspacePanel.js  # Project dashboard (mini-Heroku)
 │           │   ├── AgentManager.js    # Agent CRUD
 │           │   ├── MemoryPanel.js     # Memory browser
+│           │   ├── RelationshipsPanel.js # Discovered people view
 │           │   └── ...
 │           └── layout/                # DashboardLayout (sidebar + header)
 │
