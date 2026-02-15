@@ -146,7 +146,7 @@ async def handle_chat_send(params: dict, client, ctx: MethodContext) -> dict:
     streams chat.event messages back, then returns full response.
     """
     session_id = params.get("session_id", "main")
-    text = params.get("text", "").strip()
+    text = (params.get("text") or params.get("message") or "").strip()
     agent_id = params.get("agent_id")  # Optional: explicit agent override
     if not text:
         return {"error": "text is required"}
