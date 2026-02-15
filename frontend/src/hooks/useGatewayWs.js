@@ -74,7 +74,7 @@ export function useGatewayWs() {
                 jsonrpc: "2.0",
                 id: authId,
                 method: "connect",
-                params: { token: GATEWAY_TOKEN, client_type: "dashboard" },
+                params: { token: getGatewayToken(), client_type: "dashboard" },
               }));
               pendingRef.current[authId] = {
                 resolve: (result) => {
