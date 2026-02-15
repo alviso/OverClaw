@@ -70,15 +70,12 @@ async def extract_profile_facts(db, user_message: str):
         )
 
         text = response.content[0].text.strip()
+        # Strip markdown code fences if present
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+            if text.endswith("```"):
+                text = text[:-3].strip()
         facts = json.loads(text)
-
-        if not facts or not isinstance(facts, dict):
-            return
-
-        await _upsert_facts(db, facts)
-
-    except (json.JSONDecodeError, Exception) as e:
-        logger.debug(f"Profile extraction skipped: {e}")
 
 
 async def _extract_with_openai(db, user_message: str, api_key: str):
