@@ -1299,6 +1299,15 @@ async def handle_process_unsubscribe(params: dict, client, ctx: MethodContext) -
     return {"ok": True, "message": "No active subscription"}
 
 
+@register_method("profile.get")
+async def handle_profile_get(params: dict, client, ctx: MethodContext) -> dict:
+    """Get the accumulated user profile."""
+    from gateway.user_profile import get_profile
+    return await get_profile(ctx.db)
+
+
+
+
 def cleanup_client_streams(client_id: str):
     """Cancel all stream subscriptions for a disconnected client."""
     to_remove = [k for k in _stream_tasks if k.startswith(f"{client_id}:")]
