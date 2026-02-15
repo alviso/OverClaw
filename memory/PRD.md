@@ -52,7 +52,8 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 
 ## Completed (Feb 16, 2026) — Banner Image
 - Generated OverClaw banner image (red crayfish mascot, black background, bold OVER/CLAW typography) inspired by OpenClaw's banner style
-- Updated README.md with centered banner at the top
+- Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
+- Updated README.md with centered banner referencing local asset path
 
 ## Completed (Feb 15, 2026) — Open Source Prep
 - Comprehensive README.md with motivation, architecture diagram, OpenClaw comparison table, setup instructions (Docker/macOS/manual), usage guide, security considerations
