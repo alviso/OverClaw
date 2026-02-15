@@ -79,6 +79,10 @@ async def startup():
     global gateway_config
     logger.info("Gateway starting...")
 
+    # Load any DB-stored secrets into environment (from previous wizard setup)
+    from gateway.setup import load_secrets_to_env
+    await load_secrets_to_env(db)
+
     # Load config from MongoDB (or create default)
     stored = await db.gateway_config.find_one({"_id": "main"}, {"_id": 0})
     if stored:
