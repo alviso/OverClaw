@@ -147,7 +147,7 @@ function TypingIndicator() {
   );
 }
 
-export function ChatView({ rpc, authenticated, sessionId, connected }) {
+export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, offEvent }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
