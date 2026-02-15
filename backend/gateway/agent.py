@@ -365,6 +365,12 @@ class AgentRunner:
         if profile_context:
             system_prompt += profile_context
 
+        # Inject discovered relationships into system prompt
+        from gateway.relationship_memory import build_relationships_context
+        relationships_context = await build_relationships_context(self.db)
+        if relationships_context:
+            system_prompt += relationships_context
+
         provider, model_id, env_key = resolve_model(model_str)
         api_key = get_api_key(env_key)
 
