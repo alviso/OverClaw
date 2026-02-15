@@ -411,6 +411,11 @@ class AgentRunner:
                 _safe_extract_memories(self.db, session_id, agent_id, user_text, response_text)
             )
 
+            # Extract user profile facts (fire-and-forget)
+            asyncio.create_task(
+                _safe_extract_profile(self.db, user_text)
+            )
+
             logger.info(f"Agent turn complete: session={session_id} agent={agent_id} tools={len(tool_calls)} response_len={len(response_text)}")
             return response_text, tool_calls
 
