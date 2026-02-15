@@ -55,6 +55,16 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 - Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
 - Updated README.md with centered banner referencing local asset path
 
+## Completed (Feb 16, 2026) — Onboarding Setup Wizard
+- Web-based setup wizard shown on first launch when API keys are missing or placeholder
+- Multi-step flow: Welcome → LLM Keys (Anthropic/OpenAI) → Gateway Security Token → Optional Integrations (Gmail, Slack)
+- Each field has clear descriptions explaining what it is and why it's needed, with links to provider dashboards
+- Keys stored in MongoDB `setup_secrets` collection (persists across Docker container restarts)
+- Keys loaded into `os.environ` at startup via `load_secrets_to_env()` for immediate effect
+- Gateway token saved to localStorage for WebSocket auth; page reloads after wizard completes
+- Backend endpoints: `GET /api/setup/status`, `POST /api/setup/save`
+- New files: `backend/gateway/setup.py`, `frontend/src/components/setup/SetupWizard.js`
+
 ## Completed (Feb 16, 2026) — User Profile (Passive Extraction)
 - New module: `gateway/user_profile.py` — passively extracts personal facts from user messages using Anthropic Claude Haiku (fire-and-forget, background task)
 - Facts stored in MongoDB `user_profiles` collection with upsert semantics (new facts merge, same keys update)
