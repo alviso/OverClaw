@@ -200,6 +200,16 @@ async def startup():
                 )
                 return "Chat history cleared. Starting fresh!"
 
+            # Broadcast to webchat: user message arrived from Slack
+            await ws_manager.broadcast(event_message("chat.event", {
+                "session_id": session_id,
+                "type": "slack.message",
+                "role": "user",
+                "text": text[:200],
+                "channel": channel,
+                "user": user,
+            }))
+
             async def on_tool_call(tool_name, tool_args, status):
                 if status == "executing":
                     preview = tool_preview(tool_name, tool_args)
@@ -215,6 +225,16 @@ async def startup():
                 session_id, text, on_tool_call=on_tool_call
             )
             add_activity("slack.message", f"Slack [{user[:8]}]: {text[:40]}... -> {len(tool_calls)} tools")
+
+            # Broadcast to webchat: agent response for Slack session
+            await ws_manager.broadcast(event_message("chat.event", {
+                "session_id": session_id,
+                "type": "slack.response",
+                "role": "assistant",
+                "text": response[:500],
+                "tool_calls_count": len(tool_calls),
+            }))
+
             return response
 
         slack.set_message_handler(handle_slack_message)
