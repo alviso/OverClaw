@@ -272,15 +272,19 @@ yarn install && yarn start
 
 ### Environment Variables
 
+All keys can be entered via the **setup wizard** on first launch, or pre-configured in `backend/.env`:
+
 | Variable | Required | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | Yes | OpenAI API key (GPT-4o for agents, embeddings for memory) |
+| `OPENAI_API_KEY` | Yes* | OpenAI API key (GPT-4o for agents, embeddings for memory) |
 | `ANTHROPIC_API_KEY` | No | Anthropic API key (enables Claude model selection) |
 | `MONGO_URL` | Yes | MongoDB connection string |
 | `DB_NAME` | Yes | Database name (default: `overclaw`) |
-| `GATEWAY_TOKEN` | No | Auth token for WebSocket connections (open if unset) |
+| `GATEWAY_TOKEN` | Recommended | Auth token for WebSocket connections (open if unset) |
 | `GOOGLE_CLIENT_ID` | No | For Gmail OAuth integration |
 | `GOOGLE_CLIENT_SECRET` | No | For Gmail OAuth integration |
+
+*At least one of `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is required. The setup wizard will prompt for these on first run if not set in `.env`.
 
 Slack tokens are configured via the dashboard wizard at `/admin/slack` — not in `.env`.
 
