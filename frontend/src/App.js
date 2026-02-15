@@ -195,6 +195,28 @@ function AdminOverview({ health, config, sessions, channels, activity, rpc, auth
 }
 
 function App() {
+  const [setupNeeded, setSetupNeeded] = useState(null); // null = loading, true/false
+
+  useEffect(() => {
+    fetch(`${API}/api/setup/status`)
+      .then((r) => r.json())
+      .then((data) => setSetupNeeded(data.needs_setup))
+      .catch(() => setSetupNeeded(false)); // If backend is down, don't block with wizard
+  }, []);
+
+  if (setupNeeded === null) {
+    // Loading state
+    return (
+      <div className="h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-zinc-700 border-t-red-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (setupNeeded) {
+    return <SetupWizard onComplete={() => setSetupNeeded(false)} />;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
