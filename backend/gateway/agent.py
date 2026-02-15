@@ -40,6 +40,15 @@ async def _safe_extract_profile(db, user_text):
         logger.debug(f"Profile extraction failed: {e}")
 
 
+async def _safe_extract_relationships(db, user_text):
+    """Fire-and-forget wrapper for relationship extraction."""
+    try:
+        from gateway.relationship_memory import extract_relationships
+        await extract_relationships(db, user_text)
+    except Exception as e:
+        logger.debug(f"Relationship extraction failed: {e}")
+
+
 # ── Provider mapping ─────────────────────────────────────────────────────
 PROVIDER_MAP = {
     "openai/gpt-4o": ("openai", "gpt-4o", "OPENAI_API_KEY"),
