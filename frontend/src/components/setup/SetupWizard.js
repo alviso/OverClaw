@@ -332,7 +332,7 @@ export function SetupWizard({ onComplete }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail size={14} className="text-zinc-600" />
-                  <span className="text-zinc-500">Gmail & Slack</span>
+                  <span className="text-zinc-500">Gmail, Outlook & Slack</span>
                   <span className="text-zinc-600">— optional, can be added later</span>
                 </div>
               </div>
