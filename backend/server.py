@@ -126,12 +126,16 @@ async def startup():
     from gateway.tools.monitor import set_monitor_db
     from gateway.tools.gmail import set_gmail_db
     from gateway.gmail import set_gmail_db_ref
+    from gateway.tools.outlook import set_outlook_db
+    from gateway.outlook import set_outlook_db_ref
     from gateway.tools.create_tool import set_create_tool_db, load_persisted_tools
 
     set_memory_db(db)
     set_monitor_db(db)
     set_gmail_db(db)
     set_gmail_db_ref(db)
+    set_outlook_db(db)
+    set_outlook_db_ref(db)
     set_create_tool_db(db)
     await load_persisted_tools()
 
