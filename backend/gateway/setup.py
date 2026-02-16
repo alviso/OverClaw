@@ -29,7 +29,7 @@ SETUP_FIELDS = {
     },
     "gateway_token": {
         "env_var": "GATEWAY_TOKEN",
-        "required": True,
+        "required": False,
         "label": "Gateway Token",
     },
     "google_client_id": {
