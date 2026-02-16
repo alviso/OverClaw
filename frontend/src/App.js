@@ -21,6 +21,7 @@ import { GmailPanel } from "@/components/dashboard/GmailPanel";
 import { WorkspacePanel } from "@/components/dashboard/WorkspacePanel";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 import { RelationshipsPanel } from "@/components/dashboard/RelationshipsPanel";
+import { OutlookPanel } from "@/components/dashboard/OutlookPanel";
 import ChatPage from "@/pages/ChatPage";
 
 const API = process.env.REACT_APP_BACKEND_URL || "";
