@@ -112,11 +112,8 @@ async def get_setup_status(db) -> dict:
         if field_id in ("openai_api_key", "anthropic_api_key") and is_set:
             has_any_llm = True
 
-    # Setup is needed if: no LLM key at all, or gateway token is placeholder
+    # Setup is needed only if no LLM key is configured at all
     if not has_any_llm:
-        needs_setup = True
-    gateway_set = fields.get("gateway_token", {}).get("is_set", False)
-    if not gateway_set:
         needs_setup = True
 
     return {
