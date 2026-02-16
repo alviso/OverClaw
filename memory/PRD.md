@@ -55,6 +55,16 @@ Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) wit
 - Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
 - Updated README.md with centered banner referencing local asset path
 
+## Completed (Feb 16, 2026) — Outlook Integration + Relationship Memory + README
+- **Outlook Integration**: Full OAuth 2.0 flow via Microsoft Graph API (MSAL + httpx)
+  - OAuth routes: `/api/oauth/outlook/login`, `/callback`, `/status`, `/disconnect`
+  - Agent tool: `outlook` with list, search, read, send actions (mirrors Gmail tool)
+  - Admin panel: OutlookPanel component on the Email page (alongside Gmail)
+  - Setup wizard: Azure Client ID, Client Secret, Tenant ID fields added to optional step
+  - New files: `gateway/outlook.py`, `gateway/tools/outlook.py`, `OutlookPanel.js`
+- **Relationship Memory**: Passive people discovery from conversations (see previous entry)
+- **README**: Updated with Outlook, setup wizard, user profiling, relationships, architecture diagram
+
 ## Completed (Feb 16, 2026) — Relationship Memory + README Review
 - New module: `gateway/relationship_memory.py` — passively extracts people (name, role, team, relationship, context) from conversations
 - Stores in MongoDB `relationships` collection with upsert semantics, keeps last 5 context notes per person
