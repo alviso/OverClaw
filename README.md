@@ -162,6 +162,7 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │   │       ├── execute_command.py      # Shell command execution
 │   │       ├── file_ops.py            # Read/write/list/patch files
 │   │       ├── gmail.py               # Gmail search/read tool
+│   │       ├── outlook.py            # Outlook search/read tool
 │   │       ├── http_request.py        # Generic HTTP client tool
 │   │       ├── memory_search.py       # Memory query tool
 │   │       ├── monitor.py             # URL monitoring with screenshot diffing
