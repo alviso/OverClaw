@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { id: "relationships", label: "People", icon: Users, path: "/admin/people" },
   { id: "tasks", label: "Tasks", icon: Calendar, path: "/admin/tasks" },
   { id: "notifications", label: "Notifications", icon: Bell, path: "/admin/notifications" },
-  { id: "gmail", label: "Gmail", icon: Mail, path: "/admin/gmail" },
+  { id: "gmail", label: "Email", icon: Mail, path: "/admin/gmail" },
   { id: "slack", label: "Slack", icon: Hash, path: "/admin/slack" },
   { id: "config", label: "Config", icon: Settings, path: "/admin/config" },
 ];
