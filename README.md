@@ -37,7 +37,7 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 | Capability | How |
 |---|---|
 | **Web browsing** | Playwright-powered interactive browser (navigate, click, fill forms, screenshot) |
-| **Email** | Gmail OAuth integration — search, read, summarize threads |
+| **Email** | Gmail and Outlook (Microsoft 365) — search, read, summarize, send via OAuth 2.0 |
 | **Research** | Web search + page scraping + HTTP requests |
 | **Code & deploy** | Write projects, install deps, run them as managed processes with live preview |
 | **Self-extending** | Create new tools at runtime (Python code → registered tool) |
