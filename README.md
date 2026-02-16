@@ -290,6 +290,9 @@ All keys can be entered via the **setup wizard** on first launch, or pre-configu
 | `GATEWAY_TOKEN` | Recommended | Auth token for WebSocket connections (open if unset) |
 | `GOOGLE_CLIENT_ID` | No | For Gmail OAuth integration |
 | `GOOGLE_CLIENT_SECRET` | No | For Gmail OAuth integration |
+| `AZURE_CLIENT_ID` | No | For Outlook/Teams OAuth integration (Azure AD App Registration) |
+| `AZURE_CLIENT_SECRET` | No | For Outlook/Teams OAuth integration |
+| `AZURE_TENANT_ID` | No | Azure AD tenant ID (default: `common` for any Microsoft account) |
 
 *At least one of `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is required. The setup wizard will prompt for these on first run if not set in `.env`.
 
