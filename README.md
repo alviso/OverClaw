@@ -150,6 +150,7 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │   │   ├── skills.py                  # Skill injection into agent prompts
 │   │   ├── ws_manager.py              # WebSocket connection tracking
 │   │   ├── gmail.py                   # Gmail OAuth flow + API wrapper
+│   │   ├── outlook.py                 # Outlook/M365 OAuth flow + Graph API wrapper
 │   │   ├── channels/
 │   │   │   └── slack_channel.py       # Slack Socket Mode adapter
 │   │   └── tools/
