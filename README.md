@@ -58,7 +58,7 @@ The result is a ~5k LOC Python/React application that covers the same architectu
 │  ┌───────────┐  ┌──────────────────────────────────────────────┐ │
 │  │  WebChat   │  │           Admin Dashboard                    │ │
 │  │  (/, /chat)│  │  /admin: Overview · Agents · Workspace ·    │ │
-│  │            │  │  Skills · Memory · Tasks · Gmail · Slack     │ │
+│  │            │  │  Skills · Memory · Tasks · Email · Slack     │ │
 │  └─────┬─────┘  └──────────────────┬───────────────────────────┘ │
 │        │       WebSocket JSON-RPC  │                             │
 └────────┼───────────────────────────┼─────────────────────────────┘
