@@ -52,6 +52,21 @@ SETUP_FIELDS = {
         "required": False,
         "label": "Slack App Token",
     },
+    "azure_client_id": {
+        "env_var": "AZURE_CLIENT_ID",
+        "required": False,
+        "label": "Azure Client ID",
+    },
+    "azure_client_secret": {
+        "env_var": "AZURE_CLIENT_SECRET",
+        "required": False,
+        "label": "Azure Client Secret",
+    },
+    "azure_tenant_id": {
+        "env_var": "AZURE_TENANT_ID",
+        "required": False,
+        "label": "Azure Tenant ID",
+    },
 }
 
 
