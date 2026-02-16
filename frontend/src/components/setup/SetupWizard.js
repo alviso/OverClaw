@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, ChevronRight, ChevronLeft, Check, Loader2, KeyRound, Shield, Mail, MessageSquare, Sparkles } from "lucide-react";
+import { Eye, EyeOff, ChevronRight, ChevronLeft, Check, Loader2, KeyRound, Shield, Mail, MessageSquare, Sparkles, Building2 } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL || "";
 
