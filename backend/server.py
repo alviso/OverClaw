@@ -411,6 +411,57 @@ async def gmail_disconnect(user_id: str = "default"):
     return {"ok": False, "message": "No Gmail connection found"}
 
 
+# ── Outlook OAuth ─────────────────────────────────────────────────────────
+@api_router.get("/oauth/outlook/login")
+async def outlook_oauth_login(user_id: str = "default"):
+    try:
+        from gateway.outlook import create_auth_url
+        url = create_auth_url(user_id)
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(url=url)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+
+
+@api_router.get("/oauth/outlook/callback")
+async def outlook_oauth_callback(request: Request, code: str = None, state: str = None, error: str = None):
+    if error:
+        return HTMLResponse(
+            content=f"<html><body><h2>Outlook Authorization Failed</h2><p>{error}</p>"
+                    f"<script>setTimeout(()=>window.close(),3000)</script></body></html>",
+            status_code=400,
+        )
+    if not code or not state:
+        return HTMLResponse(content="<html><body><h2>Missing authorization code</h2></body></html>", status_code=400)
+    try:
+        from gateway.outlook import handle_callback
+        full_url = str(request.url)
+        result = await handle_callback(code, state, full_url, db)
+        email = result.get("email", "connected")
+        return HTMLResponse(
+            content=f"<html><body style='font-family:system-ui;text-align:center;padding:60px'>"
+                    f"<h2>Outlook Connected!</h2><p>Connected: <b>{email}</b></p>"
+                    f"<script>setTimeout(()=>window.close(),3000)</script></body></html>",
+        )
+    except Exception as e:
+        logger.exception("Outlook OAuth callback failed")
+        return HTMLResponse(content=f"<html><body><h2>Error</h2><p>{str(e)}</p></body></html>", status_code=500)
+
+
+@api_router.get("/oauth/outlook/status")
+async def outlook_status(user_id: str = "default"):
+    from gateway.outlook import get_outlook_status
+    return await get_outlook_status(db, user_id)
+
+
+@api_router.post("/oauth/outlook/disconnect")
+async def outlook_disconnect(user_id: str = "default"):
+    result = await db.outlook_tokens.delete_one({"user_id": user_id})
+    if result.deleted_count > 0:
+        return {"ok": True, "message": "Outlook disconnected"}
+    return {"ok": False, "message": "No Outlook connection found"}
+
+
 # ── WebSocket Gateway ────────────────────────────────────────────────────
 @api_router.websocket("/gateway")
 async def websocket_gateway(ws: WebSocket):
