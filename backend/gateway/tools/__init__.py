@@ -95,6 +95,7 @@ def init_tools():
     from gateway.tools import vision, audio_transcribe, document_parse  # noqa: F401
     from gateway.tools import monitor  # noqa: F401
     from gateway.tools import gmail  # noqa: F401
+    from gateway.tools import outlook  # noqa: F401
     from gateway.tools import delegate  # noqa: F401
     from gateway.tools import developer_tools  # noqa: F401
     from gateway.tools import create_tool  # noqa: F401
