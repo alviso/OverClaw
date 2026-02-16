@@ -149,6 +149,11 @@ class GmailTool(Tool):
         if "error" in email:
             return email["error"]
 
+        # Index email into RAG + feed extractors (fire-and-forget)
+        from gateway.email_memory import store_email_memory
+        import asyncio
+        asyncio.create_task(store_email_memory(_db, email, source="email/gmail"))
+
         return (
             f"Subject: {email['subject']}\n"
             f"From: {email['from']}\n"
