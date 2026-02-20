@@ -145,6 +145,34 @@ async def import_brain(db, brain_data: dict) -> dict:
                     await coll.insert_one(doc)
                     imported += 1
 
+            elif collection_name == "tasks":
+                # Upsert by task id
+                task_id = doc.get("id", "")
+                if not task_id:
+                    skipped += 1
+                    continue
+                existing = await coll.find_one({"id": task_id})
+                if existing:
+                    skipped += 1  # don't overwrite existing task config
+                else:
+                    doc.pop("running", None)  # reset runtime state
+                    doc.pop("last_run", None)
+                    await coll.insert_one(doc)
+                    imported += 1
+
+            elif collection_name == "chat_messages":
+                # Dedupe by session_id + timestamp + role
+                existing = await coll.find_one({
+                    "session_id": doc.get("session_id"),
+                    "timestamp": doc.get("timestamp"),
+                    "role": doc.get("role"),
+                })
+                if existing:
+                    skipped += 1
+                else:
+                    await coll.insert_one(doc)
+                    imported += 1
+
         results[collection_name] = {"imported": imported, "skipped": skipped}
 
     logger.info(f"Brain imported: {results}")
