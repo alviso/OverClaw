@@ -355,9 +355,39 @@ class AgentRunner:
         system_prompt = base_prompt + (skills_prompt or "")
 
         # Inject current time so the agent can reason about time
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
-        system_prompt += f"\n\n## Current Time\nIt is currently {now.strftime('%A, %B %d, %Y at %I:%M %p')} UTC."
+        from datetime import datetime, timezone as tz
+        import zoneinfo
+        # Try to use user's timezone from profile
+        user_tz_name = None
+        try:
+            profile = await self.db.user_profiles.find_one({"profile_id": "default"}, {"facts.timezone": 1})
+            tz_val = (profile or {}).get("facts", {}).get("timezone", {})
+            if isinstance(tz_val, dict):
+                tz_val = tz_val.get("value", "")
+            if tz_val:
+                # Map common names to IANA
+                tz_map = {
+                    "pacific": "US/Pacific", "pacific time": "US/Pacific", "pst": "US/Pacific", "pdt": "US/Pacific",
+                    "eastern": "US/Eastern", "eastern time": "US/Eastern", "est": "US/Eastern", "edt": "US/Eastern",
+                    "central": "US/Central", "central time": "US/Central", "cst": "US/Central", "cdt": "US/Central",
+                    "mountain": "US/Mountain", "mountain time": "US/Mountain", "mst": "US/Mountain",
+                    "cet": "Europe/Berlin", "cest": "Europe/Berlin",
+                }
+                user_tz_name = tz_map.get(tz_val.lower(), tz_val)
+        except Exception:
+            pass
+
+        if user_tz_name:
+            try:
+                user_tz = zoneinfo.ZoneInfo(user_tz_name)
+                now_local = datetime.now(user_tz)
+                system_prompt += f"\n\n## Current Time\nIt is currently {now_local.strftime('%A, %B %d, %Y at %I:%M %p')} {user_tz_name}."
+            except Exception:
+                now_utc = datetime.now(tz.utc)
+                system_prompt += f"\n\n## Current Time\nIt is currently {now_utc.strftime('%A, %B %d, %Y at %I:%M %p')} UTC."
+        else:
+            now_utc = datetime.now(tz.utc)
+            system_prompt += f"\n\n## Current Time\nIt is currently {now_utc.strftime('%A, %B %d, %Y at %I:%M %p')} UTC."
 
         # Inject relevant memories into system prompt
         memory_context = await build_memory_context(self.db, user_text, agent_id, max_results=3)
