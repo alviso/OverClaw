@@ -199,14 +199,7 @@ export function TasksPanel({ rpc, authenticated }) {
                 {(taskHistory[task.id] || []).length === 0 ? (
                   <div className="text-[11px] text-zinc-600 py-2">No execution history yet</div>
                 ) : (taskHistory[task.id] || []).map((h, i) => (
-                  <div key={i} className="bg-zinc-800/40 rounded-lg px-3 py-2 text-[11px]">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-1.5 h-1.5 rounded-full ${h.status === "success" ? "bg-emerald-400" : "bg-rose-400"}`} />
-                      <span className="text-zinc-400">{new Date(h.timestamp).toLocaleString()}</span>
-                      <span className="text-zinc-600">{h.tool_calls_count} tools</span>
-                    </div>
-                    <div className="text-zinc-500 mt-1 line-clamp-2">{h.response?.slice(0, 150)}</div>
-                  </div>
+                  <HistoryEntry key={i} h={h} />
                 ))}
               </div>
             )}
