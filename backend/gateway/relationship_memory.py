@@ -80,9 +80,23 @@ async def _upsert_people(db, people: list):
         doc = await db[coll_name].find_one({"user_id": "default"}, {"email": 1})
         if doc and doc.get("email"):
             user_emails.add(doc["email"].lower())
-    # Also get name from user profile
+    # Also get name from user profile — check multiple fact keys
     profile = await db.user_profiles.find_one({"profile_id": "default"}, {"facts": 1})
-    user_name = (profile or {}).get("facts", {}).get("name", "").lower()
+    facts = (profile or {}).get("facts", {})
+    user_names = set()
+    for key in ("full_name", "preferred_name", "name", "last_name"):
+        val = facts.get(key, {})
+        if isinstance(val, dict):
+            val = val.get("value", "")
+        if val:
+            user_names.add(val.lower())
+    # Also add email-derived name
+    if facts.get("email_address"):
+        ea = facts["email_address"]
+        if isinstance(ea, dict):
+            ea = ea.get("value", "")
+        if ea:
+            user_emails.add(ea.lower())
 
     for person in people:
         if not isinstance(person, dict):
