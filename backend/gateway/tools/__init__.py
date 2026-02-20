@@ -100,4 +100,5 @@ def init_tools():
     from gateway.tools import developer_tools  # noqa: F401
     from gateway.tools import create_tool  # noqa: F401
     from gateway.tools import process_manager  # noqa: F401
+    from gateway.tools import slack_notify  # noqa: F401
     logger.info(f"Tools initialized: {len(_tools)} tools available")
