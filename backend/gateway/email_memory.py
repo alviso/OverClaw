@@ -109,6 +109,9 @@ def _pick_best_name(existing_name: str, new_name: str) -> str:
     if len(parts_new) == len(parts_existing) and len(clean_new) > len(clean_existing):
         return new_name
     return existing_name
+
+
+def _is_user_sent(email: dict, user_email: str) -> bool:
     """Check if this email was sent BY the user (they responded/initiated)."""
     if not user_email:
         return False
