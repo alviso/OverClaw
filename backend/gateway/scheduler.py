@@ -96,19 +96,12 @@ class TaskScheduler:
         prompt = task.get("prompt", "")
 
         # Keep task session lean — clear old messages before each run
-        # The task uses memory_search for recall, not chat history
         await self.db.chat_messages.delete_many({"session_id": session_id})
-
-        # For email-triage: inject already-processed email IDs to prevent re-notification
-        effective_prompt = prompt
-        seen_ids = await self.db.processed_emails.distinct("message_id", {"task_id": task_id})
-        if seen_ids:
-            effective_prompt += f"\n\nALREADY PROCESSED GMAIL MESSAGE IDs — do NOT re-read or notify about these:\n{', '.join(seen_ids[-100:])}"
 
         try:
             response, tool_calls = await self.agent_runner.run_turn(
                 session_id=session_id,
-                user_text=effective_prompt,
+                user_text=prompt,
                 agent_id=agent_id,
             )
 
