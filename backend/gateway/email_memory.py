@@ -14,7 +14,8 @@ from datetime import datetime, timezone
 logger = logging.getLogger("gateway.email_memory")
 
 # Regex to parse "Display Name <email@domain.com>" or plain "email@domain.com"
-_EMAIL_PATTERN = re.compile(r'(?:"?([^"<]*)"?\s*)?<?([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>?')
+_ADDR_WITH_NAME = re.compile(r'"?([^"<,]+?)"?\s*<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>')
+_ADDR_PLAIN = re.compile(r'(?<![<\w.%+\-])([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})(?!>)')
 
 
 def _parse_email_addresses(header: str) -> list[dict]:
@@ -22,12 +23,24 @@ def _parse_email_addresses(header: str) -> list[dict]:
     if not header:
         return []
     results = []
-    for match in _EMAIL_PATTERN.finditer(header):
-        name = (match.group(1) or "").strip().strip('"').strip()
+    seen = set()
+
+    # First pass: "Name <email>" format
+    for match in _ADDR_WITH_NAME.finditer(header):
+        name = match.group(1).strip().strip('"').strip()
         email = match.group(2).strip().lower()
-        if not name:
+        if email not in seen:
+            seen.add(email)
+            results.append({"name": name, "email": email})
+
+    # Second pass: plain email addresses not already captured
+    for match in _ADDR_PLAIN.finditer(header):
+        email = match.group(1).strip().lower()
+        if email not in seen:
+            seen.add(email)
             name = email.split("@")[0].replace(".", " ").title()
-        results.append({"name": name, "email": email})
+            results.append({"name": name, "email": email})
+
     return results
 
 
