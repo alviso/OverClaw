@@ -23,6 +23,7 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 import { RelationshipsPanel } from "@/components/dashboard/RelationshipsPanel";
 import { OutlookPanel } from "@/components/dashboard/OutlookPanel";
 import { BrainPanel } from "@/components/dashboard/BrainPanel";
+import { CredentialsEditor } from "@/components/dashboard/CredentialsEditor";
 import ChatPage from "@/pages/ChatPage";
 
 const API = process.env.REACT_APP_BACKEND_URL || "";
@@ -171,11 +172,12 @@ function AdminLayout() {
           } />
           <Route path="/config" element={
             <>
-              <DashboardHeader title="Configuration" subtitle="Gateway settings">
+              <DashboardHeader title="Configuration" subtitle="Gateway settings & credentials">
                 <ModelSelector rpc={rpc} authenticated={authenticated} />
                 <ConnectionIndicator connected={connected} authenticated={authenticated} reconnecting={reconnecting} />
               </DashboardHeader>
-              <main className="flex-1 overflow-y-auto p-6">
+              <main className="flex-1 overflow-y-auto p-6 space-y-6">
+                <CredentialsEditor />
                 <ConfigViewer config={config} />
               </main>
             </>
