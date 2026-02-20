@@ -91,6 +91,13 @@ async def _upsert_people(db, people: list):
         if not name or len(name) < 2:
             continue
 
+        # Skip the user themselves
+        name_lower = name.lower()
+        if user_name and (name_lower == user_name or name_lower in user_name or user_name in name_lower):
+            continue
+        if any(email in name_lower for email in user_emails):
+            continue
+
         name_key = _normalize_name(name).replace(" ", "")
 
         # 1) Try exact name_key match
