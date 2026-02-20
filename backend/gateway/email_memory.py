@@ -85,10 +85,10 @@ def _names_match(name_a: str, name_b: str) -> bool:
     if tokens_a.issubset(tokens_b) or tokens_b.issubset(tokens_a):
         return True
 
-    # Significant overlap: at least one token matches and it's a "real" name token (>2 chars)
+    # Significant overlap: overlap must cover majority of the smaller name
     overlap = tokens_a & tokens_b
-    meaningful_overlap = {t for t in overlap if len(t) > 2}
-    if meaningful_overlap:
+    smaller = min(len(tokens_a), len(tokens_b))
+    if smaller > 0 and len(overlap) / smaller >= 0.6:
         return True
 
     return False
