@@ -190,28 +190,42 @@ async def _get_user_email(db, source: str) -> str:
 
 async def _upsert_email_contacts(db, contacts: list[dict], subject: str):
     """Upsert contacts from email headers into the relationships collection.
-    Deduplicates by email address AND name_key."""
+    Deduplicates by email address, name_key, AND fuzzy name matching."""
     now = datetime.now(timezone.utc).isoformat()
 
     for contact in contacts:
         name = contact["name"]
         email_addr = contact["email"]
-        name_key = name.lower().replace(".", "").strip()
+        name_key = _normalize_name(name).replace(" ", "")
 
-        # Try to find existing by email first (strongest match), then by name
+        # 1) Try exact email match first (strongest signal)
         existing = await db.relationships.find_one({"email_address": email_addr})
+
+        # 2) Try exact name_key match
         if not existing:
             existing = await db.relationships.find_one({"name_key": name_key})
 
+        # 3) Fuzzy name match against all existing people
+        if not existing:
+            all_people = await db.relationships.find(
+                {}, {"name": 1, "name_key": 1, "email_address": 1}
+            ).to_list(500)
+            for person in all_people:
+                if _names_match(name, person.get("name", "")):
+                    existing = person
+                    break
+
         if existing:
-            # Update: add email if missing, bump count
+            # Merge: update email if missing, pick best name, bump count
             update = {"last_seen": now}
-            if not existing.get("email_address"):
+
+            if not existing.get("email_address") and email_addr:
                 update["email_address"] = email_addr
-            # If existing name is more complete, keep it; otherwise update
-            if len(name) > len(existing.get("name", "")):
-                update["name"] = name
-                update["name_key"] = name_key
+
+            best_name = _pick_best_name(existing.get("name", ""), name)
+            if best_name != existing.get("name", ""):
+                update["name"] = best_name
+                update["name_key"] = _normalize_name(best_name).replace(" ", "")
 
             await db.relationships.update_one(
                 {"_id": existing["_id"]},
