@@ -94,6 +94,9 @@ class GmailTool(Tool):
         if emails and "error" in emails[0]:
             return emails[0]["error"]
 
+        # Filter out already-processed emails (for task dedup)
+        emails = await self._filter_processed(emails)
+
         if not emails:
             return "No emails found."
 
@@ -122,6 +125,9 @@ class GmailTool(Tool):
         if emails and "error" in emails[0]:
             return emails[0]["error"]
 
+        # Filter out already-processed emails (for task dedup)
+        emails = await self._filter_processed(emails)
+
         if not emails:
             return f"No emails found matching: {query}"
 
@@ -137,6 +143,18 @@ class GmailTool(Tool):
             )
 
         return "\n".join(lines)
+
+    async def _filter_processed(self, emails: list) -> list:
+        """Remove emails already tracked in processed_emails collection."""
+        if not emails or not _db:
+            return emails
+        seen = set(await _db.processed_emails.distinct("message_id"))
+        if not seen:
+            return emails
+        filtered = [e for e in emails if e.get("id") not in seen]
+        if len(filtered) < len(emails):
+            logger.info(f"Gmail: filtered {len(emails) - len(filtered)} already-processed emails")
+        return filtered
 
     async def _read_email(self, params: dict) -> str:
         from gateway.gmail import read_email
