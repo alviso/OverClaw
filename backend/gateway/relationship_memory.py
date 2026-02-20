@@ -107,7 +107,7 @@ async def _upsert_people(db, people: list):
 
         # Skip the user themselves
         name_lower = name.lower()
-        if user_name and (name_lower == user_name or name_lower in user_name or user_name in name_lower):
+        if any(un and (name_lower == un or name_lower in un or un in name_lower) for un in user_names):
             continue
         if any(email in name_lower for email in user_emails):
             continue
