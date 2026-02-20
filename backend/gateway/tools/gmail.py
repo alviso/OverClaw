@@ -181,6 +181,19 @@ class GmailTool(Tool):
         if "error" in result:
             return result["error"]
 
+        # Index the sent email into memory (captures outgoing context + people)
+        from gateway.email_memory import store_email_memory
+        import asyncio
+        sent_email = {
+            "subject": subject,
+            "from": "me",
+            "to": to,
+            "date": "",
+            "body": body,
+            "labels": ["SENT"],
+        }
+        asyncio.create_task(store_email_memory(_db, sent_email, source="email/gmail"))
+
         return f"Email sent successfully to {to}. Message ID: {result['message_id']}"
 
 
