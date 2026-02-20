@@ -174,6 +174,19 @@ async def import_brain(db, brain_data: dict) -> dict:
                     await coll.insert_one(doc)
                     imported += 1
 
+            elif collection_name == "sessions":
+                # Upsert by session_id
+                sid = doc.get("session_id", "")
+                if not sid:
+                    skipped += 1
+                    continue
+                existing = await coll.find_one({"session_id": sid})
+                if existing:
+                    skipped += 1
+                else:
+                    await coll.insert_one(doc)
+                    imported += 1
+
         results[collection_name] = {"imported": imported, "skipped": skipped}
 
     logger.info(f"Brain imported: {results}")
