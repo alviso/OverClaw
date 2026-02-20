@@ -625,6 +625,36 @@ async def serve_proposal(filename: str):
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
+# ── Brain Export/Import ──────────────────────────────────────────────────
+@api_router.get("/brain/stats")
+async def brain_stats():
+    from gateway.brain import get_brain_stats
+    stats = await get_brain_stats(db)
+    return stats
+
+@api_router.get("/brain/export")
+async def brain_export():
+    from gateway.brain import export_brain
+    brain = await export_brain(db)
+    return JSONResponse(
+        content=brain,
+        headers={"Content-Disposition": "attachment; filename=overclaw-brain.json"},
+    )
+
+@api_router.post("/brain/import")
+async def brain_import(file: UploadFile = File(...)):
+    import json as _json
+    from gateway.brain import import_brain
+    try:
+        content = await file.read()
+        brain_data = _json.loads(content)
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON file"}, status_code=400)
+    result = await import_brain(db, brain_data)
+    return result
+
+
+
 app.include_router(api_router)
 
 app.add_middleware(
