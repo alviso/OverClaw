@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Bot, Zap, Brain, Calendar, Bell,
   Mail, Hash, Settings, ChevronLeft, ChevronRight,
   Activity, MessageSquare, Shield, FolderCode, Users,
+  Sun, Moon,
 } from "lucide-react";
 
 const NAV_ITEMS = [
