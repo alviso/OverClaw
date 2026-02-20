@@ -1,72 +1,68 @@
 # OverClaw — PRD
 
 ## Problem Statement
-Build a streamlined work assistant ("OverClaw") inspired by the openclaw repository. The project has an orchestration architecture where a primary agent delegates tasks to specialists. The project should be open-source-ready.
+Build a streamlined work assistant, "OverClaw", with an orchestration architecture where a primary agent delegates tasks to specialists. The project should be open-source-ready with intelligence features for learning about the user and their work context.
 
-## Architecture
-- **Backend:** FastAPI + MongoDB
-- **Frontend:** React
-- **Core:** Orchestrator agent delegates to specialist tools (browser, code executor, email, etc.)
-- **Deployment:** Docker + docker-compose
+## Core Architecture
+- **Backend**: FastAPI + MongoDB
+- **Frontend**: React
+- **Agent**: LLM-powered orchestrator with specialist delegation
+- **Channels**: Webchat, Slack
+- **Integrations**: Gmail, Microsoft Outlook (scaffolded), Slack
 
 ## What's Been Implemented
 
-### Core
-- Orchestrator agent with tool-calling loop (OpenAI + Anthropic)
-- Session management, chat history
-- Long-term memory / RAG with embeddings (cosine similarity)
+### Core Intelligence
+- Passive User Profile extraction from conversations
+- Relationship Memory — auto-discovers org chart from conversations and emails
+- Email Memory — RAG pipeline that indexes email content for searchable context
+- Multi-pass deduplication for people (name, email, accent normalization)
+- Proactive Context Awareness — agent auto cross-references email/calendar for time-sensitive events
 
-### Intelligence Features
-- **Passive User Profile:** Extracts user facts from conversations, injects into context
-- **Relationship Memory:** Discovers people and org chart from conversations AND emails
-  - Smart fuzzy name matching (accent normalization, "Last, First" handling, subset detection)
-  - Email-based extraction from SENT emails only (user's responded emails)
-  - Structured parsing of To/CC headers (free, no LLM cost)
-  - LLM extraction for roles, teams, relationships from email body
-  - Deduplication by email address, name_key, AND fuzzy name matching
-  - Prevents false merges (e.g., siblings with same surname)
-- **Email Memory (Feb 2026):** Auto-indexes emails into RAG with embeddings when the agent reads them
-- **Brain Export/Import (Feb 2026):** Portable knowledge transfer between deployments
+### Scheduled Tasks
+- **Email Triage Task** (5 min interval): 3-tier email classification
+  - Category A (Important): Read + index + Slack notify
+  - Category B (Notifications): Read + index silently
+  - Category C (Promotional): Skip entirely
+- `slack_notify` tool for proactive Slack messaging (auto-targets last active conversation)
+
+### Configuration & Management
+- Onboarding Wizard (`/admin/setup`)
+- Credentials Editor (`/admin/config`)
+- Brain Export/Import (`/admin/brain`)
+- People Management (`/admin/people`) with merge, delete, inline email editing
+- Tasks UI (`/admin/tasks`)
 
 ### Integrations
-- Gmail (OAuth, read/search/send) — connected, working
-- Outlook/Microsoft 365 (OAuth scaffolding — blocked on Azure app access)
-- Slack (Socket Mode, real-time sync with webchat)
+- Gmail: Fully functional
+- Microsoft Outlook: Scaffolded, untested
+- Slack: Connected with proactive notification support
 
-### Admin / Setup
-- Onboarding Wizard (API key setup via UI, stored in MongoDB)
-- **Credentials Editor** — update API keys from admin Config page
-- People admin view (discovered relationships with email addresses)
-- Outlook admin panel
-- Brain panel (export/import)
+### Content Generation
+- Custom HTML proposal endpoint (`/api/proposals/proposal-cvs-overclaw.html`)
 
-### Open Source Prep
-- README with banner, feature docs
-- Docker build fixes, clean requirements.txt
-- CVS Health proposal document
+## Key API Endpoints
+- `POST /api/brain/export` / `POST /api/brain/import`
+- `POST /api/people/merge` / `DELETE /api/people/{id}` / `PATCH /api/people/{id}`
+- `GET /api/proposals/proposal-cvs-overclaw.html`
+- RPC: `people.list`, `people.merge`, `people.delete`
 
-## Pending Issues
-1. Outlook integration e2e (blocked on Azure app access)
-2. Full Slack regression test
+## DB Schema
+- **relationships**: `{ name, name_key, email_address, role, team, relationship, mention_count, context_history, aliases, last_seen }`
+- **settings**: `{ key, value }` — includes `slack_last_active_channel`
+- **tasks**: `{ id, name, prompt, interval_seconds, enabled, ... }`
 
-## Upcoming Tasks
+## P0 — In Progress
+- Monitor email triage task accuracy across cycles
+
+## P1 — Upcoming
+- Microsoft Outlook e2e testing (blocked on Azure creds)
 - Microsoft Teams integration
-- Verify local setup scripts
+- Background tasks DB secrets architectural fix
 
-## Backlog
-- "Already configured" indicators in setup wizard
-- Demo GIF for README
-- Pytest regression tests for backend
-
-## Key Files
-- `backend/gateway/email_memory.py` — Email Memory + fuzzy name matching + people extraction
-- `backend/gateway/relationship_memory.py` — Relationship discovery (conversation + email)
-- `backend/gateway/brain.py` — Brain Export/Import
-- `backend/gateway/memory.py` — RAG/Memory system
-- `backend/gateway/user_profile.py` — Passive user profile
-- `backend/gateway/gmail.py` — Gmail OAuth + API
-- `backend/gateway/setup.py` — Onboarding wizard + DB-backed secrets
-- `backend/server.py` — FastAPI routes
-- `frontend/src/components/dashboard/BrainPanel.js` — Brain UI
-- `frontend/src/components/dashboard/CredentialsEditor.js` — Credentials UI
-- `frontend/src/components/dashboard/RelationshipsPanel.js` — People UI
+## P2 — Backlog
+- Webchat/Slack sync verification
+- Local setup scripts verification
+- Demo GIF/recording for README
+- Consolidate deduplication logic
+- GitHub social preview image
