@@ -24,6 +24,22 @@ const NAV_ITEMS = [
 
 export function DashboardSidebar({ collapsed, onToggle }) {
   const location = useLocation();
+  const [lightMode, setLightMode] = useState(() => document.body.classList.contains("light-theme"));
+
+  useEffect(() => {
+    const saved = localStorage.getItem("overclaw-theme");
+    if (saved === "light") {
+      document.body.classList.add("light-theme");
+      setLightMode(true);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !lightMode;
+    setLightMode(next);
+    document.body.classList.toggle("light-theme", next);
+    localStorage.setItem("overclaw-theme", next ? "light" : "dark");
+  };
 
   return (
     <aside
