@@ -1,111 +1,70 @@
-# OverClaw — Product Requirements Document
+# OverClaw — PRD
 
 ## Problem Statement
-Build a streamlined work assistant (inspired by OpenClaw, rebranded as OverClaw) with a top-down orchestration architecture. A primary "Orchestrator" agent delegates tasks to specialist agents (Gmail, browser, developer, research, system). The developer agent can create its own tools and manage files within a dedicated, persistent workspace at `/app/workspace`.
+Build a streamlined work assistant ("OverClaw") inspired by the openclaw repository. The project has an orchestration architecture where a primary agent delegates tasks to specialists. The project should be open-source-ready.
 
 ## Architecture
-- **Backend**: FastAPI + WebSocket JSON-RPC + MongoDB + Slack Socket Mode
-- **Frontend**: React chat-centric UI + admin dashboard
-- **Agents**: Orchestrator → Specialist delegation (OpenAI GPT-4o)
-- **Workspace**: Persistent `/app/workspace/projects/` for agent-created projects
+- **Backend:** FastAPI + MongoDB
+- **Frontend:** React
+- **Core:** Orchestrator agent delegates to specialist tools (browser, code executor, email, etc.)
+- **Deployment:** Docker + docker-compose
 
 ## What's Been Implemented
 
-### Core Platform
-- Orchestrator agent with specialist delegation (browser, gmail, research, system, developer)
-- WebSocket JSON-RPC protocol for real-time communication
-- MongoDB for config, sessions, agents, skills, memory, tasks, notifications
-- Slack Socket Mode integration with health check loop
-- Admin dashboard with Overview, Agents, Skills, Memory, Tasks, Notifications, Gmail, Slack, Config pages
+### Core
+- Orchestrator agent with tool-calling loop (OpenAI + Anthropic)
+- Session management, chat history
+- Long-term memory / RAG with embeddings (cosine similarity)
 
-### Project Dashboard (Feb 15, 2026) — Central Workspace View
-Replaced the old tab-based Workspace Explorer (Files/Processes/Custom Tools) with a mini-Heroku dashboard:
-- **Project cards grid**: Each project shows name, type badge (Python/Node), entry point, last modified, file count
-- **Live status**: Green pulsing dot = running, gray = stopped. Cross-references process registry in real-time (polls every 5s)
-- **Quick actions per card**: Files, Run, Stop, Preview (with port), Setup (install deps)
-- **Drill-down**: Clicking a project opens `ProjectDetail` with integrated file browser + header controls (Run/Stop/Preview/Logs)
-- **Terminal view**: Live-streaming process logs accessible from running project detail
-- **Custom tools**: Collapsible section at bottom (only visible when tools exist)
-- **Backend RPC**: `workspace.projects` scans `/app/workspace/projects/`, detects type, cross-references `_processes` dict
+### Intelligence Features
+- **Passive User Profile:** Extracts user facts from conversations, injects into context
+- **Relationship Memory:** Discovers people and org chart from conversations
+- **Email Memory (Feb 2026):** Auto-indexes emails into RAG when the agent reads them. Feeds email content into Profile and Relationship extractors. Works for both Gmail and Outlook.
+- **Brain Export/Import (Feb 2026):** Portable knowledge transfer between deployments. Exports memories, user profile, and relationships as a single JSON file. Smart merge on import (deduplication, fact merging, re-embedding).
 
-### Run Project & Install Deps
-- **"Run Project"**: Auto-detects project type, suggests command, optional port override (injects PORT env var)
-- **"Install Deps"**: Creates venv + pip install for Python, npm install for Node
-- **Port detection**: Scans source code for port patterns including `os.environ.get('PORT', N)`
+### Integrations
+- Gmail (OAuth, read/search/send)
+- Outlook/Microsoft 365 (OAuth scaffolding, read/search/send — untested e2e)
+- Slack (Socket Mode, real-time sync with webchat)
 
-### Process Persistence
-- Metadata persisted to `/app/workspace/.processes.json` on start/stop/exit
-- On server restart, `recover_processes()` re-discovers alive PIDs, re-attaches to UI
-- Recovered processes stoppable via direct PID kill
+### Admin / Setup
+- Onboarding Wizard (API key setup via UI, stored in MongoDB)
+- People admin view (discovered relationships)
+- Outlook admin panel
+- Brain panel (export/import)
 
-### Developer Agent Prompt
-- Correct relative paths: explicit WRONG/RIGHT examples to prevent `/workspace/workspace/` duplication
-- Always create `requirements.txt` for Python projects
-- Always use relative URLs in HTML/JS (no leading `/`) for reverse proxy compatibility
-- Always read port from `PORT` env var with fallback
-
-### Reverse Proxy
-- `/api/preview/{port}/` exposes running apps with trailing-slash redirect for relative URL support
+### Open Source Prep
+- README with banner, feature docs
+- Docker build fixes, clean requirements.txt
+- yarn.lock tracked
+- CVS Health proposal document (HTML, served at /api/proposals/)
 
 ## Pending Issues
-- **P2**: Webchat not in sync with Slack conversations (session_id mismatch)
+1. **P0:** Outlook integration e2e testing
+2. **P1:** Webchat/Slack sync verification (recurring)
+3. **P2:** Full Slack regression test
 
-## Completed (Feb 16, 2026) — Banner Image
-- Generated OverClaw banner image (red crayfish mascot, black background, bold OVER/CLAW typography) inspired by OpenClaw's banner style
-- Cropped to remove dead space (896px→466px tall), saved to `/app/assets/overclaw-banner.png`
-- Updated README.md with centered banner referencing local asset path
-
-## Completed (Feb 16, 2026) — Outlook Integration + Relationship Memory + README
-- **Outlook Integration**: Full OAuth 2.0 flow via Microsoft Graph API (MSAL + httpx)
-  - OAuth routes: `/api/oauth/outlook/login`, `/callback`, `/status`, `/disconnect`
-  - Agent tool: `outlook` with list, search, read, send actions (mirrors Gmail tool)
-  - Admin panel: OutlookPanel component on the Email page (alongside Gmail)
-  - Setup wizard: Azure Client ID, Client Secret, Tenant ID fields added to optional step
-  - New files: `gateway/outlook.py`, `gateway/tools/outlook.py`, `OutlookPanel.js`
-- **Relationship Memory**: Passive people discovery from conversations (see previous entry)
-- **README**: Updated with Outlook, setup wizard, user profiling, relationships, architecture diagram
-
-## Completed (Feb 16, 2026) — Relationship Memory + README Review
-- New module: `gateway/relationship_memory.py` — passively extracts people (name, role, team, relationship, context) from conversations
-- Stores in MongoDB `relationships` collection with upsert semantics, keeps last 5 context notes per person
-- Relationship context injected into orchestrator system prompt alongside user profile and memories
-- New admin panel: `/admin/people` — "Discovered Relationships" view with cards grouped by relationship type (manager, report, peer, colleague, etc.)
-- Color-coded cards with mention counts, last-seen times, and latest context
-- Added `relationships.list` RPC method for the admin panel
-- Updated sidebar navigation with "People" entry (Users icon)
-- README updated: setup wizard mentions, user profiling & relationship map in capabilities table, People in admin dashboard table, new files in project structure, architecture diagram updated, env vars section clarified
-
-## Completed (Feb 16, 2026) — Webchat/Slack Sync (P1) + Slack Regression Prep (P2)
-- Backend now broadcasts `chat.event` to all WebSocket clients when Slack messages arrive and when the agent responds to Slack
-- ChatView listens for `chat.event` via `onEvent`/`offEvent` and triggers immediate message refresh (no waiting for 2s poll)
-- SessionSidebar distinguishes Slack sessions from webchat sessions: green `#` icon + "Slack" label vs blue chat icon
-- Slack session IDs parsed for friendly display (channel suffix instead of raw `slack:C06ABCD:U01XYZ`)
-- Cross-channel viewing works: clicking a Slack session in webchat shows full conversation history
-
-## Completed (Feb 16, 2026) — Onboarding Setup Wizard
-- Web-based setup wizard shown on first launch when API keys are missing or placeholder
-- Multi-step flow: Welcome → LLM Keys (Anthropic/OpenAI) → Gateway Security Token → Optional Integrations (Gmail, Slack)
-- Each field has clear descriptions explaining what it is and why it's needed, with links to provider dashboards
-- Keys stored in MongoDB `setup_secrets` collection (persists across Docker container restarts)
-- Keys loaded into `os.environ` at startup via `load_secrets_to_env()` for immediate effect
-- Gateway token saved to localStorage for WebSocket auth; page reloads after wizard completes
-- Backend endpoints: `GET /api/setup/status`, `POST /api/setup/save`
-- New files: `backend/gateway/setup.py`, `frontend/src/components/setup/SetupWizard.js`
-
-## Completed (Feb 16, 2026) — User Profile (Passive Extraction)
-- New module: `gateway/user_profile.py` — passively extracts personal facts from user messages using Anthropic Claude Haiku (fire-and-forget, background task)
-- Facts stored in MongoDB `user_profiles` collection with upsert semantics (new facts merge, same keys update)
-- Profile context injected into orchestrator's system prompt before each turn
-- Categories: name, role, company, communication style, recurring events, projects, tools, timezone, people
-- Admin RPC method `profile.get` for debugging
-- No UI needed — fully automatic and seamless
-
-## Completed (Feb 15, 2026) — Open Source Prep
-- Comprehensive README.md with motivation, architecture diagram, OpenClaw comparison table, setup instructions (Docker/macOS/manual), usage guide, security considerations
-- **Security audit**: removed `backend/.env` and `frontend/.env` from git tracking (contained real API keys); cleaned up `.gitignore` (removed duplicates, malformed entries); updated `.env.example` with all current vars
-- **Code fix**: bare `except:` → `except Exception:` in `browser_use.py`
+## Upcoming Tasks
+- Microsoft Teams integration
+- Verify local setup scripts (install_local.sh, run_local.sh)
 
 ## Backlog
-- P2: Guide user through local setup (install_local.sh, run_local.sh)
-- P3: Full regression test of Slack integration
-- P3: Interactive browser agent on KVM site (on hold)
+- "Already configured" indicators in setup wizard
+- Demo GIF for README
+- GitHub social preview image
+- Interactive browser agent fix on KVM site
+- Pytest regression tests for backend
+
+## Key Files
+- `backend/gateway/brain.py` — Brain Export/Import logic
+- `backend/gateway/email_memory.py` — Email Memory (RAG + extractors)
+- `backend/gateway/memory.py` — RAG/Memory system
+- `backend/gateway/user_profile.py` — Passive user profile
+- `backend/gateway/relationship_memory.py` — Relationship discovery
+- `backend/gateway/tools/gmail.py` — Gmail agent tool
+- `backend/gateway/tools/outlook.py` — Outlook agent tool
+- `backend/gateway/agent.py` — Agent runtime
+- `backend/gateway/setup.py` — Onboarding wizard backend
+- `backend/server.py` — FastAPI routes
+- `frontend/src/components/dashboard/BrainPanel.js` — Brain UI
+- `backend/static/proposal-cvs-overclaw.html` — CVS proposal
