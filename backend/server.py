@@ -612,6 +612,19 @@ async def preview_proxy_root(port: int, request: Request):
 
 
 # ── Mount ────────────────────────────────────────────────────────────────
+
+# ── Static proposals ─────────────────────────────────────────────────────
+from fastapi.responses import FileResponse
+
+@api_router.get("/proposals/{filename}")
+async def serve_proposal(filename: str):
+    filepath = ROOT_DIR / "static" / filename
+    if filepath.exists() and filepath.suffix in (".html", ".pdf"):
+        media = "text/html" if filepath.suffix == ".html" else "application/pdf"
+        return FileResponse(filepath, media_type=media)
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
 app.include_router(api_router)
 
 app.add_middleware(
