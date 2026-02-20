@@ -321,6 +321,7 @@ export function RelationshipsPanel({ rpc, authenticated }) {
                       selected={selected.has(p.id)}
                       onToggle={toggleSelect}
                       onDelete={handleDelete}
+                      onUpdateEmail={handleUpdateEmail}
                     />
                   ))}
                 </div>
