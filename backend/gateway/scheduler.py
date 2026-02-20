@@ -63,6 +63,13 @@ class TaskScheduler:
         now = datetime.now(timezone.utc)
         now_iso = now.isoformat()
 
+        # Safety: reset tasks stuck in 'running' for over 5 minutes
+        five_min_ago = (now - timedelta(minutes=5)).isoformat()
+        await self.db.tasks.update_many(
+            {"running": True, "last_run": {"$lt": five_min_ago}},
+            {"$set": {"running": False}},
+        )
+
         # Find enabled tasks where next_run <= now
         due_tasks = await self.db.tasks.find({
             "enabled": True,
