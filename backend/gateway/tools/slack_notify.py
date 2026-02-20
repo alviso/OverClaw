@@ -3,6 +3,7 @@ Slack Notify Tool — Allows the agent to proactively send messages to Slack.
 Used by scheduled tasks (e.g., email triage) to push notifications.
 """
 import logging
+import os
 from gateway.tools import Tool, register_tool
 
 logger = logging.getLogger("gateway.tools.slack_notify")
@@ -44,9 +45,12 @@ class SlackNotifyTool(Tool):
 
         target = params.get("channel", "").strip()
 
-        # Default to last active conversation
+        # Default to last active conversation (in-memory first, then DB)
         if not target:
             target = getattr(slack, "_last_active_channel", None) or ""
+
+        if not target:
+            target = await self._load_channel_from_db()
 
         if not target:
             return "Error: No active Slack conversation found yet. The user needs to send at least one message to the bot in Slack first."
@@ -54,11 +58,23 @@ class SlackNotifyTool(Tool):
         try:
             ok = await slack.send_message(target, message)
             if ok:
-                return f"Message sent to Slack ({target})"
+                return f"Slack notification sent successfully to {target}"
             return "Error: send_message returned False — check Slack connection."
         except Exception as e:
             logger.exception("slack_notify failed")
             return f"Error sending Slack message: {str(e)}"
+
+    async def _load_channel_from_db(self) -> str:
+        try:
+            from motor.motor_asyncio import AsyncIOMotorClient
+            client = AsyncIOMotorClient(os.environ.get("MONGO_URL"))
+            db = client[os.environ.get("DB_NAME", "overclaw")]
+            doc = await db.settings.find_one({"key": "slack_last_active_channel"})
+            if doc and doc.get("value"):
+                return doc["value"]
+        except Exception as e:
+            logger.debug(f"Failed to load channel from DB: {e}")
+        return ""
 
 
 register_tool(SlackNotifyTool())
