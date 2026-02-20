@@ -95,6 +95,10 @@ class TaskScheduler:
         agent_id = task.get("agent_id", "default")
         prompt = task.get("prompt", "")
 
+        # Keep task session lean — clear old messages before each run
+        # The task uses memory_search for recall, not chat history
+        await self.db.chat_messages.delete_many({"session_id": session_id})
+
         try:
             response, tool_calls = await self.agent_runner.run_turn(
                 session_id=session_id,
