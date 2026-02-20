@@ -127,9 +127,11 @@ async def build_relationships_context(db) -> str:
     if not people:
         return ""
 
-    lines = ["\n\n---\n## People You Know About\nPeople the user has mentioned in past conversations. Reference naturally when relevant.\n"]
+    lines = ["\n\n---\n## People You Know About\nPeople the user has mentioned in past conversations or exchanged emails with. Reference naturally when relevant.\n"]
     for p in people:
         parts = [f"**{p['name']}**"]
+        if p.get("email_address"):
+            parts.append(f"<{p['email_address']}>")
         if p.get("role"):
             parts.append(f"({p['role']})")
         if p.get("team"):
