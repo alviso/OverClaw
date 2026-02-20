@@ -25,7 +25,7 @@ pytestmark = pytest.mark.asyncio(loop_scope="function")
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://overclaw-preview.preview.emergentagent.com"
+    BASE_URL = "https://people-curator.preview.emergentagent.com"
 
 
 class TestHealthEndpoint:
