@@ -102,12 +102,20 @@ export function DashboardSidebar({ collapsed, onToggle }) {
         })}
       </nav>
 
-      {/* Collapse toggle */}
-      <div className="px-3 py-3 border-t border-zinc-800/60">
+      {/* Theme toggle + Collapse */}
+      <div className="px-3 py-3 border-t border-zinc-800/60 flex items-center gap-1">
+        <button
+          data-testid="theme-toggle"
+          onClick={toggleTheme}
+          className="flex items-center justify-center p-2 rounded-lg text-xs text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/40 transition-colors"
+          title={lightMode ? "Switch to dark" : "Switch to light"}
+        >
+          {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+        </button>
         <button
           data-testid="sidebar-toggle"
           onClick={onToggle}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/40 transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/40 transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           {!collapsed && <span>Collapse</span>}
