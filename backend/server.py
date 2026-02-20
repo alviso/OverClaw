@@ -655,6 +655,86 @@ async def brain_import(file: UploadFile = File(...)):
 
 
 
+# ── People Management ────────────────────────────────────────────────────
+from pydantic import BaseModel
+from typing import List
+
+class MergePeopleRequest(BaseModel):
+    keep_id: str
+    merge_ids: List[str]
+
+@api_router.post("/people/merge")
+async def merge_people(req: MergePeopleRequest):
+    """Merge multiple people entries into one. Combines mention counts and context."""
+    from bson import ObjectId
+    try:
+        keep = await db.relationships.find_one({"_id": ObjectId(req.keep_id)})
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid keep_id"}, status_code=400)
+    if not keep:
+        return JSONResponse({"ok": False, "error": "Person not found"}, status_code=404)
+
+    merged_count = 0
+    for mid in req.merge_ids:
+        if mid == req.keep_id:
+            continue
+        try:
+            other = await db.relationships.find_one({"_id": ObjectId(mid)})
+        except Exception:
+            continue
+        if not other:
+            continue
+
+        # Merge data into keep entry
+        update = {}
+        if not keep.get("email_address") and other.get("email_address"):
+            update["email_address"] = other["email_address"]
+        if not keep.get("role") and other.get("role"):
+            update["role"] = other["role"]
+        if not keep.get("team") and other.get("team"):
+            update["team"] = other["team"]
+
+        # Merge context histories
+        other_ctx = other.get("context_history", [])
+        if other_ctx:
+            await db.relationships.update_one(
+                {"_id": keep["_id"]},
+                {"$push": {"context_history": {"$each": other_ctx, "$slice": -15}}}
+            )
+
+        # Add mention counts
+        inc = other.get("mention_count", 0)
+        update_ops = {"$inc": {"mention_count": inc}}
+        if update:
+            update_ops["$set"] = update
+        await db.relationships.update_one({"_id": keep["_id"]}, update_ops)
+
+        # Also add aliases for future matching
+        other_name = other.get("name", "")
+        if other_name:
+            await db.relationships.update_one(
+                {"_id": keep["_id"]},
+                {"$addToSet": {"aliases": other_name}}
+            )
+
+        # Delete the merged entry
+        await db.relationships.delete_one({"_id": other["_id"]})
+        merged_count += 1
+
+    return {"ok": True, "merged": merged_count}
+
+@api_router.delete("/people/{person_id}")
+async def delete_person(person_id: str):
+    """Remove a person from the relationships collection."""
+    from bson import ObjectId
+    try:
+        result = await db.relationships.delete_one({"_id": ObjectId(person_id)})
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid ID"}, status_code=400)
+    return {"ok": True, "deleted": result.deleted_count}
+
+
+
 app.include_router(api_router)
 
 app.add_middleware(
