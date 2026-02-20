@@ -34,11 +34,20 @@ export function TasksPanel({ rpc, authenticated }) {
   const handlePause = async (id) => { await rpc("tasks.pause", { id }); fetchTasks(); };
   const handleResume = async (id) => { await rpc("tasks.resume", { id }); fetchTasks(); };
   const handleDelete = async (id) => { await rpc("tasks.delete", { id }); fetchTasks(); };
-  const handleRunNow = async (id) => { await rpc("tasks.run_now", { id }); fetchTasks(); };
+  const handleRunNow = async (id) => {
+    await rpc("tasks.run_now", { id });
+    fetchTasks();
+    // Auto-refresh history after the task likely completes
+    if (expandedTask === id) {
+      setTimeout(() => loadHistory(id, true), 5000);
+      setTimeout(() => loadHistory(id, true), 15000);
+      setTimeout(() => loadHistory(id, true), 30000);
+    }
+  };
 
-  const loadHistory = async (taskId) => {
-    if (expandedTask === taskId) { setExpandedTask(null); return; }
-    const r = await rpc("tasks.history", { id: taskId, limit: 5 });
+  const loadHistory = async (taskId, forceOpen) => {
+    if (!forceOpen && expandedTask === taskId) { setExpandedTask(null); return; }
+    const r = await rpc("tasks.history", { id: taskId, limit: 10 });
     if (r?.history) setTaskHistory(prev => ({ ...prev, [taskId]: r.history }));
     setExpandedTask(taskId);
   };
