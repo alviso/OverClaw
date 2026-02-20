@@ -45,3 +45,75 @@ pre, code, .font-mono {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(161, 161, 170, 0.25);
 }
+
+/* ── Light Theme Overrides ──────────────────── */
+/* Backgrounds: dark → light */
+body.light-theme .bg-zinc-950  { background-color: #ffffff !important; }
+body.light-theme .bg-zinc-900  { background-color: #f8f9fa !important; }
+body.light-theme .bg-zinc-800  { background-color: #f0f1f3 !important; }
+body.light-theme .bg-zinc-700  { background-color: #e4e5e7 !important; }
+
+/* Text: light text → dark text */
+body.light-theme .text-zinc-50  { color: #18181b !important; }
+body.light-theme .text-zinc-100 { color: #1a1a2e !important; }
+body.light-theme .text-zinc-200 { color: #2d2d3f !important; }
+body.light-theme .text-zinc-300 { color: #3f3f50 !important; }
+body.light-theme .text-zinc-400 { color: #52526b !important; }
+body.light-theme .text-zinc-500 { color: #64648a !important; }
+body.light-theme .text-zinc-600 { color: #8888a0 !important; }
+body.light-theme .text-zinc-700 { color: #a0a0b8 !important; }
+
+/* Borders */
+body.light-theme .border-zinc-800 { border-color: #e2e3e8 !important; }
+body.light-theme .border-zinc-700 { border-color: #d0d1d8 !important; }
+body.light-theme .border-zinc-600 { border-color: #c0c1c8 !important; }
+
+/* Special: opacity-based backgrounds */
+body.light-theme [class*="bg-zinc-800/"]  { background-color: rgba(0, 0, 0, 0.04) !important; }
+body.light-theme [class*="bg-zinc-900/"]  { background-color: rgba(0, 0, 0, 0.02) !important; }
+body.light-theme [class*="bg-zinc-950/"]  { background-color: rgba(255, 255, 255, 0.9) !important; }
+
+/* Border opacity overrides */
+body.light-theme [class*="border-zinc-800/"] { border-color: rgba(0, 0, 0, 0.08) !important; }
+body.light-theme [class*="border-zinc-700/"] { border-color: rgba(0, 0, 0, 0.10) !important; }
+
+/* Accent colors stay vibrant but adapt slightly */
+body.light-theme .bg-indigo-600\/10  { background-color: rgba(79, 70, 229, 0.08) !important; }
+body.light-theme .bg-indigo-600\/20  { background-color: rgba(79, 70, 229, 0.12) !important; }
+body.light-theme .text-indigo-300 { color: #4f46e5 !important; }
+body.light-theme .text-indigo-400 { color: #4338ca !important; }
+body.light-theme .border-indigo-500\/20 { border-color: rgba(79, 70, 229, 0.15) !important; }
+body.light-theme .border-indigo-500\/30 { border-color: rgba(79, 70, 229, 0.20) !important; }
+
+/* Relationship card backgrounds in light mode */
+body.light-theme [class*="bg-emerald-"]  { background-color: rgba(16, 185, 129, 0.06) !important; }
+body.light-theme [class*="bg-sky-"]      { background-color: rgba(14, 165, 233, 0.06) !important; }
+body.light-theme [class*="bg-amber-"]    { background-color: rgba(245, 158, 11, 0.06) !important; }
+body.light-theme [class*="bg-violet-"]   { background-color: rgba(139, 92, 246, 0.06) !important; }
+body.light-theme [class*="bg-rose-"]     { background-color: rgba(244, 63, 94, 0.06) !important; }
+body.light-theme [class*="bg-cyan-"]     { background-color: rgba(6, 182, 212, 0.06) !important; }
+body.light-theme [class*="bg-red-"]      { background-color: rgba(239, 68, 68, 0.06) !important; }
+
+/* Keep accent text colors strong in light */
+body.light-theme .text-emerald-400 { color: #059669 !important; }
+body.light-theme .text-emerald-300 { color: #059669 !important; }
+body.light-theme .text-sky-400     { color: #0284c7 !important; }
+body.light-theme .text-sky-300     { color: #0284c7 !important; }
+body.light-theme .text-amber-400   { color: #d97706 !important; }
+body.light-theme .text-amber-300   { color: #d97706 !important; }
+body.light-theme .text-violet-400  { color: #7c3aed !important; }
+body.light-theme .text-violet-300  { color: #7c3aed !important; }
+body.light-theme .text-rose-400    { color: #e11d48 !important; }
+body.light-theme .text-rose-300    { color: #e11d48 !important; }
+body.light-theme .text-cyan-400    { color: #0891b2 !important; }
+body.light-theme .text-cyan-300    { color: #0891b2 !important; }
+body.light-theme .text-red-400     { color: #dc2626 !important; }
+body.light-theme .text-red-500     { color: #b91c1c !important; }
+
+/* Scrollbar for light mode */
+body.light-theme ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
