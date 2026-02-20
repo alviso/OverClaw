@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OverClaw — Enterprise AI Agent Proposal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --cvs-red: #CC0000;
+    --cvs-red-dark: #A30000;
+    --cvs-red-light: #FF1A1A;
+    --cvs-black: #1A1A1A;
+    --cvs-gray-900: #2D2D2D;
+    --cvs-gray-700: #4A4A4A;
+    --cvs-gray-500: #6B6B6B;
+    --cvs-gray-300: #D3D3D3;
+    --cvs-gray-100: #F5F5F5;
+    --cvs-white: #FFFFFF;
+    --accent-warm: #FFF5F5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
+    color: var(--cvs-black);
+    background: var(--cvs-white);
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @media print {
+    body { font-size: 11pt; }
+    .page-break { page-break-before: always; }
+    .no-print { display: none; }
+    section { page-break-inside: avoid; }
+  }
+
+  /* ── Cover Page ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px;
+    background: linear-gradient(160deg, var(--cvs-black) 0%, var(--cvs-gray-900) 60%, var(--cvs-red-dark) 100%);
+    color: var(--cvs-white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(204,0,0,0.15) 0%, transparent 70%);
+  }
+
+  .cover-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cvs-red-light);
+    border: 1px solid rgba(204,0,0,0.4);
+    padding: 8px 18px;
+    border-radius: 4px;
+    margin-bottom: 40px;
+  }
+
+  .cover h1 {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    max-width: 700px;
+  }
+
+  .cover h1 span { color: var(--cvs-red-light); }
+
+  .cover p.subtitle {
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 600px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 60px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 48px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .cover-meta strong {
+    color: rgba(255,255,255,0.8);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ── Content Layout ── */
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  section { margin-bottom: 72px; }
+
+  h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--cvs-black);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  h2 .num {
+    color: var(--cvs-red);
+    font-weight: 800;
+    margin-right: 8px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--cvs-gray-900);
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  p, li {
+    font-size: 16px;
+    color: var(--cvs-gray-700);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .lead {
+    font-size: 18px;
+    color: var(--cvs-gray-500);
+    border-left: 3px solid var(--cvs-red);
+    padding-left: 20px;
+    margin-bottom: 40px;
+  }
+
+  ul { padding-left: 0; list-style: none; }
+  ul li { position: relative; padding-left: 24px; margin-bottom: 10px; }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    background: var(--cvs-red);
+    border-radius: 50%;
+  }
+
+  strong { color: var(--cvs-black); }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: var(--cvs-gray-300);
+    margin: 64px 0;
+  }
+
+  /* ── Callout Box ── */
+  .callout {
+    background: var(--accent-warm);
+    border-left: 4px solid var(--cvs-red);
+    padding: 28px 32px;
+    border-radius: 0 8px 8px 0;
+    margin: 32px 0;
+  }
+
+  .callout p { color: var(--cvs-gray-900); margin-bottom: 0; }
+  .callout strong { color: var(--cvs-red-dark); }
+
+  /* ── Comparison Table ── */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 32px 0;
+    font-size: 14px;
+  }
+
+  .comparison-table th {
+    background: var(--cvs-black);
+    color: var(--cvs-white);
+    padding: 14px 20px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .comparison-table th:first-child { border-radius: 6px 0 0 0; }
+  .comparison-table th:last-child { border-radius: 0 6px 0 0; }
+
+  .comparison-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--cvs-gray-300);
+    color: var(--cvs-gray-700);
+  }
+
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table tr:nth-child(even) td { background: var(--cvs-gray-100); }
+
+  .comparison-table .check { color: var(--cvs-red); font-weight: 700; font-size: 18px; }
+  .comparison-table .cross { color: var(--cvs-gray-300); font-size: 18px; }
+
+  /* ── Charts ── */
+  .chart-container {
+    margin: 40px 0;
+    padding: 32px;
+    background: var(--cvs-gray-100);
+    border-radius: 12px;
+  }
+
+  .chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cvs-gray-900);
+    margin-bottom: 24px;
+  }
+
+  .chart-subtitle {
+    font-size: 13px;
+    color: var(--cvs-gray-500);
+    margin-top: -20px;
+    margin-bottom: 24px;
+  }
+
+  /* Bar Chart */
+  .bar-chart { display: flex; flex-direction: column; gap: 16px; }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .bar-label {
+    width: 160px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cvs-gray-700);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 32px;
+    background: var(--cvs-white);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cvs-white);
+    transition: width 0.6s ease;
+  }
+
+  .bar-fill.red { background: var(--cvs-red); }
+  .bar-fill.dark { background: var(--cvs-gray-700); }
+  .bar-fill.light { background: var(--cvs-gray-300); color: var(--cvs-gray-700); }
+
+  /* Donut Chart */
+  .donut-grid {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  .donut-item { text-align: center; }
+
+  .donut-item svg {
+    width: 140px;
+    height: 140px;
+    transform: rotate(-90deg);
+  }
+
+  .donut-item circle {
+    fill: none;
+    stroke-width: 10;
+  }
+
+  .donut-bg { stroke: var(--cvs-gray-300); }
+  .donut-value { stroke-linecap: round; }
+
+  .donut-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cvs-gray-700);
+    margin-top: 12px;
+  }
+
+  .donut-pct {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--cvs-black);
+    margin-top: 4px;
+  }
+
+  /* Cost Comparison */
+  .cost-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 32px 0;
+  }
+
+  .cost-card {
+    padding: 32px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .cost-card.siloed {
+    background: var(--cvs-gray-100);
+    border: 1px solid var(--cvs-gray-300);
+  }
+
+  .cost-card.unified {
+    background: var(--accent-warm);
+    border: 2px solid var(--cvs-red);
+  }
+
+  .cost-card .label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cvs-gray-500);
+    margin-bottom: 12px;
+  }
+
+  .cost-card.unified .label { color: var(--cvs-red); }
+
+  .cost-card .amount {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--cvs-black);
+  }
+
+  .cost-card.unified .amount { color: var(--cvs-red-dark); }
+
+  .cost-card .detail {
+    font-size: 14px;
+    color: var(--cvs-gray-500);
+    margin-top: 8px;
+  }
+
+  .cost-card .savings {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--cvs-red);
+    color: white;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+    margin: 32px 0;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--cvs-gray-300);
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 32px;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -33px;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    background: var(--cvs-red);
+    border: 3px solid var(--cvs-white);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--cvs-red);
+  }
+
+  .timeline-item .week {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--cvs-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .timeline-item h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cvs-black);
+    margin-bottom: 4px;
+  }
+
+  .timeline-item p { font-size: 14px; margin-bottom: 0; }
+
+  /* Stat Row */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin: 40px 0;
+  }
+
+  .stat-card {
+    text-align: center;
+    padding: 32px 20px;
+    background: var(--cvs-gray-100);
+    border-radius: 12px;
+  }
+
+  .stat-card .value {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--cvs-red);
+    line-height: 1;
+  }
+
+  .stat-card .unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cvs-gray-500);
+    margin-top: 8px;
+  }
+
+  .stat-card .desc {
+    font-size: 13px;
+    color: var(--cvs-gray-500);
+    margin-top: 4px;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--cvs-black);
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+  }
+
+  .footer strong { color: var(--cvs-white); }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="cover-badge">Strategic Technology Proposal</div>
+  <h1>One Agent.<br><span>Full Context.</span><br>Every System.</h1>
+  <p class="subtitle">
+    Why CVS Health should give every employee a unified AI agent 
+    instead of deploying separate assistants per application.
+  </p>
+  <div class="cover-meta">
+    <div>
+      <strong>Prepared for</strong>
+      CVS Health Corporation
+    </div>
+    <div>
+      <strong>Subject</strong>
+      OverClaw — Unified Enterprise AI Agent
+    </div>
+    <div>
+      <strong>Date</strong>
+      February 2026
+    </div>
+    <div>
+      <strong>Classification</strong>
+      Confidential
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <section>
+    <h2><span class="num">01</span> Executive Summary</h2>
+    <p class="lead">
+      Enterprise AI today is fragmented. Every major platform ships its own 
+      assistant — Copilot, Joule, Artey, Einstein — each locked inside a single 
+      application, seeing only a fraction of the employee's world. The result: 
+      your people are the integration layer, manually bridging context between 
+      siloed AI assistants dozens of times per day.
+    </p>
+    <p>
+      <strong>OverClaw</strong> is a unified AI agent that connects to all enterprise systems 
+      and accumulates context from the employee's perspective — not the application's. 
+      It learns who you are, who you work with, what you're working on, and how you 
+      prefer to work. It carries that knowledge into every interaction, across every 
+      tool, in every session.
+    </p>
+    <div class="callout">
+      <p>
+        <strong>The one-liner:</strong> Your employees are already the integration 
+        layer between your enterprise applications. OverClaw gives them an AI that 
+        sees the full picture — so they don't have to.
+      </p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- THE PROBLEM -->
+  <section>
+    <h2><span class="num">02</span> The Problem: AI Assistant Sprawl</h2>
+    <p>
+      CVS Health operates across healthcare services, insurance, pharmacy, and corporate 
+      functions — each powered by different platforms with their own AI assistants. 
+      The enterprise is experiencing <strong>AI assistant sprawl</strong>.
+    </p>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Assistant</th>
+          <th>Platform</th>
+          <th>Sees Email</th>
+          <th>Sees Chat</th>
+          <th>Sees ERP/HR</th>
+          <th>Sees Calendar</th>
+          <th>Cross-System</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Microsoft Copilot</strong></td>
+          <td>Office 365</td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+        </tr>
+        <tr>
+          <td><strong>Artey (Teams)</strong></td>
+          <td>Microsoft Teams</td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+        </tr>
+        <tr>
+          <td><strong>SAP Joule</strong></td>
+          <td>SAP</td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+        </tr>
+        <tr>
+          <td><strong>Salesforce Einstein</strong></td>
+          <td>Salesforce</td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+          <td><span class="cross">&#10005;</span></td>
+        </tr>
+        <tr>
+          <td><strong>OverClaw</strong></td>
+          <td>All of the above</td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="check">&#10003;</span></td>
+          <td><span class="check">&#10003;</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Each assistant operates in a vacuum. Copilot knows the email thread about a 
+      vendor negotiation but not the SAP procurement data. Joule has the purchase 
+      order but not the Slack conversation where the team decided to renegotiate terms. 
+      <strong>No single assistant holds the context an employee actually needs to make 
+      decisions.</strong>
+    </p>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- COST OF FRAGMENTATION -->
+  <section>
+    <h2><span class="num">03</span> The Cost of Fragmentation</h2>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="value">36%</div>
+        <div class="unit">of the workday</div>
+        <div class="desc">spent searching for information across systems</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">23</div>
+        <div class="unit">minutes</div>
+        <div class="desc">average time to regain focus after a context switch</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">9.3</div>
+        <div class="unit">apps per task</div>
+        <div class="desc">average number of applications toggled per workflow</div>
+      </div>
+    </div>
+    <p>
+      Research from McKinsey, Harvard Business Review, and the American Psychological 
+      Association consistently shows that context switching is one of the largest 
+      hidden productivity drains in knowledge work. When employees ask an AI assistant 
+      for help but have to re-explain context because the assistant can't see across 
+      systems, the AI is <strong>adding</strong> a context switch rather than eliminating one.
+    </p>
+    <div class="chart-container">
+      <div class="chart-title">Time Spent Per Task: Siloed Assistants vs. Unified Agent</div>
+      <div class="chart-subtitle">Estimated minutes for common cross-system tasks</div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-label">Meeting prep</div>
+          <div class="bar-track">
+            <div class="bar-fill dark" style="width: 75%;">22 min (siloed)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"></div>
+          <div class="bar-track">
+            <div class="bar-fill red" style="width: 25%;">6 min (OverClaw)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Vendor status check</div>
+          <div class="bar-track">
+            <div class="bar-fill dark" style="width: 60%;">18 min (siloed)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"></div>
+          <div class="bar-track">
+            <div class="bar-fill red" style="width: 13%;">3 min (OverClaw)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Weekly project summary</div>
+          <div class="bar-track">
+            <div class="bar-fill dark" style="width: 100%;">30 min (siloed)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"></div>
+          <div class="bar-track">
+            <div class="bar-fill red" style="width: 30%;">8 min (OverClaw)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Onboarding a new hire</div>
+          <div class="bar-track">
+            <div class="bar-fill dark" style="width: 85%;">25 min (siloed)</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"></div>
+          <div class="bar-track">
+            <div class="bar-fill red" style="width: 20%;">5 min (OverClaw)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- THE SOLUTION -->
+  <section>
+    <h2><span class="num">04</span> The Solution: One Agent, Full Context</h2>
+    <p class="lead">
+      OverClaw is not another application assistant. It is a personal agent that 
+      sits on top of all applications and accumulates context from the employee's 
+      perspective — not the vendor's.
+    </p>
+    <h3>How it works</h3>
+    <ul>
+      <li><strong>Connects to every system the employee uses</strong> — email (Gmail, Outlook), 
+      messaging (Slack, Teams), ERP (SAP), CRM (Salesforce), calendars, document stores, 
+      and custom internal tools — via a secure, extensible plugin architecture.</li>
+      <li><strong>Builds compound memory</strong> — every interaction makes the agent smarter. 
+      Emails automatically build an organizational chart. Conversations reveal preferences. 
+      Calendar patterns expose priorities. This memory persists across sessions and grows 
+      over time.</li>
+      <li><strong>Acts, not just answers</strong> — OverClaw doesn't just retrieve information. 
+      A single instruction like "Prepare me for my 2pm with the Aetna formulary team" triggers 
+      the agent to pull recent emails, surface relevant Slack threads, check the shared drive 
+      for the latest deck, and draft a briefing — across four systems in one step.</li>
+      <li><strong>Learns passively</strong> — the agent extracts facts about the user (role, 
+      preferences, projects), discovers relationships (colleagues, reports, external contacts), 
+      and indexes email content — all automatically, without the user doing anything.</li>
+    </ul>
+    <div class="chart-container">
+      <div class="chart-title">Context Accumulation Over Time</div>
+      <div class="donut-grid">
+        <div class="donut-item">
+          <svg viewBox="0 0 120 120">
+            <circle class="donut-bg" cx="60" cy="60" r="50" />
+            <circle class="donut-value" cx="60" cy="60" r="50"
+              stroke="var(--cvs-gray-500)" stroke-dasharray="47 267" />
+          </svg>
+          <div class="donut-label">Week 1</div>
+          <div class="donut-pct">15%</div>
+        </div>
+        <div class="donut-item">
+          <svg viewBox="0 0 120 120">
+            <circle class="donut-bg" cx="60" cy="60" r="50" />
+            <circle class="donut-value" cx="60" cy="60" r="50"
+              stroke="var(--cvs-red)" stroke-dasharray="157 157" />
+          </svg>
+          <div class="donut-label">Month 1</div>
+          <div class="donut-pct">50%</div>
+        </div>
+        <div class="donut-item">
+          <svg viewBox="0 0 120 120">
+            <circle class="donut-bg" cx="60" cy="60" r="50" />
+            <circle class="donut-value" cx="60" cy="60" r="50"
+              stroke="var(--cvs-red-dark)" stroke-dasharray="251 63" />
+          </svg>
+          <div class="donut-label">Quarter 1</div>
+          <div class="donut-pct">80%</div>
+        </div>
+        <div class="donut-item">
+          <svg viewBox="0 0 120 120">
+            <circle class="donut-bg" cx="60" cy="60" r="50" />
+            <circle class="donut-value" cx="60" cy="60" r="50"
+              stroke="var(--cvs-black)" stroke-dasharray="295 19" />
+          </svg>
+          <div class="donut-label">Month 6</div>
+          <div class="donut-pct">94%</div>
+        </div>
+      </div>
+      <p style="text-align:center; font-size:13px; color:var(--cvs-gray-500); margin-top:16px; margin-bottom:0;">
+        Percentage of employee's working context captured by the agent over time
+      </p>
+    </div>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- WHY NOT COPILOT -->
+  <section>
+    <h2><span class="num">05</span> Why Not Just Expand Copilot?</h2>
+    <p>
+      Microsoft Copilot is the most commonly proposed enterprise AI solution. 
+      While powerful within the Microsoft ecosystem, it has fundamental limitations 
+      as a unified agent:
+    </p>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Microsoft Copilot</th>
+          <th>OverClaw</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cross-vendor integration</td>
+          <td>Microsoft only</td>
+          <td><strong>Any system via plugins</strong></td>
+        </tr>
+        <tr>
+          <td>Persistent memory across sessions</td>
+          <td>Limited / per-app</td>
+          <td><strong>Full RAG + embeddings</strong></td>
+        </tr>
+        <tr>
+          <td>Passive relationship discovery</td>
+          <td>No</td>
+          <td><strong>Automatic org chart</strong></td>
+        </tr>
+        <tr>
+          <td>Email content indexing</td>
+          <td>Search only</td>
+          <td><strong>Semantic RAG index</strong></td>
+        </tr>
+        <tr>
+          <td>LLM provider choice</td>
+          <td>GPT only</td>
+          <td><strong>OpenAI, Anthropic, Gemini, etc.</strong></td>
+        </tr>
+        <tr>
+          <td>Self-hosted / on-prem option</td>
+          <td>No</td>
+          <td><strong>Yes — Docker, any cloud</strong></td>
+        </tr>
+        <tr>
+          <td>Per-user licensing cost</td>
+          <td>$30/user/month + M365</td>
+          <td><strong>LLM API costs only</strong></td>
+        </tr>
+        <tr>
+          <td>Data stays in corporate boundary</td>
+          <td>Microsoft cloud</td>
+          <td><strong>Your infrastructure</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <p>
+        <strong>Key insight:</strong> Copilot is an application-level assistant. 
+        OverClaw is an employee-level agent. They solve fundamentally different 
+        problems. Copilot helps you write a better email. OverClaw knows why 
+        you're writing it, who the recipient is, what the last 3 conversations 
+        about this topic contained, and what your calendar looks like this week.
+      </p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- FINANCIAL IMPACT -->
+  <section>
+    <h2><span class="num">06</span> Financial Impact</h2>
+    <h3>License cost comparison (per 1,000 employees)</h3>
+    <div class="cost-grid">
+      <div class="cost-card siloed">
+        <div class="label">Siloed Assistants</div>
+        <div class="amount">$564K</div>
+        <div class="detail">
+          Copilot ($360K) + Joule ($120K) + Einstein ($84K)<br>
+          Per year, 1,000 users
+        </div>
+      </div>
+      <div class="cost-card unified">
+        <div class="label">OverClaw</div>
+        <div class="amount">$96K</div>
+        <div class="detail">
+          LLM API usage (~$8/user/month avg)<br>
+          Self-hosted, no per-seat licenses
+        </div>
+        <div class="savings">83% cost reduction</div>
+      </div>
+    </div>
+    <h3>Productivity ROI</h3>
+    <p>
+      Conservative estimate: each employee saves <strong>30 minutes per day</strong> 
+      on cross-system lookups, context reconstruction, and tool switching.
+    </p>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="value">$18K</div>
+        <div class="unit">saved per employee/year</div>
+        <div class="desc">at $72/hr fully loaded cost</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">$18M</div>
+        <div class="unit">annual savings</div>
+        <div class="desc">for 1,000 pilot employees</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">187x</div>
+        <div class="unit">ROI</div>
+        <div class="desc">productivity gain vs. infrastructure cost</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- SECURITY -->
+  <section>
+    <h2><span class="num">07</span> Security &amp; Compliance</h2>
+    <p>
+      For a healthcare organization operating under HIPAA, data sovereignty is 
+      non-negotiable. OverClaw is architected for regulated environments:
+    </p>
+    <ul>
+      <li><strong>Self-hosted deployment</strong> — runs on CVS Health's own infrastructure 
+      (on-prem, private cloud, or VPC). No data leaves the corporate boundary.</li>
+      <li><strong>OAuth-based integrations</strong> — the agent can only access what the 
+      employee can access. Existing access controls and sensitivity labels are respected.</li>
+      <li><strong>Per-employee memory isolation</strong> — each user's context, memory, 
+      and relationship graph is isolated and auditable.</li>
+      <li><strong>No model training on corporate data</strong> — LLM providers never see 
+      or train on your data. API calls are stateless.</li>
+      <li><strong>Open source and auditable</strong> — the full codebase is inspectable. 
+      No black-box vendor dependencies.</li>
+      <li><strong>Configurable retention policies</strong> — memory and indexed content 
+      can be automatically expired to comply with data retention requirements.</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PILOT PLAN -->
+  <section>
+    <h2><span class="num">08</span> Proposed Pilot Program</h2>
+    <p class="lead">
+      A 30-day pilot with 20 power users across two departments — 
+      enough to validate productivity gains without organizational disruption.
+    </p>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="week">Week 1 — Setup</div>
+        <h4>Infrastructure &amp; Integration</h4>
+        <p>Deploy OverClaw on CVS Health infrastructure. Connect email (Outlook), 
+        messaging (Teams/Slack), and one business system (SAP or Salesforce).</p>
+      </div>
+      <div class="timeline-item">
+        <div class="week">Week 2 — Onboarding</div>
+        <h4>User Activation</h4>
+        <p>Onboard 20 pilot users (managers, PMs, cross-functional leads). 
+        Brief training session. Agent begins learning user context immediately.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="week">Weeks 3-4 — Measurement</div>
+        <h4>Data Collection &amp; Analysis</h4>
+        <p>Track: queries resolved without app-switching, time saved per task, 
+        user satisfaction scores, memory accuracy, relationship graph completeness.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="week">Week 5 — Decision</div>
+        <h4>Results Review &amp; Expansion Plan</h4>
+        <p>Present findings to stakeholders. If metrics support expansion, 
+        define rollout plan for broader deployment.</p>
+      </div>
+    </div>
+    <h3>Success metrics</h3>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Target</th>
+          <th>Measurement Method</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Time saved per user per day</td>
+          <td>&ge; 30 minutes</td>
+          <td>User self-report + usage logs</td>
+        </tr>
+        <tr>
+          <td>Cross-system queries resolved</td>
+          <td>&ge; 80% without manual app-switching</td>
+          <td>Agent interaction logs</td>
+        </tr>
+        <tr>
+          <td>User satisfaction (NPS)</td>
+          <td>&ge; 70</td>
+          <td>Weekly survey</td>
+        </tr>
+        <tr>
+          <td>Relationship graph accuracy</td>
+          <td>&ge; 85% of team correctly identified</td>
+          <td>Manual validation</td>
+        </tr>
+        <tr>
+          <td>Memory recall accuracy</td>
+          <td>&ge; 90% relevant context surfaced</td>
+          <td>Sampled interaction review</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CLOSING -->
+  <section>
+    <h2><span class="num">09</span> Conclusion</h2>
+    <p>
+      The enterprise AI landscape is heading toward more fragmentation, not less. 
+      Every vendor is shipping their own assistant, each optimized for their own 
+      platform, each blind to the broader context of the employee's work.
+    </p>
+    <p>
+      CVS Health has a unique opportunity to move ahead of this trend. By deploying 
+      a unified, employee-centric AI agent, you give your workforce compound intelligence 
+      that grows with every interaction — across every system, every conversation, 
+      every email.
+    </p>
+    <div class="callout">
+      <p>
+        <strong>The question isn't whether employees need AI assistance.</strong> 
+        They already have it — fragmented across five different assistants that don't 
+        talk to each other. The question is whether CVS Health consolidates that 
+        intelligence into a single, context-aware agent that actually understands 
+        the employee's full world.
+      </p>
+    </div>
+    <p style="margin-top: 40px; font-size: 18px; font-weight: 600; color: var(--cvs-black);">
+      We'd welcome the opportunity to discuss a pilot deployment at your convenience.
+    </p>
+  </section>
+</div>
+
+<div class="footer">
+  <strong>OverClaw</strong> &mdash; Unified Enterprise AI Agent &mdash; Confidential<br>
+  <span style="margin-top:8px; display:inline-block;">
+    &copy; 2026 &mdash; Prepared exclusively for CVS Health Corporation
+  </span>
+</div>
+
+</body>
+</html>
