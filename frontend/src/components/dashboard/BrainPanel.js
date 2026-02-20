@@ -66,12 +66,15 @@ export function BrainPanel() {
 
   const total = stats
     ? (stats.memories || 0) + (stats.user_profiles || 0) + (stats.relationships || 0)
+      + (stats.tasks || 0) + (stats.chat_messages || 0) + (stats.sessions || 0)
     : 0;
 
   const STAT_ITEMS = [
     { key: "memories", label: "Memories", icon: Brain, color: "text-violet-400", bg: "bg-violet-500/10" },
     { key: "user_profiles", label: "User Profiles", icon: FileText, color: "text-sky-400", bg: "bg-sky-500/10" },
-    { key: "relationships", label: "Relationships", icon: Users, color: "text-amber-400", bg: "bg-amber-500/10" },
+    { key: "relationships", label: "People", icon: Users, color: "text-amber-400", bg: "bg-amber-500/10" },
+    { key: "tasks", label: "Tasks", icon: FileText, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+    { key: "conversation_sessions", label: "Conversations", icon: Users, color: "text-rose-400", bg: "bg-rose-500/10" },
   ];
 
   return (
