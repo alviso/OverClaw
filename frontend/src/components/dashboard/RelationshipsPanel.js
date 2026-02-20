@@ -177,7 +177,7 @@ export function RelationshipsPanel({ rpc, authenticated }) {
     grouped[rel].push(p);
   });
 
-  const groupOrder = ["manager", "report", "peer", "colleague", "client", "vendor", "external", "unknown"];
+  const groupOrder = ["manager", "report", "peer", "colleague", "client", "external", "unknown", "vendor"];
   const selectedNames = people.filter((p) => selected.has(p.id)).map((p) => p.name);
 
   return (
