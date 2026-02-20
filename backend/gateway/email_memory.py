@@ -98,15 +98,15 @@ def _name_tokens(name: str) -> set:
 
 
 def _names_match(name_a: str, name_b: str) -> bool:
-    """Check if two names likely refer to the same person.
-    - Exact match after normalization
-    - One is a subset of the other (e.g., 'Áron' vs 'Vadász Áron')
-    - Significant token overlap (e.g., 'Attila Vadász' vs 'Vadász Attila (TcT)')
-    """
+    """Check if two names likely refer to the same person."""
     norm_a = _normalize_name(name_a)
     norm_b = _normalize_name(name_b)
 
     if norm_a == norm_b:
+        return True
+
+    # Also compare accent-stripped versions
+    if _strip_accents(norm_a) == _strip_accents(norm_b):
         return True
 
     tokens_a = _name_tokens(name_a)
@@ -115,13 +115,15 @@ def _names_match(name_a: str, name_b: str) -> bool:
     if not tokens_a or not tokens_b:
         return False
 
-    # One name is a subset of the other
+    # One name is a subset of the other (including accent variants)
     if tokens_a.issubset(tokens_b) or tokens_b.issubset(tokens_a):
         return True
 
-    # Significant overlap: overlap must cover majority of the smaller name
+    # Count overlap against base (non-expanded) token counts
+    base_a = {t for t in _normalize_name(name_a).replace(".", "").replace(",", "").split() if len(t) > 1}
+    base_b = {t for t in _normalize_name(name_b).replace(".", "").replace(",", "").split() if len(t) > 1}
     overlap = tokens_a & tokens_b
-    smaller = min(len(tokens_a), len(tokens_b))
+    smaller = min(len(base_a), len(base_b))
     if smaller > 0 and len(overlap) / smaller >= 0.6:
         return True
 
