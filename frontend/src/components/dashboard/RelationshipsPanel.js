@@ -24,9 +24,18 @@ function timeAgo(isoString) {
   return new Date(isoString).toLocaleDateString();
 }
 
-function PersonCard({ person, mergeMode, selected, onToggle, onDelete }) {
+function PersonCard({ person, mergeMode, selected, onToggle, onDelete, onUpdateEmail }) {
   const rel = RELATIONSHIP_COLORS[person.relationship] || RELATIONSHIP_COLORS.unknown;
   const latestContext = person.context_history?.slice(-1)[0]?.text || "";
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailDraft, setEmailDraft] = useState(person.email_address || "");
+
+  const saveEmail = async () => {
+    const trimmed = emailDraft.trim();
+    if (trimmed === (person.email_address || "")) { setEditingEmail(false); return; }
+    await onUpdateEmail(person.id, trimmed);
+    setEditingEmail(false);
+  };
 
   return (
     <div
@@ -68,12 +77,41 @@ function PersonCard({ person, mergeMode, selected, onToggle, onDelete }) {
             </span>
           </div>
 
-          {person.email_address && (
-            <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-              <Mail size={10} className="text-zinc-600" />
-              <span className="truncate">{person.email_address}</span>
-            </div>
-          )}
+          {/* Email row — editable */}
+          <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+            <Mail size={10} className="text-zinc-600" />
+            {editingEmail ? (
+              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <input
+                  autoFocus
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") saveEmail(); if (e.key === "Escape") setEditingEmail(false); }}
+                  className="bg-zinc-800 border border-zinc-600 rounded px-1.5 py-0.5 text-xs text-zinc-200 w-44 outline-none focus:border-indigo-500"
+                  placeholder="email@example.com"
+                  data-testid={`email-input-${person.id}`}
+                />
+                <button onClick={saveEmail} className="text-emerald-400 hover:text-emerald-300"><Check size={12} /></button>
+                <button onClick={() => setEditingEmail(false)} className="text-zinc-500 hover:text-zinc-300"><X size={12} /></button>
+              </div>
+            ) : (
+              <>
+                <span className={`truncate ${person.email_address ? "" : "italic text-zinc-700"}`}>
+                  {person.email_address || "no email"}
+                </span>
+                {!mergeMode && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditingEmail(true); setEmailDraft(person.email_address || ""); }}
+                    className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-400 transition-all"
+                    data-testid={`edit-email-${person.id}`}
+                    title="Edit email"
+                  >
+                    <Pencil size={10} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
 
           <div className="flex items-center gap-1.5 text-xs text-zinc-500">
             {person.role && (
