@@ -195,8 +195,9 @@ async def build_relationships_context(db) -> str:
 
 async def get_relationships(db) -> list:
     """Return all discovered relationships for the admin panel."""
-    cursor = db.relationships.find(
-        {}, {"_id": 0}
-    ).sort("mention_count", -1)
-
-    return await cursor.to_list(length=100)
+    cursor = db.relationships.find({}).sort("mention_count", -1)
+    docs = await cursor.to_list(length=100)
+    # Convert _id to string for JSON serialization
+    for doc in docs:
+        doc["id"] = str(doc.pop("_id"))
+    return docs
