@@ -120,7 +120,7 @@ async def _upsert_people(db, people: list):
 async def build_relationships_context(db) -> str:
     """Build a context string of known people for injection into the system prompt."""
     cursor = db.relationships.find(
-        {}, {"_id": 0, "name": 1, "role": 1, "team": 1, "relationship": 1, "context_history": 1}
+        {}, {"_id": 0, "name": 1, "role": 1, "team": 1, "relationship": 1, "email_address": 1, "context_history": 1}
     ).sort("mention_count", -1).limit(20)
 
     people = await cursor.to_list(length=20)
