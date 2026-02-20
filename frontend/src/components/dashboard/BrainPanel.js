@@ -98,7 +98,7 @@ export function BrainPanel() {
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-5 gap-3 mb-6">
           {STAT_ITEMS.map(({ key, label, icon: Icon, color, bg }) => (
             <div key={key} className="bg-zinc-800/40 rounded-lg p-3 flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center`}>
