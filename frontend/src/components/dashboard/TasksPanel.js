@@ -13,8 +13,21 @@ export function TasksPanel({ rpc, authenticated }) {
 
   const fetchTasks = useCallback(() => {
     if (!authenticated) return;
-    rpc("tasks.list").then(r => { if (r?.tasks) setTasks(r.tasks); }).catch(() => {});
+    rpc("tasks.list").then(r => {
+      if (r?.tasks) setTasks(r.tasks);
+    }).catch(() => {});
   }, [authenticated, rpc]);
+
+  // Auto-refresh history for expanded task
+  useEffect(() => {
+    if (!expandedTask || !authenticated) return;
+    const interval = setInterval(() => {
+      rpc("tasks.history", { id: expandedTask, limit: 10 }).then(r => {
+        if (r?.history) setTaskHistory(prev => ({ ...prev, [expandedTask]: r.history }));
+      }).catch(() => {});
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [expandedTask, authenticated, rpc]);
 
   useEffect(() => {
     fetchTasks();
