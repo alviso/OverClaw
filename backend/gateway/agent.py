@@ -354,6 +354,11 @@ class AgentRunner:
         skills_prompt = await skill_mgr.build_skills_prompt(agent_id)
         system_prompt = base_prompt + (skills_prompt or "")
 
+        # Inject current time so the agent can reason about time
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        system_prompt += f"\n\n## Current Time\nIt is currently {now.strftime('%A, %B %d, %Y at %I:%M %p')} UTC."
+
         # Inject relevant memories into system prompt
         memory_context = await build_memory_context(self.db, user_text, agent_id, max_results=3)
         if memory_context:
