@@ -202,6 +202,17 @@ export function RelationshipsPanel({ rpc, authenticated }) {
     } catch {}
   };
 
+  const handleUpdateEmail = async (id, email) => {
+    try {
+      await fetch(`${API}/api/people/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_address: email }),
+      });
+      fetchPeople();
+    } catch {}
+  };
+
   const cancelMerge = () => {
     setMergeMode(false);
     setSelected(new Set());
