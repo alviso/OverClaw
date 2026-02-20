@@ -146,7 +146,7 @@ async def startup():
     orchestrator_tools = [
         "memory_search", "browse_webpage", "system_info", "http_request",
         "analyze_image", "transcribe_audio", "parse_document", "monitor_url",
-        "browser_use", "gmail", "delegate", "list_agents",
+        "browser_use", "gmail", "delegate", "list_agents", "slack_notify",
     ]
     specialist_ids = [a["id"] for a in SPECIALIST_AGENTS]
     non_delegate = [t for t in orchestrator_tools if t not in ("delegate", "list_agents")]
