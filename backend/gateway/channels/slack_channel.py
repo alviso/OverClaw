@@ -303,8 +303,22 @@ class SlackChannel(ChannelAdapter):
 
         logger.info(f"Slack message ACCEPTED: user={user} channel={channel} dm={channel_type} files={len(files)} text={text[:80]}")
 
-        # Track last active conversation for proactive notifications
+        # Persist last active conversation for proactive notifications
         self._last_active_channel = channel
+        try:
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import os
+            client = AsyncIOMotorClient(os.environ.get("MONGO_URL"))
+            _db = client[os.environ.get("DB_NAME", "overclaw")]
+            asyncio.create_task(
+                _db.settings.update_one(
+                    {"key": "slack_last_active_channel"},
+                    {"$set": {"value": channel, "user": user}},
+                    upsert=True,
+                )
+            )
+        except Exception:
+            pass
 
         # Run message handling in background so it doesn't block other Slack events
         # Use direct API calls instead of say() for reliability from background tasks
