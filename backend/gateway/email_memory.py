@@ -69,18 +69,32 @@ def _normalize_name(name: str) -> str:
     name = name.lower().strip()
     # Remove parenthetical suffixes like "(TcT)"
     name = re.sub(r'\s*\([^)]*\)\s*', ' ', name)
+    # Handle "Last, First" → "first last"
+    if "," in name:
+        parts = [p.strip() for p in name.split(",", 1)]
+        if len(parts) == 2 and parts[0] and parts[1]:
+            name = f"{parts[1]} {parts[0]}"
     # Remove extra whitespace
     name = re.sub(r'\s+', ' ', name).strip()
     return name
 
 
+def _strip_accents(s: str) -> str:
+    """Remove diacritics for fuzzy comparison: Péter → Peter, Áron → Aron."""
+    import unicodedata
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'
+    )
+
+
 def _name_tokens(name: str) -> set:
     """Get a set of meaningful name tokens for fuzzy matching."""
     normalized = _normalize_name(name)
-    # Remove dots, commas
     cleaned = normalized.replace(".", "").replace(",", "")
     tokens = {t for t in cleaned.split() if len(t) > 1}
-    return tokens
+    # Also add accent-stripped versions
+    stripped = {_strip_accents(t) for t in tokens}
+    return tokens | stripped
 
 
 def _names_match(name_a: str, name_b: str) -> bool:
