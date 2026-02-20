@@ -73,11 +73,8 @@ async def import_brain(db, brain_data: dict) -> dict:
             doc["imported_at"] = now
 
             if collection_name == "memories":
-                # Dedupe by content + session_id
-                existing = await coll.find_one({
-                    "content": doc.get("content"),
-                    "session_id": doc.get("session_id"),
-                })
+                # Dedupe by content alone — same content = same memory
+                existing = await coll.find_one({"content": doc.get("content")})
                 if existing:
                     skipped += 1
                     continue
