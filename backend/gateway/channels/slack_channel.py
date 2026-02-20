@@ -67,6 +67,7 @@ class SlackChannel(ChannelAdapter):
         self._background_tasks: set = set()  # prevent GC of background tasks
         self._handler_task = None  # reference to socket mode handler task
         self._app_token: Optional[str] = None
+        self._last_active_channel: Optional[str] = None
 
     def set_message_handler(self, handler):
         """Set the callback for incoming messages."""
