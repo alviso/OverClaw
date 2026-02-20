@@ -184,4 +184,7 @@ async def get_brain_stats(db) -> dict:
     stats = {}
     for collection_name in BRAIN_COLLECTIONS:
         stats[collection_name] = await db[collection_name].count_documents({})
+    # Add conversation session count for a more useful stat
+    sessions = await db.chat_messages.distinct("session_id")
+    stats["conversation_sessions"] = len(sessions)
     return stats
