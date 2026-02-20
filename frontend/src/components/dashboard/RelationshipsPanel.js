@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Users, RefreshCw, User, Briefcase, ArrowRight } from "lucide-react";
+import { Users, RefreshCw, User, Briefcase, ArrowRight, Mail } from "lucide-react";
 
 const RELATIONSHIP_COLORS = {
   manager: { bg: "bg-amber-500/10", border: "border-amber-500/20", text: "text-amber-400", label: "Manager" },
@@ -41,6 +41,15 @@ function PersonCard({ person }) {
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${rel.bg} ${rel.border} border ${rel.text} font-medium`}>
               {rel.label}
             </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+            {person.email_address && (
+              <>
+                <Mail size={10} className="text-zinc-600" />
+                <span className="truncate">{person.email_address}</span>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-zinc-500">
@@ -103,7 +112,7 @@ export function RelationshipsPanel({ rpc, authenticated }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-sm text-zinc-500">
-            People discovered from your conversations. OverClaw passively builds this map as you chat.
+            People discovered from your conversations and emails. OverClaw passively builds this map as you chat.
           </p>
         </div>
         <button
