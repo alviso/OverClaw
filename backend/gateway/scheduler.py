@@ -99,12 +99,29 @@ class TaskScheduler:
         # The task uses memory_search for recall, not chat history
         await self.db.chat_messages.delete_many({"session_id": session_id})
 
+        # For email-triage: inject already-processed email IDs to prevent re-notification
+        effective_prompt = prompt
+        seen_ids = await self.db.processed_emails.distinct("message_id", {"task_id": task_id})
+        if seen_ids:
+            effective_prompt += f"\n\nALREADY PROCESSED GMAIL MESSAGE IDs — do NOT re-read or notify about these:\n{', '.join(seen_ids[-100:])}"
+
         try:
             response, tool_calls = await self.agent_runner.run_turn(
                 session_id=session_id,
-                user_text=prompt,
+                user_text=effective_prompt,
                 agent_id=agent_id,
             )
+
+            # Track gmail message IDs that were read in this run
+            for tc in tool_calls:
+                if tc.get("tool") == "gmail":
+                    mid = tc.get("args", {}).get("message_id", "")
+                    if mid:
+                        await self.db.processed_emails.update_one(
+                            {"message_id": mid, "task_id": task_id},
+                            {"$set": {"processed_at": datetime.now(timezone.utc).isoformat()}},
+                            upsert=True,
+                        )
 
             # Store execution result
             result_entry = {
