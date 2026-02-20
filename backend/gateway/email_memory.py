@@ -129,20 +129,23 @@ def _names_match(name_a: str, name_b: str) -> bool:
 
 
 def _pick_best_name(existing_name: str, new_name: str) -> str:
-    """Pick the most complete/informative name."""
-    # Strip parens from both for comparison
-    clean_existing = re.sub(r'\s*\([^)]*\)\s*', ' ', existing_name).strip()
-    clean_new = re.sub(r'\s*\([^)]*\)\s*', ' ', new_name).strip()
+    """Pick the most complete/informative name. Prefer 'First Last' over 'Last, First'."""
+    # Clean both to "First Last" for comparison
+    clean_existing = _clean_name(existing_name)
+    clean_new = _clean_name(new_name)
+    # Also strip parens
+    clean_existing = re.sub(r'\s*\([^)]*\)\s*', ' ', clean_existing).strip()
+    clean_new = re.sub(r'\s*\([^)]*\)\s*', ' ', clean_new).strip()
 
-    # Prefer the one with more word parts (fuller name)
     parts_existing = [p for p in clean_existing.split() if len(p) > 1]
     parts_new = [p for p in clean_new.split() if len(p) > 1]
 
+    # Prefer the one with more word parts (fuller name)
     if len(parts_new) > len(parts_existing):
-        return new_name
+        return clean_new
     if len(parts_new) == len(parts_existing) and len(clean_new) > len(clean_existing):
-        return new_name
-    return existing_name
+        return clean_new
+    return clean_existing
 
 
 def _is_user_sent(email: dict, user_email: str) -> bool:
