@@ -208,10 +208,34 @@ async def build_relationships_context(db) -> str:
 
 
 async def get_relationships(db) -> list:
-    """Return all discovered relationships for the admin panel."""
+    """Return all discovered relationships for the admin panel, excluding the user."""
+    # Get user identity for filtering
+    user_emails = set()
+    for coll_name in ("gmail_tokens", "microsoft_tokens"):
+        doc = await db[coll_name].find_one({"user_id": "default"}, {"email": 1})
+        if doc and doc.get("email"):
+            user_emails.add(doc["email"].lower())
+    profile = await db.user_profiles.find_one({"profile_id": "default"}, {"facts": 1})
+    facts = (profile or {}).get("facts", {})
+    user_names = set()
+    for key in ("full_name", "preferred_name", "name"):
+        val = facts.get(key, {})
+        if isinstance(val, dict):
+            val = val.get("value", "")
+        if val:
+            user_names.add(val.lower())
+
     cursor = db.relationships.find({}).sort("mention_count", -1)
     docs = await cursor.to_list(length=100)
-    # Convert _id to string for JSON serialization
+    result = []
     for doc in docs:
         doc["id"] = str(doc.pop("_id"))
-    return docs
+        # Filter out the user themselves
+        name_lower = doc.get("name", "").lower()
+        email_lower = (doc.get("email_address") or "").lower()
+        if any(un and (name_lower == un or name_lower in un or un in name_lower) for un in user_names):
+            continue
+        if email_lower and email_lower in user_emails:
+            continue
+        result.append(doc)
+    return result
