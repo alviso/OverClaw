@@ -166,7 +166,7 @@ export function BrainPanel() {
             </span>
           </div>
           {importResult.ok && importResult.results && (
-            <div className="grid grid-cols-3 gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-3 mt-3">
               {Object.entries(importResult.results).map(([key, val]) => (
                 <div key={key} className="text-xs text-zinc-400">
                   <span className="font-medium text-zinc-300 capitalize">{key.replace("_", " ")}</span>
