@@ -15,6 +15,7 @@ BRAIN_COLLECTIONS = {
     "relationships": {"exclude_fields": {"_id": 1}},
     "tasks": {"exclude_fields": {"_id": 1}},
     "chat_messages": {"exclude_fields": {"_id": 1}},
+    "sessions": {"exclude_fields": {"_id": 1}},
 }
 
 
