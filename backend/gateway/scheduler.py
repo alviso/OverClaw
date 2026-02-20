@@ -9,7 +9,7 @@ When a task detects something noteworthy, it creates a notification.
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 logger = logging.getLogger("gateway.scheduler")
