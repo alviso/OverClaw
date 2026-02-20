@@ -1,6 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import { Clock, Play, Pause, Trash2, Plus, ChevronDown, ChevronUp, RotateCw, History, AlertCircle } from "lucide-react";
 
+function HistoryEntry({ h }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = (h.response?.length || 0) > 150;
+  return (
+    <div className="bg-zinc-800/40 rounded-lg px-3 py-2 text-[11px]">
+      <div className="flex items-center gap-2">
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${h.status === "success" ? "bg-emerald-400" : "bg-rose-400"}`} />
+        <span className="text-zinc-400">{new Date(h.timestamp).toLocaleString()}</span>
+        <span className="text-zinc-600">{h.tool_calls_count} tools</span>
+        {isLong && (
+          <button onClick={() => setExpanded(!expanded)} className="text-zinc-600 hover:text-zinc-400 ml-auto">
+            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+        )}
+      </div>
+      <div className={`text-zinc-500 mt-1 whitespace-pre-wrap ${expanded ? "" : "line-clamp-2"}`}>
+        {h.response || "No response"}
+      </div>
+    </div>
+  );
+}
+
 export function TasksPanel({ rpc, authenticated }) {
   const [tasks, setTasks] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
