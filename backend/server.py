@@ -734,6 +734,22 @@ async def delete_person(person_id: str):
     return {"ok": True, "deleted": result.deleted_count}
 
 
+@api_router.patch("/people/{person_id}")
+async def update_person(person_id: str, request: Request):
+    """Update a person's fields (e.g. email_address)."""
+    from bson import ObjectId
+    data = await request.json()
+    allowed = {"email_address", "role", "team", "relationship"}
+    update = {k: v for k, v in data.items() if k in allowed}
+    if not update:
+        return JSONResponse({"ok": False, "error": "No valid fields"}, status_code=400)
+    try:
+        result = await db.relationships.update_one({"_id": ObjectId(person_id)}, {"$set": update})
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid ID"}, status_code=400)
+    return {"ok": True, "modified": result.modified_count}
+
+
 
 app.include_router(api_router)
 
