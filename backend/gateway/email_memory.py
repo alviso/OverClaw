@@ -13,9 +13,21 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger("gateway.email_memory")
 
-# Regex to parse "Display Name <email@domain.com>" or plain "email@domain.com"
-_ADDR_WITH_NAME = re.compile(r'"?([^"<,]+?)"?\s*<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>')
-_ADDR_PLAIN = re.compile(r'(?<![<\w.%+\-])([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})(?!>)')
+# Regex patterns for email parsing
+_QUOTED_NAME = re.compile(r'"([^"]+)"\s*<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>')
+_UNQUOTED_NAME = re.compile(r'([^<,]+?)\s*<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>')
+_PLAIN_EMAIL = re.compile(r'(?<![<\w.%+\-])([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})(?!>)')
+
+
+def _clean_name(raw: str) -> str:
+    """Clean a parsed name: handle 'Last, First' format, strip junk."""
+    name = raw.strip().strip('"').strip()
+    # If name contains a comma, it's likely "Last, First" format
+    if "," in name:
+        parts = [p.strip() for p in name.split(",", 1)]
+        if len(parts) == 2 and parts[0] and parts[1]:
+            name = f"{parts[1]} {parts[0]}"  # Convert to "First Last"
+    return name
 
 
 def _parse_email_addresses(header: str) -> list[dict]:
@@ -25,16 +37,24 @@ def _parse_email_addresses(header: str) -> list[dict]:
     results = []
     seen = set()
 
-    # First pass: "Name <email>" format
-    for match in _ADDR_WITH_NAME.finditer(header):
-        name = match.group(1).strip().strip('"').strip()
+    # First: "Quoted Name" <email> (handles commas in names)
+    for match in _QUOTED_NAME.finditer(header):
+        name = _clean_name(match.group(1))
         email = match.group(2).strip().lower()
         if email not in seen:
             seen.add(email)
             results.append({"name": name, "email": email})
 
-    # Second pass: plain email addresses not already captured
-    for match in _ADDR_PLAIN.finditer(header):
+    # Second: Unquoted Name <email>
+    for match in _UNQUOTED_NAME.finditer(header):
+        email = match.group(2).strip().lower()
+        if email not in seen:
+            name = match.group(1).strip()
+            seen.add(email)
+            results.append({"name": name, "email": email})
+
+    # Third: plain email addresses
+    for match in _PLAIN_EMAIL.finditer(header):
         email = match.group(1).strip().lower()
         if email not in seen:
             seen.add(email)
