@@ -44,7 +44,71 @@ def _parse_email_addresses(header: str) -> list[dict]:
     return results
 
 
-def _is_user_sent(email: dict, user_email: str) -> bool:
+def _normalize_name(name: str) -> str:
+    """Normalize name for matching: lowercase, strip parens/suffixes, consistent ordering."""
+    name = name.lower().strip()
+    # Remove parenthetical suffixes like "(TcT)"
+    name = re.sub(r'\s*\([^)]*\)\s*', ' ', name)
+    # Remove extra whitespace
+    name = re.sub(r'\s+', ' ', name).strip()
+    return name
+
+
+def _name_tokens(name: str) -> set:
+    """Get a set of meaningful name tokens for fuzzy matching."""
+    normalized = _normalize_name(name)
+    # Remove dots, commas
+    cleaned = normalized.replace(".", "").replace(",", "")
+    tokens = {t for t in cleaned.split() if len(t) > 1}
+    return tokens
+
+
+def _names_match(name_a: str, name_b: str) -> bool:
+    """Check if two names likely refer to the same person.
+    - Exact match after normalization
+    - One is a subset of the other (e.g., 'Áron' vs 'Vadász Áron')
+    - Significant token overlap (e.g., 'Attila Vadász' vs 'Vadász Attila (TcT)')
+    """
+    norm_a = _normalize_name(name_a)
+    norm_b = _normalize_name(name_b)
+
+    if norm_a == norm_b:
+        return True
+
+    tokens_a = _name_tokens(name_a)
+    tokens_b = _name_tokens(name_b)
+
+    if not tokens_a or not tokens_b:
+        return False
+
+    # One name is a subset of the other
+    if tokens_a.issubset(tokens_b) or tokens_b.issubset(tokens_a):
+        return True
+
+    # Significant overlap: at least one token matches and it's a "real" name token (>2 chars)
+    overlap = tokens_a & tokens_b
+    meaningful_overlap = {t for t in overlap if len(t) > 2}
+    if meaningful_overlap:
+        return True
+
+    return False
+
+
+def _pick_best_name(existing_name: str, new_name: str) -> str:
+    """Pick the most complete/informative name."""
+    # Strip parens from both for comparison
+    clean_existing = re.sub(r'\s*\([^)]*\)\s*', ' ', existing_name).strip()
+    clean_new = re.sub(r'\s*\([^)]*\)\s*', ' ', new_name).strip()
+
+    # Prefer the one with more word parts (fuller name)
+    parts_existing = [p for p in clean_existing.split() if len(p) > 1]
+    parts_new = [p for p in clean_new.split() if len(p) > 1]
+
+    if len(parts_new) > len(parts_existing):
+        return new_name
+    if len(parts_new) == len(parts_existing) and len(clean_new) > len(clean_existing):
+        return new_name
+    return existing_name
     """Check if this email was sent BY the user (they responded/initiated)."""
     if not user_email:
         return False
