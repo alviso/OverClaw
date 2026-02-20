@@ -109,23 +109,35 @@ def _names_match(name_a: str, name_b: str) -> bool:
     if _strip_accents(norm_a) == _strip_accents(norm_b):
         return True
 
-    tokens_a = _name_tokens(name_a)
-    tokens_b = _name_tokens(name_b)
+    # Get base tokens (without accent expansion) for size comparison
+    base_a = {t for t in norm_a.replace(".", "").replace(",", "").split() if len(t) > 1}
+    base_b = {t for t in norm_b.replace(".", "").replace(",", "").split() if len(t) > 1}
 
-    if not tokens_a or not tokens_b:
+    if not base_a or not base_b:
         return False
 
-    # One name is a subset of the other (including accent variants)
-    if tokens_a.issubset(tokens_b) or tokens_b.issubset(tokens_a):
-        return True
+    # Build expanded tokens for matching (with accent-stripped variants)
+    expanded_a = base_a | {_strip_accents(t) for t in base_a}
+    expanded_b = base_b | {_strip_accents(t) for t in base_b}
 
-    # Count overlap against base (non-expanded) token counts
-    base_a = {t for t in _normalize_name(name_a).replace(".", "").replace(",", "").split() if len(t) > 1}
-    base_b = {t for t in _normalize_name(name_b).replace(".", "").replace(",", "").split() if len(t) > 1}
-    overlap = tokens_a & tokens_b
-    smaller = min(len(base_a), len(base_b))
-    if smaller > 0 and len(overlap) / smaller >= 0.6:
-        return True
+    # One name is a subset of the other (e.g., "Áron" matches "Áron Vadász")
+    # Check: every base token in smaller set has a match in larger expanded set
+    if len(base_a) <= len(base_b):
+        if all(t in expanded_b or _strip_accents(t) in expanded_b for t in base_a):
+            return True
+    if len(base_b) <= len(base_a):
+        if all(t in expanded_a or _strip_accents(t) in expanded_a for t in base_b):
+            return True
+
+    # For two multi-token names: require that MOST base tokens match, not just one
+    # This prevents "John Smith" matching "Jane Smith" or "Áron Vadász" matching "Attila Vadász"
+    if len(base_a) >= 2 and len(base_b) >= 2:
+        # Count how many tokens from each set have a match in the other
+        matches_a = sum(1 for t in base_a if t in expanded_b or _strip_accents(t) in expanded_b)
+        matches_b = sum(1 for t in base_b if t in expanded_a or _strip_accents(t) in expanded_a)
+        # Both names must have majority of their tokens matched
+        if matches_a / len(base_a) >= 0.6 and matches_b / len(base_b) >= 0.6:
+            return True
 
     return False
 
