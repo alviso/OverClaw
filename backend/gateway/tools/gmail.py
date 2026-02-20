@@ -146,7 +146,7 @@ class GmailTool(Tool):
 
     async def _filter_processed(self, emails: list) -> list:
         """Remove emails already tracked in processed_emails collection."""
-        if not emails or not _db:
+        if not emails or _db is None:
             return emails
         seen = set(await _db.processed_emails.distinct("message_id"))
         if not seen:
