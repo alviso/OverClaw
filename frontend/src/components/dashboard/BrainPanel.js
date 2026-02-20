@@ -186,7 +186,7 @@ export function BrainPanel() {
       <div className="bg-zinc-900/30 border border-zinc-800/40 rounded-xl p-4">
         <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">How it works</h4>
         <ul className="space-y-1.5 text-xs text-zinc-500">
-          <li><strong className="text-zinc-400">Export</strong> downloads all memories, profile facts, and relationships as a single JSON file.</li>
+          <li><strong className="text-zinc-400">Export</strong> downloads memories, people, tasks, conversations, and profile as a single JSON file.</li>
           <li><strong className="text-zinc-400">Import</strong> merges the file into the current database — existing data is preserved, duplicates are skipped.</li>
           <li><strong className="text-zinc-400">Embeddings</strong> are regenerated on import if missing (requires OpenAI key).</li>
           <li><strong className="text-zinc-400">OAuth tokens</strong> are excluded — you'll need to reconnect Gmail/Outlook on the new machine.</li>
