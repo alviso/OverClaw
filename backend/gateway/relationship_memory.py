@@ -69,10 +69,20 @@ async def extract_relationships(db, user_message: str):
 
 async def _upsert_people(db, people: list):
     """Upsert discovered people into the relationships collection.
-    Uses fuzzy name matching to avoid duplicates."""
+    Uses fuzzy name matching to avoid duplicates. Filters out the user."""
     from gateway.email_memory import _names_match, _pick_best_name, _normalize_name
 
     now = datetime.now(timezone.utc).isoformat()
+
+    # Get connected user's email and name to filter them out
+    user_emails = set()
+    for coll_name in ("gmail_tokens", "microsoft_tokens"):
+        doc = await db[coll_name].find_one({"user_id": "default"}, {"email": 1})
+        if doc and doc.get("email"):
+            user_emails.add(doc["email"].lower())
+    # Also get name from user profile
+    profile = await db.user_profiles.find_one({"profile_id": "default"}, {"facts": 1})
+    user_name = (profile or {}).get("facts", {}).get("name", "").lower()
 
     for person in people:
         if not isinstance(person, dict):
