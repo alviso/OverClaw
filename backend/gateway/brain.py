@@ -21,7 +21,7 @@ BRAIN_COLLECTIONS = {
 async def export_brain(db) -> dict:
     """Export all knowledge collections into a portable dict."""
     brain = {
-        "version": 1,
+        "version": 2,
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "collections": {},
         "stats": {},
