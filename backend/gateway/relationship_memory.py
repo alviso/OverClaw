@@ -68,7 +68,10 @@ async def extract_relationships(db, user_message: str):
 
 
 async def _upsert_people(db, people: list):
-    """Upsert discovered people into the relationships collection."""
+    """Upsert discovered people into the relationships collection.
+    Uses fuzzy name matching to avoid duplicates."""
+    from gateway.email_memory import _names_match, _pick_best_name, _normalize_name
+
     now = datetime.now(timezone.utc).isoformat()
 
     for person in people:
@@ -78,16 +81,23 @@ async def _upsert_people(db, people: list):
         if not name or len(name) < 2:
             continue
 
-        # Normalize name for matching (lowercase for lookup, preserve original for display)
-        name_key = name.lower().replace(".", "").strip()
+        name_key = _normalize_name(name).replace(" ", "")
 
-        update = {
-            "name": name,
-            "name_key": name_key,
-            "last_seen": now,
-        }
+        # 1) Try exact name_key match
+        existing = await db.relationships.find_one({"name_key": name_key})
 
-        # Only update fields that have values (don't overwrite with null)
+        # 2) Fuzzy name match against all existing people
+        if not existing:
+            all_people = await db.relationships.find(
+                {}, {"name": 1, "name_key": 1, "email_address": 1}
+            ).to_list(500)
+            for p in all_people:
+                if _names_match(name, p.get("name", "")):
+                    existing = p
+                    break
+
+        update = {"last_seen": now}
+
         if person.get("role"):
             update["role"] = person["role"]
         if person.get("team"):
@@ -95,24 +105,39 @@ async def _upsert_people(db, people: list):
         if person.get("relationship"):
             update["relationship"] = person["relationship"]
 
-        # Append context to history (keep last 5)
         context = (person.get("context") or "").strip()
 
-        await db.relationships.update_one(
-            {"name_key": name_key},
-            {
-                "$set": update,
-                "$setOnInsert": {"discovered_at": now},
-                "$push": {
-                    "context_history": {
-                        "$each": [{"text": context, "at": now}] if context else [],
-                        "$slice": -5,
-                    }
+        if existing:
+            best_name = _pick_best_name(existing.get("name", ""), name)
+            if best_name != existing.get("name", ""):
+                update["name"] = best_name
+                update["name_key"] = _normalize_name(best_name).replace(" ", "")
+
+            await db.relationships.update_one(
+                {"_id": existing["_id"]},
+                {
+                    "$set": update,
+                    "$push": {
+                        "context_history": {
+                            "$each": [{"text": context, "at": now}] if context else [],
+                            "$slice": -10,
+                        }
+                    },
+                    "$inc": {"mention_count": 1},
                 },
-                "$inc": {"mention_count": 1},
-            },
-            upsert=True,
-        )
+            )
+        else:
+            await db.relationships.insert_one({
+                "name": name,
+                "name_key": name_key,
+                "role": person.get("role"),
+                "team": person.get("team"),
+                "relationship": person.get("relationship", "unknown"),
+                "discovered_at": now,
+                "last_seen": now,
+                "mention_count": 1,
+                "context_history": [{"text": context, "at": now}] if context else [],
+            })
 
     logger.info(f"Relationships updated: {[p.get('name') for p in people if isinstance(p, dict)]}")
 
