@@ -149,6 +149,16 @@ function AdminLayout() {
               </main>
             </>
           } />
+          <Route path="/brain" element={
+            <>
+              <DashboardHeader title="Brain" subtitle="Export & import agent knowledge">
+                <ConnectionIndicator connected={connected} authenticated={authenticated} reconnecting={reconnecting} />
+              </DashboardHeader>
+              <main className="flex-1 overflow-y-auto p-6">
+                <BrainPanel />
+              </main>
+            </>
+          } />
           <Route path="/slack" element={
             <>
               <DashboardHeader title="Slack" subtitle="Channel configuration">
