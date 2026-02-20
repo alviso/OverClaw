@@ -48,7 +48,7 @@ async def import_brain(db, brain_data: dict) -> dict:
         return {"ok": False, "error": "Invalid brain file format"}
 
     version = brain_data.get("version", 0)
-    if version != 1:
+    if version not in (1, 2):
         return {"ok": False, "error": f"Unsupported brain version: {version}"}
 
     results = {}
