@@ -141,19 +141,16 @@ async def handle_callback(code: str, state: str, db) -> dict:
 
     # Get user email for display
     try:
-        # Try userinfo endpoint first (uses openid scope, more reliable)
-        import httplib2
-        http = creds.authorize(httplib2.Http())
-        resp, content = http.request("https://www.googleapis.com/oauth2/v2/userinfo")
-        if resp.status == 200:
-            import json as _json
-            info = _json.loads(content)
-            email = info.get("email", "unknown")
+        import requests as _requests
+        resp = _requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {creds.token}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            email = resp.json().get("email", "unknown")
         else:
-            # Fallback to Gmail profile API
-            service = build("gmail", "v1", credentials=creds)
-            profile = service.users().getProfile(userId="me").execute()
-            email = profile.get("emailAddress", "unknown")
+            email = "connected"
 
         await db.gmail_tokens.update_one(
             {"user_id": user_id},
