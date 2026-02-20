@@ -13,6 +13,8 @@ BRAIN_COLLECTIONS = {
     "memories": {"exclude_fields": {"_id": 1, "embedding": 1}},
     "user_profiles": {"exclude_fields": {"_id": 1}},
     "relationships": {"exclude_fields": {"_id": 1}},
+    "tasks": {"exclude_fields": {"_id": 1}},
+    "chat_messages": {"exclude_fields": {"_id": 1}},
 }
 
 
