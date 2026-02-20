@@ -120,7 +120,7 @@ class TaskScheduler:
             result_entry = {
                 "task_id": task_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "response": response[:2000],
+                "response": response[:5000],
                 "tool_calls_count": len(tool_calls),
                 "status": "success",
             }
