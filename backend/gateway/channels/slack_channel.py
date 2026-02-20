@@ -302,6 +302,9 @@ class SlackChannel(ChannelAdapter):
 
         logger.info(f"Slack message ACCEPTED: user={user} channel={channel} dm={channel_type} files={len(files)} text={text[:80]}")
 
+        # Track last active conversation for proactive notifications
+        self._last_active_channel = channel
+
         # Run message handling in background so it doesn't block other Slack events
         # Use direct API calls instead of say() for reliability from background tasks
         task = asyncio.create_task(self._handle_message_async(text, channel, user, thread_ts))
