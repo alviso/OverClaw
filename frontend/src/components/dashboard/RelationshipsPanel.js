@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Users, RefreshCw, User, Briefcase, ArrowRight, Mail, Merge, Trash2, X, Check } from "lucide-react";
+import { Users, RefreshCw, User, Briefcase, ArrowRight, Mail, Merge, Trash2, X, Check, Pencil } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL || "";
 
