@@ -199,6 +199,13 @@ export function MindmapPanel({ rpc, authenticated }) {
     }
   }, []);
 
+  const handleNodeHover = useCallback((node) => {
+    const canvas = document.querySelector('[data-testid="mindmap-canvas"] canvas');
+    if (canvas) {
+      canvas.style.cursor = node ? "pointer" : "default";
+    }
+  }, []);
+
   const handleNodeClick = useCallback((node) => {
     setSelectedNode((prev) => (prev?.id === node.id ? null : node));
     if (graphRef.current) {
