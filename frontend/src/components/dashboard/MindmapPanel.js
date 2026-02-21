@@ -332,6 +332,11 @@ export function MindmapPanel({ rpc, authenticated }) {
                 ctx.fill();
               }}
               onNodeClick={handleNodeClick}
+              onNodeHover={handleNodeHover}
+              nodeLabel={(node) => node.type === "topic"
+                ? `${node.label}${node.summary ? ' — ' + node.summary : ''}`
+                : `${node.label}${node.role ? ' (' + node.role + ')' : ''}`
+              }
               onBackgroundClick={() => setSelectedNode(null)}
               backgroundColor="#09090b"
               linkDirectionalParticles={0}
