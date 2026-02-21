@@ -397,6 +397,10 @@ class SlackChannel(ChannelAdapter):
         """Handle a message asynchronously in the background."""
         if self._on_message:
             try:
+                # Check if this is a new session — send a reminder with available commands
+                session_id = f"slack:{channel}:{user}"
+                await self._maybe_send_session_reminder(session_id, channel)
+
                 logger.info(f"Slack: calling agent for user={user} channel={channel}")
                 response = await self._on_message(channel, user, text, thread_ts)
                 if response:
