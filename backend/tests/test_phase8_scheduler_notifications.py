@@ -13,7 +13,7 @@ import websocket
 from uuid import uuid4
 
 # Use public URL for testing - WS connection uses local to avoid timeout
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://brain-memory-sync.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://agent-workspace-17.preview.emergentagent.com").rstrip("/")
 WS_URL = "ws://localhost:8001/api/gateway"  # Use localhost for WS to avoid 60s timeout
 GATEWAY_TOKEN = os.environ.get("GATEWAY_TOKEN", "dev-token-change-me")
 
