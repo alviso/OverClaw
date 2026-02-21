@@ -225,7 +225,6 @@ async def _gather_conversations(db) -> str:
 
 async def _call_llm(prompt: str) -> dict:
     """Call the LLM to generate the mindmap graph structure."""
-    # Try Anthropic first (better at structured output), fallback to OpenAI
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
     openai_key = os.environ.get("OPENAI_API_KEY", "")
 
@@ -239,7 +238,10 @@ async def _call_llm(prompt: str) -> dict:
                 messages=[{"role": "user", "content": prompt}],
             )
             text = response.content[0].text.strip()
-            return _parse_json(text)
+            result = _parse_json(text)
+            if isinstance(result, dict) and "nodes" in result:
+                return result
+            logger.warning(f"Anthropic returned unexpected structure: {type(result)}")
         except Exception as e:
             logger.warning(f"Anthropic mindmap generation failed: {e}")
 
@@ -254,7 +256,10 @@ async def _call_llm(prompt: str) -> dict:
                 response_format={"type": "json_object"},
             )
             text = response.choices[0].message.content.strip()
-            return _parse_json(text)
+            result = _parse_json(text)
+            if isinstance(result, dict) and "nodes" in result:
+                return result
+            logger.warning(f"OpenAI returned unexpected structure: {type(result)}")
         except Exception as e:
             logger.warning(f"OpenAI mindmap generation failed: {e}")
 
@@ -264,8 +269,22 @@ async def _call_llm(prompt: str) -> dict:
 
 def _parse_json(text: str) -> dict:
     """Parse JSON from LLM output, handling markdown fences."""
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-        if text.endswith("```"):
-            text = text[:-3].strip()
-    return json.loads(text)
+    # Strip markdown code fences
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        # Remove opening fence (possibly with language hint)
+        first_newline = cleaned.find("\n")
+        if first_newline != -1:
+            cleaned = cleaned[first_newline + 1:]
+        else:
+            cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3].strip()
+
+    # Find the JSON object boundaries
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        cleaned = cleaned[start:end + 1]
+
+    return json.loads(cleaned)
