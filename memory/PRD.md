@@ -54,6 +54,11 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 - **tasks**: `{ id, name, prompt, interval_seconds, enabled, ... }`
 - **setup_secrets**: `{ _id: "main", openai_api_key, anthropic_api_key, gateway_token, ... }`
 
+## Completed — Conversation Context Fix (Feb 2026)
+- **Root Cause**: `agent.py` was reconstructing LLM history using only `role` and `content`, completely dropping `tool_calls` data. This meant the LLM had no memory of what tools it used or what they returned in previous turns.
+- **Fix**: When building `llm_messages` from history, assistant messages with `tool_calls` now include a `[Tools used: ...]` summary with tool names, args, and results. The LLM can now correctly answer follow-up questions about its own actions.
+- **Impact**: Fixes the exact bug where "what kind of snag?" about a failed browser_use tool got an unrelated response about email/Slack notifications.
+
 ## Completed — Mindmap Feature (Feb 2026)
 - **Mindmap Page** (`/admin/mindmap`): Interactive force-directed graph visualization of user's cognitive landscape
 - **LLM-Powered Clustering**: Auto-generates topic nodes (work streams, projects, efforts) from memories, relationships, and conversation data
