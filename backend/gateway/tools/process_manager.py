@@ -211,10 +211,17 @@ class StartProcessTool(Tool):
         if not os.path.isdir(work_dir):
             return f"Error: directory not found: {cwd}"
 
-        # Check for duplicate names
-        for pid, info in _processes.items():
+        # Check for duplicate names — with liveness verification
+        for pid, info in list(_processes.items()):
             if info["name"] == name and info["status"] == "running":
-                return f"Error: process '{name}' is already running (pid={pid})"
+                # Verify the process is actually alive before blocking
+                if _is_pid_alive(info["pid"]):
+                    return f"Error: process '{name}' is already running (pid={pid})"
+                # Process is dead but registry thinks it's running — clean it up
+                info["status"] = "exited"
+                info["stopped_at"] = datetime.now(timezone.utc).isoformat()
+                logger.info(f"Auto-cleaned dead process '{name}' (pid={pid}) before starting new one")
+                _save_process_state()
 
         try:
             # Set PYTHONUNBUFFERED for Python processes so output appears immediately
@@ -297,6 +304,13 @@ class StopProcessTool(Tool):
                     pid = p_id
                     break
             if not pid:
+                # Maybe it's dead but still registered — clean it up
+                for p_id, info in list(_processes.items()):
+                    if info["name"] == name:
+                        info["status"] = "stopped"
+                        info["stopped_at"] = datetime.now(timezone.utc).isoformat()
+                        _save_process_state()
+                        return f"Process '{name}' was already dead — cleaned up registry entry."
                 return f"Error: no running process found with name '{name}'"
 
         info = _processes.get(pid)
@@ -305,7 +319,11 @@ class StopProcessTool(Tool):
         if info["status"] != "running":
             return f"Process {pid} ({info['name']}) already {info['status']}"
 
+        # Kill via process group for clean shutdown
         proc = info.get("_proc")
+        pid_int = int(pid)
+        killed = False
+
         if proc:
             try:
                 os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
@@ -314,19 +332,32 @@ class StopProcessTool(Tool):
                 except asyncio.TimeoutError:
                     os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
                     await proc.wait()
+                killed = True
+            except ProcessLookupError:
+                killed = True  # Already dead
+            except Exception as e:
+                logger.warning(f"Error killing process group for {pid}: {e}")
+
+        if not killed:
+            # Recovered process or fallback — kill by PID directly
+            try:
+                os.killpg(os.getpgid(pid_int), signal.SIGTERM)
+                await asyncio.sleep(1)
             except ProcessLookupError:
                 pass
-        else:
-            # Recovered process without asyncio handle — kill by PID directly
-            try:
-                os.killpg(os.getpgid(int(pid)), signal.SIGTERM)
-                await asyncio.sleep(1)
+            except Exception:
+                # Try killing just the process if group kill fails
                 try:
-                    os.killpg(os.getpgid(int(pid)), signal.SIGKILL)
+                    os.kill(pid_int, signal.SIGTERM)
+                    await asyncio.sleep(1)
                 except ProcessLookupError:
                     pass
-            except ProcessLookupError:
-                pass
+            # Force kill if still alive
+            if _is_pid_alive(pid_int):
+                try:
+                    os.kill(pid_int, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
 
         info["status"] = "stopped"
         info["stopped_at"] = datetime.now(timezone.utc).isoformat()
