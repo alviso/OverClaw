@@ -393,6 +393,22 @@ class SlackChannel(ChannelAdapter):
                 channel=channel, text=f"Unknown command: `{cmd}`\nType `!help` for available commands."
             )
 
+    async def _maybe_send_session_reminder(self, session_id: str, channel: str):
+        """Send a one-time reminder at the start of a new conversation."""
+        try:
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import os
+            client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+            db = client[os.environ["DB_NAME"]]
+            msg_count = await db.chat_messages.count_documents({"session_id": session_id})
+            if msg_count == 0:
+                await self._app.client.chat_postMessage(
+                    channel=channel,
+                    text="_Tip: `!clear` to reset history, `!status` to check connection, `!help` for all commands._"
+                )
+        except Exception as e:
+            logger.debug(f"Session reminder check failed: {e}")
+
     async def _handle_message_async(self, text, channel, user, thread_ts):
         """Handle a message asynchronously in the background."""
         if self._on_message:
