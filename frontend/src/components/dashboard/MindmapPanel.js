@@ -390,7 +390,7 @@ function NodeDetail({ node, onClose, onSetImportance }) {
   return (
     <div
       data-testid="mindmap-node-detail"
-      className="w-72 border-l border-zinc-800/60 bg-zinc-900/80 backdrop-blur-sm p-4 overflow-y-auto flex flex-col gap-4 animate-fade-in"
+      className="absolute right-0 top-0 bottom-0 w-72 border-l border-zinc-800/60 bg-zinc-900/95 backdrop-blur-md p-4 overflow-y-auto flex flex-col gap-4 z-10 shadow-xl shadow-black/30"
     >
       {/* Header */}
       <div className="flex items-start justify-between">
