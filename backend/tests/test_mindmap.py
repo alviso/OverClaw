@@ -216,9 +216,7 @@ class TestMindmapRPC:
             close_timeout=10
         ) as ws:
             # Wait for auth success
-            auth_response = await asyncio.wait_for(ws.recv(), timeout=5)
-            auth_data = json.loads(auth_response)
-            assert auth_data.get("type") == "auth.success"
+            await self.wait_for_auth(ws)
             
             # Test without node_id
             result = await self.rpc_call(ws, "mindmap.set_importance", {
