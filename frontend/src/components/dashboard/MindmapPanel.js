@@ -33,6 +33,8 @@ export function MindmapPanel({ rpc, authenticated }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [error, setError] = useState(null);
   const graphRef = useRef();
+  const containerRef = useRef();
+  const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
   const ForceGraph = useForceGraph();
 
   const fetchMindmap = useCallback(async () => {
