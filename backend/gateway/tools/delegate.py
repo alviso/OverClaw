@@ -90,7 +90,7 @@ class ListAgentsTool(Tool):
     }
 
     async def execute(self, params: dict) -> str:
-        if not _db:
+        if _db is None:
             return "Error: not initialized"
 
         agents = await _db.agents.find({}, {"_id": 0}).to_list(50)
