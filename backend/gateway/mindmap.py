@@ -83,7 +83,7 @@ async def generate_mindmap(db) -> dict:
 
     graph = await _call_llm(prompt)
 
-    if not graph:
+    if not graph or not isinstance(graph, dict):
         return {
             "nodes": [],
             "edges": [],
@@ -91,16 +91,24 @@ async def generate_mindmap(db) -> dict:
             "error": "LLM failed to generate mindmap",
         }
 
+    nodes = graph.get("nodes", [])
+    edges = graph.get("edges", [])
+
+    if not isinstance(nodes, list):
+        nodes = []
+    if not isinstance(edges, list):
+        edges = []
+
     # Merge in any user-set importance overrides
     overrides = await db.mindmap_overrides.find({}, {"_id": 0}).to_list(100)
     override_map = {o["node_id"]: o for o in overrides}
-    for node in graph.get("nodes", []):
-        if node["id"] in override_map:
+    for node in nodes:
+        if isinstance(node, dict) and node.get("id") in override_map:
             node["importance"] = override_map[node["id"]].get("importance", node.get("importance", "medium"))
 
     result = {
-        "nodes": graph.get("nodes", []),
-        "edges": graph.get("edges", []),
+        "nodes": nodes,
+        "edges": edges,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
