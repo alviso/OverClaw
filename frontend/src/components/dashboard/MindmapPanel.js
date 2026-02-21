@@ -474,3 +474,73 @@ function NodeDetail({ node, onClose, onSetImportance }) {
     </div>
   );
 }
+
+
+function NodeList({ nodes, onSelectNode }) {
+  const topics = nodes.filter((n) => n.type === "topic");
+  const people = nodes.filter((n) => n.type === "person");
+
+  return (
+    <div
+      data-testid="mindmap-node-list"
+      className="w-72 border-l border-zinc-800/60 bg-zinc-900/80 backdrop-blur-sm overflow-y-auto"
+    >
+      <div className="px-3 py-2.5 border-b border-zinc-800/40">
+        <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium">
+          Topics
+        </span>
+      </div>
+      {topics.map((node) => {
+        const color = CATEGORY_COLORS[node.category] || "#6366f1";
+        return (
+          <button
+            key={node.id}
+            data-testid={`mindmap-node-${node.id}`}
+            onClick={() => onSelectNode(node)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/20"
+          >
+            <div
+              className="w-3 h-3 rounded-full flex-shrink-0"
+              style={{ backgroundColor: color }}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-zinc-200 truncate">{node.label}</div>
+              {node.summary && (
+                <div className="text-[10px] text-zinc-600 truncate">{node.summary}</div>
+              )}
+            </div>
+            {node.importance === "high" && (
+              <ChevronUp className="w-3 h-3 text-red-400 flex-shrink-0" />
+            )}
+          </button>
+        );
+      })}
+
+      {people.length > 0 && (
+        <>
+          <div className="px-3 py-2.5 border-b border-zinc-800/40 mt-1">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium">
+              People
+            </span>
+          </div>
+          {people.map((node) => (
+            <button
+              key={node.id}
+              data-testid={`mindmap-node-${node.id}`}
+              onClick={() => onSelectNode(node)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-zinc-800/50 transition-colors border-b border-zinc-800/20"
+            >
+              <div className="w-3 h-3 rounded-full bg-zinc-700 border border-zinc-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs text-zinc-200 truncate">{node.label}</div>
+                {node.role && (
+                  <div className="text-[10px] text-zinc-600 truncate">{node.role}</div>
+                )}
+              </div>
+            </button>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
