@@ -419,11 +419,26 @@ class AgentRunner:
 
         history = await self.session_mgr.get_history(session_id, limit=max_ctx)
 
-        # Build messages for the LLM
+        # Build messages for the LLM — include tool call context
         llm_messages = []
         for msg in history[:-1]:
-            if msg["role"] in ("user", "assistant"):
-                llm_messages.append({"role": msg["role"], "content": msg["content"]})
+            if msg["role"] == "user":
+                llm_messages.append({"role": "user", "content": msg["content"]})
+            elif msg["role"] == "assistant":
+                content = msg.get("content") or ""
+                # Re-inject tool call summaries so the LLM remembers what it did
+                tool_calls_data = msg.get("tool_calls")
+                if tool_calls_data:
+                    tool_lines = []
+                    for tc in tool_calls_data:
+                        tool_name = tc.get("tool", "unknown")
+                        tool_args = json.dumps(tc.get("args", {}))[:150]
+                        tool_result = tc.get("result", "")[:300]
+                        tool_lines.append(f"- {tool_name}({tool_args}) → {tool_result}")
+                    tool_summary = "\n[Tools used:\n" + "\n".join(tool_lines) + "\n]"
+                    content = (content + "\n" + tool_summary) if content else tool_summary
+                if content:
+                    llm_messages.append({"role": "assistant", "content": content})
         llm_messages.append({"role": "user", "content": user_text})
 
         # Filter tools by agent's allowlist
