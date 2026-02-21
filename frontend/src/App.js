@@ -24,6 +24,7 @@ import { RelationshipsPanel } from "@/components/dashboard/RelationshipsPanel";
 import { OutlookPanel } from "@/components/dashboard/OutlookPanel";
 import { BrainPanel } from "@/components/dashboard/BrainPanel";
 import { CredentialsEditor } from "@/components/dashboard/CredentialsEditor";
+import { MindmapPanel } from "@/components/dashboard/MindmapPanel";
 import ChatPage from "@/pages/ChatPage";
 
 const API = process.env.REACT_APP_BACKEND_URL || "";
@@ -116,6 +117,16 @@ function AdminLayout() {
               </DashboardHeader>
               <main className="flex-1 overflow-y-auto p-6">
                 <RelationshipsPanel rpc={rpc} authenticated={authenticated} />
+              </main>
+            </>
+          } />
+          <Route path="/mindmap" element={
+            <>
+              <DashboardHeader title="Mindmap" subtitle="Your cognitive landscape">
+                <ConnectionIndicator connected={connected} authenticated={authenticated} reconnecting={reconnecting} />
+              </DashboardHeader>
+              <main className="flex-1 overflow-hidden">
+                <MindmapPanel rpc={rpc} authenticated={authenticated} />
               </main>
             </>
           } />
