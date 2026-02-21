@@ -318,7 +318,7 @@ export function MindmapPanel({ rpc, authenticated }) {
               nodePointerAreaPaint={(node, color, ctx) => {
                 const cfg = NODE_TYPE_CONFIG[node.type] || NODE_TYPE_CONFIG.topic;
                 const scale = IMPORTANCE_SCALE[node.importance] || 1;
-                const r = cfg.baseRadius * scale + 4;
+                const r = cfg.baseRadius * scale + 6;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
                 ctx.fillStyle = color;
