@@ -1224,6 +1224,17 @@ async def handle_workspace_stop_process(params: dict, client, ctx: MethodContext
     return {"ok": "Error" not in result, "message": result}
 
 
+@register_method("workspace.cleanup_processes")
+async def handle_workspace_cleanup(params: dict, client, ctx: MethodContext) -> dict:
+    """Remove dead/stale process entries from the registry."""
+    from gateway.tools.process_manager import cleanup_dead_processes, _processes
+    before = len(_processes)
+    cleanup_dead_processes()
+    after = len(_processes)
+    removed = before - after
+    return {"ok": True, "removed": removed, "remaining": after}
+
+
 
 # ── Process streaming subscriptions (keyed by client_id) ──────────────────
 _stream_tasks: dict[str, asyncio.Task] = {}
