@@ -301,6 +301,12 @@ class SlackChannel(ChannelAdapter):
             logger.debug("Slack: ignoring empty message")
             return
 
+        # ── Slash-style commands (handled before the agent) ──
+        stripped_cmd = text.strip().lower()
+        if stripped_cmd.startswith("!"):
+            await self._handle_command(stripped_cmd, channel, user)
+            return
+
         logger.info(f"Slack message ACCEPTED: user={user} channel={channel} dm={channel_type} files={len(files)} text={text[:80]}")
 
         # Persist last active conversation for proactive notifications
