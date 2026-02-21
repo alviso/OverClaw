@@ -57,6 +57,22 @@ export function MindmapPanel({ rpc, authenticated }) {
 
   useEffect(() => { fetchMindmap(); }, [fetchMindmap]);
 
+  // Track container size for the graph
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setContainerSize({ width: Math.floor(width), height: Math.floor(height) });
+        }
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const generateMindmap = async () => {
     setGenerating(true);
     setError(null);
