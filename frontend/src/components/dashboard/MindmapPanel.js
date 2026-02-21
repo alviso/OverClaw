@@ -314,8 +314,8 @@ export function MindmapPanel({ rpc, authenticated }) {
       </div>
 
       {/* Graph + Detail panel */}
-      <div className="flex-1 relative flex min-h-0">
-        <div className="flex-1 bg-zinc-950" data-testid="mindmap-canvas">
+      <div className="flex-1 relative flex min-h-0 overflow-hidden">
+        <div className="flex-1 min-w-0 bg-zinc-950" data-testid="mindmap-canvas">
           {ForceGraph && forceData && (
             <ForceGraph
               ref={graphRef}
