@@ -1007,7 +1007,7 @@ async def handle_workspace_projects(params: dict, client, ctx: MethodContext) ->
             "entry_point": entry_point,
             "has_deps": has_deps,
             "has_venv": has_venv,
-            "status": "running" if running_proc else "stopped",
+            "status": running_proc["status"] if running_proc else "stopped",
             "process": running_proc,
             "port": port,
             "last_modified": last_modified,
