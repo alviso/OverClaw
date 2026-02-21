@@ -67,8 +67,8 @@ class SlackNotifyTool(Tool):
     async def _load_channel_from_db(self) -> str:
         try:
             from motor.motor_asyncio import AsyncIOMotorClient
-            client = AsyncIOMotorClient(os.environ.get("MONGO_URL"))
-            db = client[os.environ.get("DB_NAME", "overclaw")]
+            client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+            db = client[os.environ["DB_NAME"]]
             doc = await db.settings.find_one({"key": "slack_last_active_channel"})
             if doc and doc.get("value"):
                 return doc["value"]

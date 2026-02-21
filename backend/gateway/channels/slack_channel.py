@@ -308,8 +308,8 @@ class SlackChannel(ChannelAdapter):
         try:
             from motor.motor_asyncio import AsyncIOMotorClient
             import os
-            client = AsyncIOMotorClient(os.environ.get("MONGO_URL"))
-            _db = client[os.environ.get("DB_NAME", "overclaw")]
+            client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+            _db = client[os.environ["DB_NAME"]]
             asyncio.create_task(
                 _db.settings.update_one(
                     {"key": "slack_last_active_channel"},
