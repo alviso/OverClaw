@@ -373,7 +373,7 @@ export function MindmapPanel({ rpc, authenticated }) {
           )}
         </div>
 
-        {/* Right panel: detail only, shown on node click */}
+        {/* Detail overlay */}
         {selectedNode && (
           <NodeDetail
             node={selectedNode}
