@@ -332,6 +332,67 @@ class SlackChannel(ChannelAdapter):
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.discard)
 
+    async def _handle_command(self, cmd: str, channel: str, user: str):
+        """Handle !-prefixed commands."""
+        COMMANDS_HELP = (
+            "*Available commands:*\n"
+            "`!clear` — Clear conversation history and start fresh\n"
+            "`!status` — Show agent and connection status\n"
+            "`!help` — Show this help message"
+        )
+
+        if cmd == "!help":
+            await self._app.client.chat_postMessage(channel=channel, text=COMMANDS_HELP)
+
+        elif cmd == "!clear":
+            session_id = f"slack:{channel}:{user}"
+            try:
+                from motor.motor_asyncio import AsyncIOMotorClient
+                import os
+                client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+                db = client[os.environ["DB_NAME"]]
+                r1 = await db.chat_messages.delete_many({"session_id": session_id})
+                await db.sessions.delete_many({"session_id": session_id})
+                await self._app.client.chat_postMessage(
+                    channel=channel,
+                    text=f"Conversation cleared ({r1.deleted_count} messages removed). Starting fresh."
+                )
+                logger.info(f"Slack: cleared session {session_id} ({r1.deleted_count} msgs)")
+            except Exception as e:
+                logger.exception("Slack: !clear error")
+                await self._app.client.chat_postMessage(
+                    channel=channel, text=f"Error clearing history: {str(e)[:200]}"
+                )
+
+        elif cmd == "!status":
+            from gateway.channels import get_channel
+            slack_ch = get_channel("slack")
+            connected = slack_ch._connected if slack_ch else False
+            session_id = f"slack:{channel}:{user}"
+            msg_count = 0
+            try:
+                from motor.motor_asyncio import AsyncIOMotorClient
+                import os
+                client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+                db = client[os.environ["DB_NAME"]]
+                msg_count = await db.chat_messages.count_documents({"session_id": session_id})
+            except Exception:
+                pass
+            await self._app.client.chat_postMessage(
+                channel=channel,
+                text=(
+                    f"*Status*\n"
+                    f"Slack connected: {'Yes' if connected else 'No'}\n"
+                    f"Session: `{session_id}`\n"
+                    f"Messages in history: {msg_count}\n"
+                    f"Type `!help` for available commands."
+                )
+            )
+        else:
+            await self._app.client.chat_postMessage(
+                channel=channel, text=f"Unknown command: `{cmd}`\nType `!help` for available commands."
+            )
+
     async def _handle_message_async(self, text, channel, user, thread_ts):
         """Handle a message asynchronously in the background."""
         if self._on_message:
