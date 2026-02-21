@@ -1,29 +1,108 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="1.042" timestamp="2026-02-21T18:26:11.315259+00:00" hostname="agent-env-4f5bffb3-1e93-4ff7-bcb8-43208492eb6a"><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_get_returns_cached_data" time="0.236"><failure message="AssertionError: Auth failed: {'type': 'hot'}&#10;assert 'hot' == 'auth.success'&#10;  &#10;  - auth.success&#10;  + hot">backend/tests/test_mindmap.py:51: in test_mindmap_get_returns_cached_data
-    assert auth_data.get("type") == "auth.success", f"Auth failed: {auth_data}"
-E   AssertionError: Auth failed: {'type': 'hot'}
-E   assert 'hot' == 'auth.success'
-E     
-E     - auth.success
-E     + hot</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_generate_creates_new_mindmap" time="0.176"><failure message="AssertionError: Auth failed: {'type': 'hot'}&#10;assert 'hot' == 'auth.success'&#10;  &#10;  - auth.success&#10;  + hot">backend/tests/test_mindmap.py:106: in test_mindmap_generate_creates_new_mindmap
-    assert auth_data.get("type") == "auth.success", f"Auth failed: {auth_data}"
-E   AssertionError: Auth failed: {'type': 'hot'}
-E   assert 'hot' == 'auth.success'
-E     
-E     - auth.success
-E     + hot</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_set_importance_on_topic" time="0.181"><failure message="AssertionError: Auth failed: {'type': 'hot'}&#10;assert 'hot' == 'auth.success'&#10;  &#10;  - auth.success&#10;  + hot">backend/tests/test_mindmap.py:141: in test_mindmap_set_importance_on_topic
-    assert auth_data.get("type") == "auth.success", f"Auth failed: {auth_data}"
-E   AssertionError: Auth failed: {'type': 'hot'}
-E   assert 'hot' == 'auth.success'
-E     
-E     - auth.success
-E     + hot</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_set_importance_validation" time="0.176"><failure message="AssertionError: assert 'hot' == 'auth.success'&#10;  &#10;  - auth.success&#10;  + hot">backend/tests/test_mindmap.py:192: in test_mindmap_set_importance_validation
-    assert auth_data.get("type") == "auth.success"
-E   AssertionError: assert 'hot' == 'auth.success'
-E     
-E     - auth.success
-E     + hot</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_set_importance_requires_params" time="0.203"><failure message="AssertionError: assert 'hot' == 'auth.success'&#10;  &#10;  - auth.success&#10;  + hot">backend/tests/test_mindmap.py:214: in test_mindmap_set_importance_requires_params
-    assert auth_data.get("type") == "auth.success"
-E   AssertionError: assert 'hot' == 'auth.success'
-E     
-E     - auth.success
-E     + hot</failure></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="51.305" timestamp="2026-02-21T18:26:53.435704+00:00" hostname="agent-env-4f5bffb3-1e93-4ff7-bcb8-43208492eb6a"><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_get_returns_cached_data" time="10.268"><failure message="TimeoutError">/usr/local/lib/python3.11/asyncio/tasks.py:500: in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/connection.py:303: in recv
+    return await self.recv_messages.get(decode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:159: in get
+    frame = await self.frames.get(not self.closed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:51: in get
+    await self.get_waiter
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_mindmap.py:64: in test_mindmap_get_returns_cached_data
+    auth_data = await self.wait_for_auth(ws)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_mindmap.py:43: in wait_for_auth
+    response = await asyncio.wait_for(ws.recv(), timeout=10)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/tasks.py:502: in wait_for
+    raise exceptions.TimeoutError() from exc
+E   TimeoutError</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_generate_creates_new_mindmap" time="10.216"><failure message="TimeoutError">/usr/local/lib/python3.11/asyncio/tasks.py:500: in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/connection.py:303: in recv
+    return await self.recv_messages.get(decode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:159: in get
+    frame = await self.frames.get(not self.closed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:51: in get
+    await self.get_waiter
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_mindmap.py:117: in test_mindmap_generate_creates_new_mindmap
+    auth_data = await self.wait_for_auth(ws)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_mindmap.py:43: in wait_for_auth
+    response = await asyncio.wait_for(ws.recv(), timeout=10)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/tasks.py:502: in wait_for
+    raise exceptions.TimeoutError() from exc
+E   TimeoutError</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_set_importance_on_topic" time="10.224"><failure message="TimeoutError">/usr/local/lib/python3.11/asyncio/tasks.py:500: in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/connection.py:303: in recv
+    return await self.recv_messages.get(decode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:159: in get
+    frame = await self.frames.get(not self.closed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:51: in get
+    await self.get_waiter
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_mindmap.py:150: in test_mindmap_set_importance_on_topic
+    await self.wait_for_auth(ws)
+backend/tests/test_mindmap.py:43: in wait_for_auth
+    response = await asyncio.wait_for(ws.recv(), timeout=10)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/tasks.py:502: in wait_for
+    raise exceptions.TimeoutError() from exc
+E   TimeoutError</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_set_importance_validation" time="10.220"><failure message="TimeoutError">/usr/local/lib/python3.11/asyncio/tasks.py:500: in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/connection.py:303: in recv
+    return await self.recv_messages.get(decode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:159: in get
+    frame = await self.frames.get(not self.closed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:51: in get
+    await self.get_waiter
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_mindmap.py:199: in test_mindmap_set_importance_validation
+    await self.wait_for_auth(ws)
+backend/tests/test_mindmap.py:43: in wait_for_auth
+    response = await asyncio.wait_for(ws.recv(), timeout=10)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/tasks.py:502: in wait_for
+    raise exceptions.TimeoutError() from exc
+E   TimeoutError</failure></testcase><testcase classname="backend.tests.test_mindmap.TestMindmapRPC" name="test_mindmap_set_importance_requires_params" time="10.202"><failure message="TimeoutError">/usr/local/lib/python3.11/asyncio/tasks.py:500: in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/connection.py:303: in recv
+    return await self.recv_messages.get(decode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:159: in get
+    frame = await self.frames.get(not self.closed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/websockets/asyncio/messages.py:51: in get
+    await self.get_waiter
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+backend/tests/test_mindmap.py:219: in test_mindmap_set_importance_requires_params
+    await self.wait_for_auth(ws)
+backend/tests/test_mindmap.py:43: in wait_for_auth
+    response = await asyncio.wait_for(ws.recv(), timeout=10)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/tasks.py:502: in wait_for
+    raise exceptions.TimeoutError() from exc
+E   TimeoutError</failure></testcase></testsuite></testsuites>
