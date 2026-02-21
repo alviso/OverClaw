@@ -170,14 +170,14 @@ class TestCodePatterns:
         """Verify no 'if not _db' patterns exist (should use 'is None')"""
         import subprocess
         result = subprocess.run(
-            ["grep", "-rn", "if not _db", "/app/backend", "--include=*.py"],
+            ["grep", "-rn", "if not _db", "/app/backend", "--include=*.py", "--exclude-dir=tests"],
             capture_output=True,
             text=True
         )
-        # Should find nothing
+        # Should find nothing in non-test code
         if result.stdout.strip():
             pytest.fail(f"Found 'if not _db' patterns (should use 'is None'):\n{result.stdout}")
-        print(f"✓ No 'if not _db' patterns found in codebase")
+        print(f"✓ No 'if not _db' patterns found in backend code (excluding tests)")
     
     def test_env_only_fields_defined(self):
         """Verify _ENV_ONLY_FIELDS is defined in setup.py with gateway_token"""
