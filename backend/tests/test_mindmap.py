@@ -9,8 +9,41 @@ import os
 import websockets
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-WS_URL = BASE_URL.replace("https://", "wss://").replace("http://", "ws://") + "/ws"
+WS_URL = BASE_URL.replace("https://", "wss://").replace("http://", "ws://") + "/api/gateway"
 GATEWAY_TOKEN = os.environ.get("GATEWAY_TOKEN", "dev-token-change-me")
+
+
+async def send_rpc(ws, method, params=None, req_id=1):
+    """Send an RPC request and wait for response"""
+    msg = {
+        "jsonrpc": "2.0",
+        "id": str(req_id),
+        "method": method,
+        "params": params or {}
+    }
+    await ws.send(json.dumps(msg))
+    
+    # Wait for response with matching id
+    while True:
+        raw = await asyncio.wait_for(ws.recv(), timeout=30)
+        data = json.loads(raw)
+        if data.get("id") == str(req_id):
+            return data
+        # Skip events/notifications
+
+
+async def connect_and_auth(ws):
+    """Connect to WebSocket and authenticate"""
+    # Wait for welcome message
+    welcome = await asyncio.wait_for(ws.recv(), timeout=5)
+    print(f"Got welcome: {welcome[:100]}...")
+    
+    # Authenticate
+    auth_resp = await send_rpc(ws, "connect", {"token": GATEWAY_TOKEN}, req_id="auth")
+    if "error" in auth_resp:
+        raise AssertionError(f"Auth failed: {auth_resp}")
+    print(f"Authenticated: client_id={auth_resp.get('result', {}).get('client_id')}")
+    return auth_resp
 
 
 class TestMindmapRPC:
@@ -25,48 +58,15 @@ class TestMindmapRPC:
         self.request_id += 1
         return str(self.request_id)
     
-    async def rpc_call(self, ws, method, params=None):
-        """Make an RPC call and return result"""
-        msg = {
-            "jsonrpc": "2.0",
-            "method": method,
-            "params": params or {},
-            "id": self.get_request_id()
-        }
-        await ws.send(json.dumps(msg))
-        response = await ws.recv()
-        return json.loads(response)
-    
-    async def wait_for_auth(self, ws):
-        """Wait for auth.success, skipping any other messages like 'hot'"""
-        while True:
-            response = await asyncio.wait_for(ws.recv(), timeout=10)
-            data = json.loads(response)
-            if data.get("type") == "auth.success":
-                return data
-            elif data.get("type") == "hot":
-                # Skip hot reload messages
-                continue
-            elif data.get("type") == "error" or "error" in data:
-                raise AssertionError(f"Auth error: {data}")
-            # For other message types, continue waiting
-            print(f"Received message while waiting for auth: {data.get('type')}")
-    
     @pytest.mark.asyncio
     async def test_mindmap_get_returns_cached_data(self):
         """Test that mindmap.get returns the cached mindmap with nodes and edges"""
-        async with websockets.connect(
-            WS_URL,
-            additional_headers={"Authorization": f"Bearer {GATEWAY_TOKEN}"},
-            close_timeout=5
-        ) as ws:
-            # Wait for auth success
-            auth_data = await self.wait_for_auth(ws)
-            print(f"Auth successful: {auth_data}")
+        async with websockets.connect(WS_URL, close_timeout=5) as ws:
+            await connect_and_auth(ws)
             
             # Call mindmap.get
-            result = await self.rpc_call(ws, "mindmap.get")
-            print(f"mindmap.get response: {json.dumps(result, indent=2)}")
+            result = await send_rpc(ws, "mindmap.get", {}, self.get_request_id())
+            print(f"mindmap.get response: {json.dumps(result, indent=2)[:500]}")
             
             # Verify result structure
             assert "result" in result, f"Expected result in response: {result}"
@@ -93,7 +93,6 @@ class TestMindmapRPC:
                 if topics:
                     topic = topics[0]
                     assert "category" in topic, "Topic should have category"
-                    # importance may not be present if not set
                     print(f"Sample topic: {topic}")
                 
                 # Verify person node has expected fields
@@ -108,19 +107,14 @@ class TestMindmapRPC:
     @pytest.mark.asyncio
     async def test_mindmap_generate_creates_new_mindmap(self):
         """Test that mindmap.generate creates a new mindmap with LLM"""
-        async with websockets.connect(
-            WS_URL,
-            additional_headers={"Authorization": f"Bearer {GATEWAY_TOKEN}"},
-            close_timeout=60  # LLM generation may take time
-        ) as ws:
-            # Wait for auth success
-            auth_data = await self.wait_for_auth(ws)
+        async with websockets.connect(WS_URL, close_timeout=60) as ws:
+            await connect_and_auth(ws)
             
             # Call mindmap.generate (this calls LLM so may take time)
             print("Calling mindmap.generate - this may take a few seconds...")
             result = await asyncio.wait_for(
-                self.rpc_call(ws, "mindmap.generate"),
-                timeout=45  # Allow time for LLM call
+                send_rpc(ws, "mindmap.generate", {}, self.get_request_id()),
+                timeout=45
             )
             print(f"mindmap.generate response: {json.dumps(result, indent=2)[:500]}...")
             
@@ -141,16 +135,11 @@ class TestMindmapRPC:
     @pytest.mark.asyncio
     async def test_mindmap_set_importance_on_topic(self):
         """Test setting importance level on a topic node"""
-        async with websockets.connect(
-            WS_URL,
-            additional_headers={"Authorization": f"Bearer {GATEWAY_TOKEN}"},
-            close_timeout=10
-        ) as ws:
-            # Wait for auth success
-            await self.wait_for_auth(ws)
+        async with websockets.connect(WS_URL, close_timeout=10) as ws:
+            await connect_and_auth(ws)
             
             # First get the current mindmap to find a topic node
-            result = await self.rpc_call(ws, "mindmap.get")
+            result = await send_rpc(ws, "mindmap.get", {}, self.get_request_id())
             mindmap = result.get("result", {})
             topics = [n for n in mindmap.get("nodes", []) if n.get("type") == "topic"]
             
@@ -161,10 +150,10 @@ class TestMindmapRPC:
             print(f"Testing set_importance on topic: {topic_id}")
             
             # Test setting importance to high
-            result = await self.rpc_call(ws, "mindmap.set_importance", {
+            result = await send_rpc(ws, "mindmap.set_importance", {
                 "node_id": topic_id,
                 "importance": "high"
-            })
+            }, self.get_request_id())
             print(f"Set importance to high: {result}")
             assert "result" in result, f"Expected result: {result}"
             assert result["result"].get("ok") == True, f"set_importance should succeed: {result}"
@@ -172,17 +161,17 @@ class TestMindmapRPC:
             assert result["result"].get("importance") == "high"
             
             # Verify the change persisted
-            get_result = await self.rpc_call(ws, "mindmap.get")
+            get_result = await send_rpc(ws, "mindmap.get", {}, self.get_request_id())
             updated_mindmap = get_result.get("result", {})
             updated_topic = next((n for n in updated_mindmap.get("nodes", []) if n.get("id") == topic_id), None)
             if updated_topic:
                 assert updated_topic.get("importance") == "high", f"Importance should be high: {updated_topic}"
             
             # Test setting to low
-            result = await self.rpc_call(ws, "mindmap.set_importance", {
+            result = await send_rpc(ws, "mindmap.set_importance", {
                 "node_id": topic_id,
                 "importance": "low"
-            })
+            }, self.get_request_id())
             assert result["result"].get("ok") == True
             assert result["result"].get("importance") == "low"
             print("set_importance to low succeeded")
@@ -190,19 +179,14 @@ class TestMindmapRPC:
     @pytest.mark.asyncio
     async def test_mindmap_set_importance_validation(self):
         """Test that set_importance validates importance level"""
-        async with websockets.connect(
-            WS_URL,
-            additional_headers={"Authorization": f"Bearer {GATEWAY_TOKEN}"},
-            close_timeout=10
-        ) as ws:
-            # Wait for auth success
-            await self.wait_for_auth(ws)
+        async with websockets.connect(WS_URL, close_timeout=10) as ws:
+            await connect_and_auth(ws)
             
             # Test with invalid importance level
-            result = await self.rpc_call(ws, "mindmap.set_importance", {
+            result = await send_rpc(ws, "mindmap.set_importance", {
                 "node_id": "test-node",
                 "importance": "invalid"
-            })
+            }, self.get_request_id())
             print(f"Invalid importance response: {result}")
             res = result.get("result", {})
             assert res.get("ok") == False or res.get("error"), f"Should reject invalid importance: {result}"
@@ -210,25 +194,20 @@ class TestMindmapRPC:
     @pytest.mark.asyncio
     async def test_mindmap_set_importance_requires_params(self):
         """Test that set_importance requires node_id and importance"""
-        async with websockets.connect(
-            WS_URL,
-            additional_headers={"Authorization": f"Bearer {GATEWAY_TOKEN}"},
-            close_timeout=10
-        ) as ws:
-            # Wait for auth success
-            await self.wait_for_auth(ws)
+        async with websockets.connect(WS_URL, close_timeout=10) as ws:
+            await connect_and_auth(ws)
             
             # Test without node_id
-            result = await self.rpc_call(ws, "mindmap.set_importance", {
+            result = await send_rpc(ws, "mindmap.set_importance", {
                 "importance": "high"
-            })
+            }, self.get_request_id())
             res = result.get("result", {})
             assert res.get("ok") == False or res.get("error"), f"Should require node_id: {result}"
             
             # Test without importance
-            result = await self.rpc_call(ws, "mindmap.set_importance", {
+            result = await send_rpc(ws, "mindmap.set_importance", {
                 "node_id": "test"
-            })
+            }, self.get_request_id())
             res = result.get("result", {})
             assert res.get("ok") == False or res.get("error"), f"Should require importance: {result}"
 
