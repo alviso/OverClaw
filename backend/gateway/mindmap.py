@@ -23,18 +23,16 @@ Generate a mindmap graph with:
 - **Edges**: Connections between topics and people, and between related topics
 
 Return ONLY valid JSON with this structure:
-{
+{{
   "nodes": [
-    {"id": "topic-1", "label": "Project Alpha", "type": "topic", "category": "work", "summary": "Brief description", "importance": "medium"},
-    {"id": "person-1", "label": "Sarah Chen", "type": "person", "role": "Engineering Lead", "team": "Backend"},
-    ...
+    {{"id": "topic-1", "label": "Project Alpha", "type": "topic", "category": "work", "summary": "Brief description", "importance": "medium"}},
+    {{"id": "person-1", "label": "Sarah Chen", "type": "person", "role": "Engineering Lead", "team": "Backend"}}
   ],
   "edges": [
-    {"source": "topic-1", "target": "person-1", "label": "leads"},
-    {"source": "topic-1", "target": "topic-2", "label": "depends on"},
-    ...
+    {{"source": "topic-1", "target": "person-1", "label": "leads"}},
+    {{"source": "topic-1", "target": "topic-2", "label": "depends on"}}
   ]
-}
+}}
 
 Rules:
 - Topic categories: "work", "personal", "urgent", "planning", "communication", "learning"
