@@ -114,9 +114,7 @@ class TestMindmapRPC:
             close_timeout=60  # LLM generation may take time
         ) as ws:
             # Wait for auth success
-            auth_response = await asyncio.wait_for(ws.recv(), timeout=5)
-            auth_data = json.loads(auth_response)
-            assert auth_data.get("type") == "auth.success", f"Auth failed: {auth_data}"
+            auth_data = await self.wait_for_auth(ws)
             
             # Call mindmap.generate (this calls LLM so may take time)
             print("Calling mindmap.generate - this may take a few seconds...")
