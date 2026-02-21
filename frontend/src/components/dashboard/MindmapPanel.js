@@ -107,7 +107,6 @@ export function MindmapPanel({ rpc, authenticated }) {
     const cfg = NODE_TYPE_CONFIG[node.type] || NODE_TYPE_CONFIG.topic;
     const scale = IMPORTANCE_SCALE[node.importance] || 1;
     const r = cfg.baseRadius * scale;
-    const fontSize = Math.max(10 / globalScale, 3);
 
     // Glow for selected
     if (selectedNode?.id === node.id) {
@@ -144,12 +143,37 @@ export function MindmapPanel({ rpc, authenticated }) {
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
 
-    // Label
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+    // Label — centered inside the circle
+    const label = node.label || "";
+    const maxFontSize = node.type === "topic" ? r * 0.45 : r * 0.55;
+    const fontSize = Math.max(Math.min(maxFontSize, 14 / globalScale), 2);
     ctx.font = `${node.type === "topic" ? "600" : "400"} ${fontSize}px sans-serif`;
-    ctx.fillStyle = node.type === "topic" ? "#f4f4f5" : "#a1a1aa";
-    ctx.fillText(node.label, node.x, node.y + r + 3);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+
+    // Word-wrap label inside circle
+    const maxWidth = r * 1.5;
+    const words = label.split(" ");
+    const lines = [];
+    let currentLine = "";
+    for (const word of words) {
+      const testLine = currentLine ? currentLine + " " + word : word;
+      if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    const lineHeight = fontSize * 1.2;
+    const totalHeight = lines.length * lineHeight;
+    const startY = node.y - totalHeight / 2 + lineHeight / 2;
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], node.x, startY + i * lineHeight);
+    }
   }, [selectedNode]);
 
   const linkCanvasObject = useCallback((link, ctx) => {
