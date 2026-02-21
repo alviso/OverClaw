@@ -965,8 +965,8 @@ async def handle_workspace_projects(params: dict, client, ctx: MethodContext) ->
         port = None
         for pid, info in _processes.items():
             proj_cwd = info.get("cwd", "")
-            if (proj_cwd == f"projects/{name}" or proj_cwd.endswith(f"/{name}")) and info["status"] == "running":
-                running_proc = {"pid": pid, "name": info["name"], "started_at": info["started_at"]}
+            if proj_cwd == f"projects/{name}" or proj_cwd.endswith(f"/{name}"):
+                running_proc = {"pid": pid, "name": info["name"], "started_at": info["started_at"], "status": info["status"]}
                 # Detect port
                 cmd = info["command"]
                 pm = _re.search(r'(?:--port|--bind|:)[\s=]*(\d{4,5})', cmd)
