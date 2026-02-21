@@ -9,7 +9,7 @@ import time
 import os
 import websocket
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://people-curator.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://brain-memory-sync.preview.emergentagent.com')
 GATEWAY_TOKEN = "dev-token-change-me"
 WS_URL = BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/gateway'
 
