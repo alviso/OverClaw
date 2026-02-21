@@ -48,7 +48,7 @@ class DelegateTool(Tool):
     }
 
     async def execute(self, params: dict) -> str:
-        if not _agent_runner or not _db:
+        if _agent_runner is None or _db is None:
             return "Error: delegate tool not initialized"
 
         agent_id = params.get("agent_id", "")
