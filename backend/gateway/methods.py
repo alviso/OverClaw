@@ -1326,6 +1326,33 @@ async def handle_relationships_list(params: dict, client, ctx: MethodContext) ->
     return {"people": people}
 
 
+# ── Mindmap (Cognitive Landscape) ────────────────────────────────────────
+
+@register_method("mindmap.get")
+async def handle_mindmap_get(params: dict, client, ctx: MethodContext) -> dict:
+    """Return the cached mindmap graph."""
+    from gateway.mindmap import get_cached_mindmap
+    return await get_cached_mindmap(ctx.db)
+
+
+@register_method("mindmap.generate")
+async def handle_mindmap_generate(params: dict, client, ctx: MethodContext) -> dict:
+    """Generate a fresh mindmap from memories, people, and conversations."""
+    from gateway.mindmap import generate_mindmap
+    return await generate_mindmap(ctx.db)
+
+
+@register_method("mindmap.set_importance")
+async def handle_mindmap_set_importance(params: dict, client, ctx: MethodContext) -> dict:
+    """Set user-defined importance on a mindmap node."""
+    from gateway.mindmap import set_node_importance
+    node_id = params.get("node_id", "")
+    importance = params.get("importance", "")
+    if not node_id or not importance:
+        return {"ok": False, "error": "node_id and importance are required"}
+    return await set_node_importance(ctx.db, node_id, importance)
+
+
 
 
 def cleanup_client_streams(client_id: str):
