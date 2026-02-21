@@ -61,9 +61,7 @@ class TestMindmapRPC:
             close_timeout=5
         ) as ws:
             # Wait for auth success
-            auth_response = await asyncio.wait_for(ws.recv(), timeout=5)
-            auth_data = json.loads(auth_response)
-            assert auth_data.get("type") == "auth.success", f"Auth failed: {auth_data}"
+            auth_data = await self.wait_for_auth(ws)
             print(f"Auth successful: {auth_data}")
             
             # Call mindmap.get
