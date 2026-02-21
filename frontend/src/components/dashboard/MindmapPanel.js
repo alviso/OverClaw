@@ -333,7 +333,7 @@ export function MindmapPanel({ rpc, authenticated }) {
 
       {/* Graph + Detail panel */}
       <div className="flex-1 relative flex min-h-0 overflow-hidden">
-        <div className="flex-1 min-w-0 bg-zinc-950" data-testid="mindmap-canvas">
+        <div ref={containerRef} className="flex-1 min-w-0 bg-zinc-950" data-testid="mindmap-canvas">
           {ForceGraph && forceData && (
             <ForceGraph
               ref={graphRef}
@@ -362,8 +362,8 @@ export function MindmapPanel({ rpc, authenticated }) {
               d3AlphaDecay={0.03}
               d3VelocityDecay={0.3}
               warmupTicks={40}
-              width={undefined}
-              height={undefined}
+              width={containerSize.width}
+              height={containerSize.height}
             />
           )}
         </div>
