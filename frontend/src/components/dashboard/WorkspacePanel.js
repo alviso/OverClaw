@@ -449,7 +449,7 @@ function ProjectDetail({ project, rpc, authenticated, onBack, onEvent, offEvent,
               <Globe className="w-3.5 h-3.5" /> Preview :{liveProject.port}
             </a>
           )}
-          {isRunning && liveProject.process && (
+          {liveProject.process && (
             <button onClick={() => setTerminalProc(liveProject.process)} data-testid="project-detail-terminal"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors">
               <Terminal className="w-3.5 h-3.5" /> Logs
