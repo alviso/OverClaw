@@ -25,6 +25,15 @@ _subscribers: dict[str, set] = {}
 _PERSIST_FILE = Path("/app/workspace/.processes.json")
 
 
+def _is_pid_alive(pid: int) -> bool:
+    """Check if a PID is still running."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except (ProcessLookupError, PermissionError, OSError):
+        return False
+
+
 def _save_process_state():
     """Persist process metadata so we can recover after restart."""
     data = {}
@@ -40,32 +49,55 @@ def _save_process_state():
             "exit_code": info.get("exit_code"),
         }
     try:
+        _PERSIST_FILE.parent.mkdir(parents=True, exist_ok=True)
         _PERSIST_FILE.write_text(_json.dumps(data, indent=2))
     except Exception as e:
         logger.warning(f"Failed to persist process state: {e}")
 
 
+def cleanup_dead_processes():
+    """Remove dead/stale process entries from the registry.
+    Called on startup and can be called anytime to prune the registry."""
+    to_remove = []
+    for pid_str, info in _processes.items():
+        if info["status"] == "running" and not _is_pid_alive(info["pid"]):
+            info["status"] = "exited"
+            info["stopped_at"] = datetime.now(timezone.utc).isoformat()
+            logger.info(f"Cleaned up dead process: {info['name']} (pid={pid_str})")
+        # Remove non-running entries older than this session (they clutter the list)
+        if info["status"] in ("exited", "stopped"):
+            to_remove.append(pid_str)
+
+    for pid_str in to_remove:
+        _processes.pop(pid_str, None)
+        _output_buffers.pop(pid_str, None)
+
+    if to_remove:
+        _save_process_state()
+        logger.info(f"Pruned {len(to_remove)} stale process entries from registry")
+
+
 def recover_processes():
-    """On startup, re-discover processes that are still alive from a previous run."""
+    """On startup, re-discover processes that are still alive from a previous run.
+    Dead processes from previous runs are discarded (not loaded into registry)."""
     if not _PERSIST_FILE.exists():
         return
     try:
         data = _json.loads(_PERSIST_FILE.read_text())
     except Exception as e:
         logger.warning(f"Failed to read process state file: {e}")
+        # Remove corrupt state file
+        try:
+            _PERSIST_FILE.unlink()
+        except Exception:
+            pass
         return
 
     recovered = 0
     for pid_str, info in data.items():
         pid_int = int(pid_str)
-        # Check if the process is still alive
-        try:
-            os.kill(pid_int, 0)  # signal 0 = check existence
-            alive = True
-        except (ProcessLookupError, PermissionError):
-            alive = False
 
-        if alive:
+        if _is_pid_alive(pid_int):
             _processes[pid_str] = {
                 "pid": pid_int,
                 "name": info["name"],
@@ -73,26 +105,18 @@ def recover_processes():
                 "cwd": info["cwd"],
                 "status": "running",
                 "started_at": info["started_at"],
-                "_proc": None,  # can't re-attach asyncio subprocess, but can still kill by PID
+                "_proc": None,
             }
             _output_buffers[pid_str] = [f"[sys] Process recovered after server restart (PID {pid_int})"]
             recovered += 1
-        else:
-            # Mark as exited
-            _processes[pid_str] = {
-                "pid": pid_int,
-                "name": info["name"],
-                "command": info["command"],
-                "cwd": info["cwd"],
-                "status": info.get("status", "exited") if info.get("status") != "running" else "exited",
-                "started_at": info["started_at"],
-                "stopped_at": info.get("stopped_at") or datetime.now(timezone.utc).isoformat(),
-                "exit_code": info.get("exit_code"),
-                "_proc": None,
-            }
+        # Dead processes from previous runs are simply not loaded
 
     if recovered:
         logger.info(f"Recovered {recovered} running process(es) from previous session")
+    else:
+        logger.info("No surviving processes from previous session")
+
+    # Write clean state (only truly alive processes)
     _save_process_state()
 
 
