@@ -367,8 +367,8 @@ export function MindmapPanel({ rpc, authenticated }) {
               d3AlphaDecay={0.03}
               d3VelocityDecay={0.3}
               warmupTicks={40}
-              width={containerSize.width}
-              height={containerSize.height}
+              width={dimensions.width}
+              height={dimensions.height}
             />
           )}
         </div>
