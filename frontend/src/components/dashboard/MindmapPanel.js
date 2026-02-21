@@ -368,23 +368,12 @@ export function MindmapPanel({ rpc, authenticated }) {
           )}
         </div>
 
-        {/* Right panel: detail or node list */}
-        {selectedNode ? (
+        {/* Right panel: detail only, shown on node click */}
+        {selectedNode && (
           <NodeDetail
             node={selectedNode}
             onClose={() => setSelectedNode(null)}
             onSetImportance={setImportance}
-          />
-        ) : (
-          <NodeList
-            nodes={graphData?.nodes || []}
-            onSelectNode={(node) => {
-              setSelectedNode(node);
-              if (graphRef.current) {
-                graphRef.current.centerAt(node.x, node.y, 400);
-                graphRef.current.zoom(2.5, 400);
-              }
-            }}
           />
         )}
       </div>
