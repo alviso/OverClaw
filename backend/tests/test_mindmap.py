@@ -37,6 +37,21 @@ class TestMindmapRPC:
         response = await ws.recv()
         return json.loads(response)
     
+    async def wait_for_auth(self, ws):
+        """Wait for auth.success, skipping any other messages like 'hot'"""
+        while True:
+            response = await asyncio.wait_for(ws.recv(), timeout=10)
+            data = json.loads(response)
+            if data.get("type") == "auth.success":
+                return data
+            elif data.get("type") == "hot":
+                # Skip hot reload messages
+                continue
+            elif data.get("type") == "error" or "error" in data:
+                raise AssertionError(f"Auth error: {data}")
+            # For other message types, continue waiting
+            print(f"Received message while waiting for auth: {data.get('type')}")
+    
     @pytest.mark.asyncio
     async def test_mindmap_get_returns_cached_data(self):
         """Test that mindmap.get returns the cached mindmap with nodes and edges"""
