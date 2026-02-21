@@ -57,21 +57,26 @@ export function MindmapPanel({ rpc, authenticated }) {
 
   useEffect(() => { fetchMindmap(); }, [fetchMindmap]);
 
-  // Track container size for the graph
+  // Measure container dimensions reliably
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setContainerSize({ width: Math.floor(width), height: Math.floor(height) });
+    const measure = () => {
+      const el = containerRef.current;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          setDimensions({ width: Math.floor(rect.width), height: Math.floor(rect.height) });
         }
       }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    };
+    // Measure after layout settles
+    measure();
+    const timer = setTimeout(measure, 100);
+    window.addEventListener("resize", measure);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", measure);
+    };
+  }, [graphData]);
 
   const generateMindmap = async () => {
     setGenerating(true);
