@@ -54,6 +54,13 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 - **tasks**: `{ id, name, prompt, interval_seconds, enabled, ... }`
 - **setup_secrets**: `{ _id: "main", openai_api_key, anthropic_api_key, gateway_token, ... }`
 
+## Completed — Mindmap Feature (Feb 2026)
+- **Mindmap Page** (`/admin/mindmap`): Interactive force-directed graph visualization of user's cognitive landscape
+- **LLM-Powered Clustering**: Auto-generates topic nodes (work streams, projects, efforts) from memories, relationships, and conversation data
+- **People as Participants**: People appear as secondary nodes connected to the topics they're involved in
+- **Importance Feedback**: Users can mark topic importance (high/medium/low) — persisted to DB and reflected visually with ring colors
+- **Data-testid Coverage**: All interactive elements have test IDs for automation
+
 ## Completed — P0 Stability Fixes (Feb 2026)
 - **Unified Secret Loading**: `setup.py` refactored with `_ENV_ONLY_FIELDS` to prevent `gateway_token` from being silently overridden by DB values
 - **Auth Logic Simplified**: `.env` is now the single source of truth for `GATEWAY_TOKEN`; DB values for this field are skipped during startup loading
