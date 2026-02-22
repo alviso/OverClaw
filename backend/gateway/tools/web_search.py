@@ -34,11 +34,8 @@ class WebSearchTool(Tool):
             return "Error: query is required"
 
         try:
-            from duckduckgo_search import DDGS
-            results = []
-            with DDGS() as ddgs:
-                for r in ddgs.text(query, max_results=max_results):
-                    results.append(r)
+            from ddgs import DDGS
+            results = list(DDGS().text(query, max_results=max_results))
 
             if not results:
                 return f"No results found for: {query}"
