@@ -20,12 +20,23 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 - Proactive Context Awareness — agent auto cross-references email/calendar for time-sensitive events
 
 ### Scheduled Tasks
-- **Email Triage Task** (5 min interval): 3-tier email classification with improved prompt v2
+- **Email Triage Task** (5 min interval): 3-tier email classification with improved prompt v3
   - Tier A (Action Required): Read full email, extract specific action + deadline, Slack notify
   - Tier B (FYI): Mention briefly in Slack summary
   - Tier C (Skip): Marketing/spam/low-priority — ignored entirely
   - Format: Leads with ACTION, not context. Concise Slack-ready bullet points.
+  - **Feedback loop**: Appends 👍/👎 reaction prompt, tracks responses, auto-tunes prompt
 - `slack_notify` tool for proactive Slack messaging (auto-targets last active conversation)
+
+### Triage Feedback System (NEW — Feb 2026)
+- **Reaction Tracking**: After each triage Slack message, appends "React 👍 or 👎 to rate this summary"
+- **Feedback Storage**: `triage_messages` MongoDB collection tracks sent messages and reactions
+- **Auto-Tuning**: Before each triage run, injects feedback context into the prompt:
+  - <60% approval: aggressive conciseness instructions + examples of disliked summaries
+  - 60-79%: moderate improvement suggestions
+  - ≥80%: maintain current style
+  - Minimum 3 ratings required before feedback kicks in
+- **RPC endpoints**: `triage.feedback_stats`, `triage.recent_feedback`
 
 ### Configuration & Management
 - Onboarding Wizard (`/admin/setup`)
@@ -39,7 +50,7 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 ### Integrations
 - Gmail: Fully functional
 - Microsoft Outlook: Scaffolded, untested
-- Slack: Connected with proactive notification support
+- Slack: Connected with proactive notification support + reaction feedback
 
 ### Content Generation
 - Custom HTML proposal endpoint (`/api/proposals/proposal-cvs-overclaw.html`)
@@ -52,6 +63,7 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 - RPC: `workspace.cleanup_processes`
 - RPC: `mindmap.generate`, `mindmap.get`, `mindmap.set_importance`
 - RPC: `debug.logs`, `debug.clear`, `debug.test`
+- RPC: `triage.feedback_stats`, `triage.recent_feedback`
 
 ## DB Schema
 - **relationships**: `{ name, name_key, email_address, role, team, relationship, mention_count, context_history, aliases, last_seen }`
@@ -59,16 +71,7 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 - **tasks**: `{ id, name, prompt, prompt_version, interval_seconds, enabled, ... }`
 - **setup_secrets**: `{ _id: "main", openai_api_key, anthropic_api_key, gateway_token, ... }`
 - **debug_logs**: `{ timestamp, level, name, pathname, lineno, msg, exc_text }`
-
-## Completed — Email Triage Prompt Improvement (Feb 2026)
-- **Root Cause**: The email triage task prompt was too generic, giving the LLM freedom to produce verbose, non-actionable summaries that missed key actions and repeated known context.
-- **Fix**: Created `backend/gateway/email_triage.py` with a structured 4-step prompt:
-  1. Fetch recent unread emails
-  2. Classify into Tier A (Action Required), B (FYI), C (Skip)
-  3. Read Tier A emails in full and extract specific actions + deadlines
-  4. Compose ONE concise Slack notification with action-first formatting
-- **Versioned prompt**: `prompt_version=2` allows future updates while preserving user settings
-- **Seeded on startup**: `server.py` calls `seed_email_triage_task(db)` to create/update the task idempotently
+- **triage_messages**: `{ channel, message_ts, summary_preview, sent_at, feedback, feedback_reaction, feedback_user, feedback_at }`
 
 ## P1 — Upcoming
 - Microsoft Outlook E2E testing (blocked on Azure creds)
