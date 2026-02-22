@@ -1,0 +1,70 @@
+{
+  "summary": "Slack/Webchat quality parity fix testing complete. All 20 backend tests passed. Verified: (1) web_search is NOT in orchestrator tools_allowed in MongoDB, (2) delegate and list_agents ARE in orchestrator tools, (3) prompt_version=3 is set, (4) orchestrator prompt starts with 'You are OverClaw', (5) ORCHESTRATOR_TOOLS in server.py has no web_search, (6) research specialist HAS web_search in tools_allowed, (7) agent.py run_turn has diagnostic logging (has_delegate, has_web_search), (8) !debug command exists in slack_channel.py and shows agent config, (9) !help mentions !debug, (10) startup code uses set comparison (not additive) for tools patching, (11) versioned prompt mechanism replaces old content check.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Health endpoint returns healthy status",
+    "Gateway config does NOT have web_search in tools_allowed (CRITICAL FIX)",
+    "Gateway config HAS delegate tool",
+    "Gateway config HAS list_agents tool",
+    "Gateway config has prompt_version = 3",
+    "Orchestrator prompt starts with 'You are OverClaw'",
+    "Research specialist HAS web_search (correct - this is where research should happen)",
+    "Research specialist HAS browse_webpage",
+    "ORCHESTRATOR_TOOLS list in server.py does NOT contain web_search",
+    "Server uses set comparison for tools patching (not additive $addToSet)",
+    "Server has versioned prompt mechanism (ORCHESTRATOR_PROMPT_VERSION=3)",
+    "Agent has has_delegate diagnostic variable",
+    "Agent has has_web_search diagnostic variable",
+    "Agent logs delegate and web_search status in diagnostic log",
+    "!debug command exists in slack_channel.py",
+    "!debug shows agent config (tools, model, prompt_version, delegate status, web_search status)",
+    "!help mentions !debug command",
+    "ORCHESTRATOR_PROMPT starts correctly in agents_config.py",
+    "Research specialist in SPECIALIST_AGENTS has web_search",
+    "Orchestrator tools consistent between code and MongoDB",
+    "web_search is NOT anywhere in orchestrator config (MongoDB + code verified)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_slack_webchat_parity.py",
+    "/app/test_reports/pytest/test_slack_webchat_parity.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "The fix correctly addresses the root cause: orchestrator was doing shallow web_search directly instead of delegating to the research specialist",
+    "The declarative ORCHESTRATOR_TOOLS list with set comparison ensures stale tools (like web_search) are removed on startup",
+    "The versioned prompt mechanism (prompt_version field) is a good practice for propagating prompt improvements",
+    "The !debug Slack command provides useful diagnostics for troubleshooting Slack vs webchat quality issues",
+    "The diagnostic logging in agent.py run_turn helps trace which agent is being used and what tools it has"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_slack_webchat_parity.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "N/A (backend only testing)"
+  },
+  "seed_data_creation": "No new seed data created. Used existing gateway_config and agents collections.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Slack/Webchat quality parity fix verified. The key change was removing web_search from orchestrator tools_allowed so it must delegate to the research specialist for web research. The research specialist does multi-step deep research with web_search + browse_webpage. Also added: (1) ORCHESTRATOR_PROMPT_VERSION=3 for versioned prompt updates, (2) !debug Slack command for diagnostics, (3) diagnostic logging in agent.py run_turn. Slack is MOCKED in preview environment - cannot test actual Slack integration, but code structure was validated.",
+  "fix_verification": {
+    "root_cause": "Orchestrator had web_search in tools_allowed, so it did shallow searches directly instead of delegating to research specialist",
+    "fix_applied": [
+      "Removed web_search from ORCHESTRATOR_TOOLS list in server.py",
+      "Changed tools patching to use set comparison (declarative, removes stale tools)",
+      "Added ORCHESTRATOR_PROMPT_VERSION=3 for versioned prompt updates",
+      "Added !debug Slack command for agent config diagnostics",
+      "Added diagnostic logging in run_turn for session/agent/delegate/web_search"
+    ],
+    "expected_behavior_change": "Orchestrator now delegates research tasks to research specialist, which does thorough multi-step web research with web_search and browse_webpage tools"
+  },
+  "mocked_integrations": ["Slack (not connected in preview environment - tested config state via MongoDB queries)"]
+}
