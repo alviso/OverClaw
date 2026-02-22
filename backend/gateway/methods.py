@@ -1375,6 +1375,16 @@ async def handle_debug_clear(params: dict, client, ctx: MethodContext) -> dict:
     return {"ok": True, "cleared": count}
 
 
+@register_method("debug.test")
+async def handle_debug_test(params: dict, client, ctx: MethodContext) -> dict:
+    """Emit a test warning to verify the debug log pipeline."""
+    import logging
+    test_logger = logging.getLogger("gateway.debug_test")
+    test_logger.warning("Debug log test — this is a test warning from debug.test RPC")
+    test_logger.error("Debug log test — this is a test error from debug.test RPC")
+    return {"ok": True, "message": "Test warning and error emitted"}
+
+
 
 def cleanup_client_streams(client_id: str):
     """Cancel all stream subscriptions for a disconnected client."""
