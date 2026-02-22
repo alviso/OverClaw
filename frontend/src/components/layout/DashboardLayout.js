@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Bot, Zap, Brain, Calendar, Bell,
   Mail, Hash, Settings, ChevronLeft, ChevronRight,
   Activity, MessageSquare, Shield, FolderCode, Users,
-  Sun, Moon, Network,
+  Sun, Moon, Network, ScrollText,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { id: "gmail", label: "Email", icon: Mail, path: "/admin/gmail" },
   { id: "slack", label: "Slack", icon: Hash, path: "/admin/slack" },
   { id: "brain", label: "Brain", icon: Activity, path: "/admin/brain" },
+  { id: "logs", label: "Logs", icon: ScrollText, path: "/admin/logs" },
   { id: "config", label: "Config", icon: Settings, path: "/admin/config" },
 ];
 
