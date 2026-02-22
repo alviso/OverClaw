@@ -394,6 +394,46 @@ class SlackChannel(ChannelAdapter):
                     f"Type `!help` for available commands."
                 )
             )
+
+        elif cmd == "!debug":
+            # Show what agent config is active for this session
+            session_id = f"slack:{channel}:{user}"
+            try:
+                from motor.motor_asyncio import AsyncIOMotorClient
+                import os
+                client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+                db = client[os.environ["DB_NAME"]]
+                cfg = await db.gateway_config.find_one({"_id": "main"}, {"_id": 0})
+                if cfg:
+                    agent_cfg = cfg.get("agent", {})
+                    tools = agent_cfg.get("tools_allowed", [])
+                    model = agent_cfg.get("model", "?")
+                    prompt_version = agent_cfg.get("prompt_version", "?")
+                    prompt = agent_cfg.get("system_prompt", "")[:150]
+                    has_delegate = "delegate" in tools
+                    has_web_search = "web_search" in tools
+                    await self._app.client.chat_postMessage(
+                        channel=channel,
+                        text=(
+                            f"*Agent Debug Info*\n"
+                            f"Session: `{session_id}`\n"
+                            f"Model: `{model}`\n"
+                            f"Prompt version: `{prompt_version}`\n"
+                            f"Prompt preview: _{prompt}_...\n"
+                            f"Tools ({len(tools)}): `{', '.join(sorted(tools))}`\n"
+                            f"Has `delegate`: {'Yes' if has_delegate else '*NO — orchestrator cannot delegate!*'}\n"
+                            f"Has `web_search`: {'*YES — should be removed, research goes via delegate*' if has_web_search else 'No (correct — research via delegate)'}\n"
+                        )
+                    )
+                else:
+                    await self._app.client.chat_postMessage(
+                        channel=channel, text="No gateway config found in DB."
+                    )
+            except Exception as e:
+                await self._app.client.chat_postMessage(
+                    channel=channel, text=f"Debug error: {str(e)[:200]}"
+                )
+
         else:
             await self._app.client.chat_postMessage(
                 channel=channel, text=f"Unknown command: `{cmd}`\nType `!help` for available commands."
