@@ -150,40 +150,60 @@ async def startup():
     # Seed specialist agents
     await seed_specialist_agents(db)
 
-    # Ensure orchestrator-level tools exist in non-specialist agents
-    orchestrator_tools = [
+    # ── Enforce orchestrator tools and prompt (versioned) ────────────────
+    # The orchestrator should NOT have web_search — it delegates to the
+    # research specialist instead.  This list is DECLARATIVE: any tools
+    # in the stored config that are not here get REMOVED so stale installs
+    # get a clean state.
+    ORCHESTRATOR_TOOLS = [
         "memory_search", "browse_webpage", "system_info", "http_request",
         "analyze_image", "transcribe_audio", "parse_document", "monitor_url",
-        "browser_use", "gmail", "delegate", "list_agents", "slack_notify",
+        "browser_use", "gmail", "outlook", "delegate", "list_agents", "slack_notify",
+        "create_directory", "patch_file", "search_in_files",
+        "create_tool", "list_custom_tools", "delete_custom_tool",
+        "start_process", "stop_process", "list_processes", "get_process_output",
+        "read_file", "write_file", "list_files", "execute_command",
     ]
+    ORCHESTRATOR_PROMPT_VERSION = 3  # Bump when prompt changes
+
     specialist_ids = [a["id"] for a in SPECIALIST_AGENTS]
-    non_delegate = [t for t in orchestrator_tools if t not in ("delegate", "list_agents")]
+
+    # Patch specialist agents to include new tools where appropriate
+    non_delegate = [t for t in ORCHESTRATOR_TOOLS if t not in ("delegate", "list_agents")]
     for tool_name in non_delegate:
         await db.agents.update_many(
             {"tools_allowed": {"$exists": True, "$nin": [tool_name]}, "id": {"$nin": specialist_ids}},
             {"$addToSet": {"tools_allowed": tool_name}},
         )
 
-    # Patch stored gateway config with new tools + orchestrator prompt
+    # Patch stored gateway config — DECLARATIVE tools + versioned prompt
     stored_cfg = await db.gateway_config.find_one({"_id": "main"})
     if stored_cfg:
-        agent_tools = stored_cfg.get("agent", {}).get("tools_allowed", [])
-        added = [t for t in orchestrator_tools if t not in agent_tools]
-        if added:
-            agent_tools.extend(added)
+        # Set tools to exact list (removes stale entries like web_search)
+        stored_tools = stored_cfg.get("agent", {}).get("tools_allowed", [])
+        if set(stored_tools) != set(ORCHESTRATOR_TOOLS):
             await db.gateway_config.update_one(
-                {"_id": "main"}, {"$set": {"agent.tools_allowed": agent_tools}}
+                {"_id": "main"}, {"$set": {"agent.tools_allowed": ORCHESTRATOR_TOOLS}}
             )
-            gateway_config.agent.tools_allowed = agent_tools
-            logger.info(f"Patched config: added {added}")
+            gateway_config.agent.tools_allowed = ORCHESTRATOR_TOOLS
+            removed = set(stored_tools) - set(ORCHESTRATOR_TOOLS)
+            added = set(ORCHESTRATOR_TOOLS) - set(stored_tools)
+            if removed:
+                logger.info(f"Removed from orchestrator tools: {removed}")
+            if added:
+                logger.info(f"Added to orchestrator tools: {added}")
 
-        stored_prompt = stored_cfg.get("agent", {}).get("system_prompt", "")
-        if "DO THE WORK" not in stored_prompt:
+        # Versioned prompt update — always applies when version changes
+        stored_version = stored_cfg.get("agent", {}).get("prompt_version", 1)
+        if stored_version < ORCHESTRATOR_PROMPT_VERSION:
             await db.gateway_config.update_one(
-                {"_id": "main"}, {"$set": {"agent.system_prompt": ORCHESTRATOR_PROMPT}}
+                {"_id": "main"}, {"$set": {
+                    "agent.system_prompt": ORCHESTRATOR_PROMPT,
+                    "agent.prompt_version": ORCHESTRATOR_PROMPT_VERSION,
+                }}
             )
             gateway_config.agent.system_prompt = ORCHESTRATOR_PROMPT
-            logger.info("Updated orchestrator prompt (v2 — action-oriented)")
+            logger.info(f"Orchestrator prompt updated to version {ORCHESTRATOR_PROMPT_VERSION}")
 
     # Seed default skills
     from gateway.skills import seed_default_skills
