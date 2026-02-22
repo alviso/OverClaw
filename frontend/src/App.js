@@ -25,6 +25,7 @@ import { OutlookPanel } from "@/components/dashboard/OutlookPanel";
 import { BrainPanel } from "@/components/dashboard/BrainPanel";
 import { CredentialsEditor } from "@/components/dashboard/CredentialsEditor";
 import { MindmapPanel } from "@/components/dashboard/MindmapPanel";
+import { LogsPanel } from "@/components/dashboard/LogsPanel";
 import ChatPage from "@/pages/ChatPage";
 
 const API = process.env.REACT_APP_BACKEND_URL || "";
