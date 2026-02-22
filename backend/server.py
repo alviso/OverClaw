@@ -117,6 +117,10 @@ async def startup():
     add_activity("gateway.start", "Gateway started successfully")
     init_tools()
 
+    # Initialize debug logger (captures WARNING+ to MongoDB)
+    from gateway.debug_log import init_debug_logger
+    init_debug_logger(db)
+
     # Recover processes from previous session
     from gateway.tools.process_manager import recover_processes
     recover_processes()
