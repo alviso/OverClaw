@@ -114,6 +114,11 @@ class SlackChannel(ChannelAdapter):
                 logger.info(f"Slack EVENT received: type=app_mention user={event.get('user','?')}")
                 await self._process_message(event, say)
 
+            # Listen for reactions on triage messages
+            @self._app.event("reaction_added")
+            async def handle_reaction(event):
+                await self._process_reaction(event)
+
             # Start Socket Mode — save reference to prevent GC
             self._app_token = app_token
             self._handler = AsyncSocketModeHandler(self._app, app_token)
