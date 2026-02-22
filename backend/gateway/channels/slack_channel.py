@@ -343,6 +343,7 @@ class SlackChannel(ChannelAdapter):
             "*Available commands:*\n"
             "`!clear` — Clear conversation history and start fresh\n"
             "`!status` — Show agent and connection status\n"
+            "`!debug` — Show active agent config (prompt, tools, model)\n"
             "`!help` — Show this help message"
         )
 
