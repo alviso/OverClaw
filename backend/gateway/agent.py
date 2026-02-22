@@ -349,6 +349,16 @@ class AgentRunner:
         max_ctx = agent_def.get("max_context_messages", self.config.agent.max_context_messages)
         tools_allowed = agent_def.get("tools_allowed")
 
+        # Diagnostic logging — helps trace Slack vs webchat quality issues
+        has_delegate = "delegate" in (tools_allowed or [])
+        has_web_search = "web_search" in (tools_allowed or [])
+        prompt_preview = base_prompt[:80].replace("\n", " ") if base_prompt else "(none)"
+        logger.info(
+            f"Agent resolved: session={session_id} agent={agent_id} model={model_str} "
+            f"tools={len(tools_allowed or [])} delegate={has_delegate} web_search={has_web_search} "
+            f"prompt={prompt_preview}..."
+        )
+
         # Inject skills into system prompt
         skill_mgr = SkillManager(self.db)
         skills_prompt = await skill_mgr.build_skills_prompt(agent_id)
