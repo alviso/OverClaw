@@ -174,12 +174,12 @@ async def startup():
             logger.info(f"Patched config: added {added}")
 
         stored_prompt = stored_cfg.get("agent", {}).get("system_prompt", "")
-        if "orchestrator" not in stored_prompt.lower():
+        if "DO THE WORK" not in stored_prompt:
             await db.gateway_config.update_one(
                 {"_id": "main"}, {"$set": {"agent.system_prompt": ORCHESTRATOR_PROMPT}}
             )
             gateway_config.agent.system_prompt = ORCHESTRATOR_PROMPT
-            logger.info("Updated default agent to orchestrator prompt")
+            logger.info("Updated orchestrator prompt (v2 — action-oriented)")
 
     # Seed default skills
     from gateway.skills import seed_default_skills
