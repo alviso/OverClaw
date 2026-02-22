@@ -95,6 +95,14 @@ class TaskScheduler:
         agent_id = task.get("agent_id", "default")
         prompt = task.get("prompt", "")
 
+        # For the email triage task, inject feedback context into the prompt
+        if task_id == "email-triage":
+            try:
+                from gateway.email_triage import build_triage_prompt_with_feedback
+                prompt = await build_triage_prompt_with_feedback(self.db)
+            except Exception as e:
+                logger.warning(f"Failed to build feedback-enhanced triage prompt: {e}")
+
         # Keep task session lean — clear old messages before each run
         await self.db.chat_messages.delete_many({"session_id": session_id})
 
