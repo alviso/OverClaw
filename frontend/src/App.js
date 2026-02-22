@@ -194,6 +194,16 @@ function AdminLayout() {
               </main>
             </>
           } />
+          <Route path="/logs" element={
+            <>
+              <DashboardHeader title="Logs" subtitle="Errors & warnings">
+                <ConnectionIndicator connected={connected} authenticated={authenticated} reconnecting={reconnecting} />
+              </DashboardHeader>
+              <main className="flex-1 overflow-hidden">
+                <LogsPanel rpc={rpc} authenticated={authenticated} />
+              </main>
+            </>
+          } />
         </Routes>
       </div>
     </div>
