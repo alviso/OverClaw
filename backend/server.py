@@ -151,20 +151,20 @@ async def startup():
     await seed_specialist_agents(db)
 
     # ── Enforce orchestrator tools and prompt (versioned) ────────────────
-    # The orchestrator should NOT have web_search — it delegates to the
-    # research specialist instead.  This list is DECLARATIVE: any tools
-    # in the stored config that are not here get REMOVED so stale installs
-    # get a clean state.
+    # The orchestrator should NOT have web_search or browser_use:
+    # - web_search: delegates to research specialist
+    # - browser_use: broken (missing uvx) and should go through browser specialist
+    # This list is DECLARATIVE: stored config is set to exactly this list.
     ORCHESTRATOR_TOOLS = [
         "memory_search", "browse_webpage", "system_info", "http_request",
         "analyze_image", "transcribe_audio", "parse_document", "monitor_url",
-        "browser_use", "gmail", "outlook", "delegate", "list_agents", "slack_notify",
+        "gmail", "outlook", "delegate", "list_agents", "slack_notify",
         "create_directory", "patch_file", "search_in_files",
         "create_tool", "list_custom_tools", "delete_custom_tool",
         "start_process", "stop_process", "list_processes", "get_process_output",
         "read_file", "write_file", "list_files", "execute_command",
     ]
-    ORCHESTRATOR_PROMPT_VERSION = 3  # Bump when prompt changes
+    ORCHESTRATOR_PROMPT_VERSION = 4  # Bump when prompt changes
 
     specialist_ids = [a["id"] for a in SPECIALIST_AGENTS]
 
