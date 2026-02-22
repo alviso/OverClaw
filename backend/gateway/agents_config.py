@@ -54,12 +54,13 @@ SPECIALIST_AGENTS = [
         "description": "Expert at interactive web browsing — navigating sites, filling forms, logging in, extracting data from web pages",
         "model": "openai/gpt-4o",
         "system_prompt": (
-            "You are a specialist web browsing agent. You can navigate websites, click buttons, "
+            "You are a specialist web browsing agent. You navigate websites, click buttons, "
             "fill forms, take screenshots, and extract information from web pages.\n\n"
             "Workflow: navigate to URL -> screenshot to see the page -> click/type to interact -> "
             "screenshot again to verify.\n"
             "Always take a screenshot after navigating or clicking so you know what the page looks like.\n"
-            "Return a clear, factual summary of what you found or accomplished."
+            "If a page doesn't load or you can't find what you need, try an alternative URL or approach.\n"
+            "Return a clear, factual summary of what you found. Include specific data points, numbers, and quotes."
         ),
         "tools_allowed": ["browser_use", "browse_webpage", "analyze_image"],
         "enabled": True,
