@@ -26,17 +26,19 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
   - Tier C (Skip): Marketing/spam/low-priority — ignored entirely
   - Format: Leads with ACTION, not context. Concise Slack-ready bullet points.
   - **Feedback loop**: Appends 👍/👎 reaction prompt, tracks responses, auto-tunes prompt
-- `slack_notify` tool for proactive Slack messaging (auto-targets last active conversation)
 
-### Triage Feedback System (NEW — Feb 2026)
+### Triage Feedback System (Feb 2026)
 - **Reaction Tracking**: After each triage Slack message, appends "React 👍 or 👎 to rate this summary"
 - **Feedback Storage**: `triage_messages` MongoDB collection tracks sent messages and reactions
-- **Auto-Tuning**: Before each triage run, injects feedback context into the prompt:
-  - <60% approval: aggressive conciseness instructions + examples of disliked summaries
-  - 60-79%: moderate improvement suggestions
-  - ≥80%: maintain current style
-  - Minimum 3 ratings required before feedback kicks in
+- **Auto-Tuning**: Before each triage run, injects feedback context into the prompt
 - **RPC endpoints**: `triage.feedback_stats`, `triage.recent_feedback`
+
+### Slack/Webchat Quality Parity Fix (Feb 2026)
+- **Root Cause**: Orchestrator had `web_search` in tools_allowed, did shallow searches instead of delegating to research specialist
+- **Fix**: Removed `web_search` from orchestrator tools (declarative set, not additive)
+- **Versioned Prompts**: `ORCHESTRATOR_PROMPT_VERSION=3` ensures prompt improvements propagate to existing installs
+- **!debug Command**: Users can type `!debug` in Slack to inspect active agent config (tools, model, prompt version)
+- **Diagnostic Logging**: `run_turn` now logs session/agent/tools for every request
 
 ### Configuration & Management
 - Onboarding Wizard (`/admin/setup`)
@@ -50,15 +52,11 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 ### Integrations
 - Gmail: Fully functional
 - Microsoft Outlook: Scaffolded, untested
-- Slack: Connected with proactive notification support + reaction feedback
-
-### Content Generation
-- Custom HTML proposal endpoint (`/api/proposals/proposal-cvs-overclaw.html`)
+- Slack: Connected with proactive notification support + reaction feedback + !debug
 
 ## Key API Endpoints
 - `POST /api/brain/export` / `POST /api/brain/import`
 - `POST /api/people/merge` / `DELETE /api/people/{id}` / `PATCH /api/people/{id}`
-- `GET /api/proposals/proposal-cvs-overclaw.html`
 - RPC: `people.list`, `people.merge`, `people.delete`
 - RPC: `workspace.cleanup_processes`
 - RPC: `mindmap.generate`, `mindmap.get`, `mindmap.set_importance`
@@ -72,6 +70,7 @@ Build a streamlined work assistant, "OverClaw", with an orchestration architectu
 - **setup_secrets**: `{ _id: "main", openai_api_key, anthropic_api_key, gateway_token, ... }`
 - **debug_logs**: `{ timestamp, level, name, pathname, lineno, msg, exc_text }`
 - **triage_messages**: `{ channel, message_ts, summary_preview, sent_at, feedback, feedback_reaction, feedback_user, feedback_at }`
+- **gateway_config**: `{ agent: { tools_allowed, system_prompt, prompt_version, model } }`
 
 ## P1 — Upcoming
 - Microsoft Outlook E2E testing (blocked on Azure creds)
