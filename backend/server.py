@@ -156,7 +156,7 @@ async def startup():
     # - browser_use: broken (missing uvx) and should go through browser specialist
     # This list is DECLARATIVE: stored config is set to exactly this list.
     ORCHESTRATOR_TOOLS = [
-        "memory_search", "browse_webpage", "system_info", "http_request",
+        "memory_search", "system_info",
         "analyze_image", "transcribe_audio", "parse_document", "monitor_url",
         "gmail", "outlook", "delegate", "list_agents", "slack_notify",
         "create_directory", "patch_file", "search_in_files",
