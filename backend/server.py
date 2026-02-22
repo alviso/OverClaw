@@ -249,6 +249,10 @@ async def startup():
 
     await start_channels(gateway_config)
 
+    # Seed email triage task with improved prompt
+    from gateway.email_triage import seed_email_triage_task
+    await seed_email_triage_task(db)
+
     # Init scheduler + notifications
     from gateway.notifications import NotificationManager
     from gateway.scheduler import TaskScheduler
