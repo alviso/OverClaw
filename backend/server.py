@@ -143,6 +143,10 @@ async def startup():
     set_create_tool_db(db)
     await load_persisted_tools()
 
+    # Wire triage feedback to DB
+    from gateway.triage_feedback import set_feedback_db
+    set_feedback_db(db)
+
     # Seed specialist agents
     await seed_specialist_agents(db)
 
