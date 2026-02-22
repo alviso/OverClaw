@@ -1385,6 +1385,26 @@ async def handle_debug_test(params: dict, client, ctx: MethodContext) -> dict:
     return {"ok": True, "message": "Test warning and error emitted"}
 
 
+# ── Triage Feedback ───────────────────────────────────────────────────────
+
+@register_method("triage.feedback_stats")
+async def handle_triage_feedback_stats(params: dict, client, ctx: MethodContext) -> dict:
+    """Get email triage feedback statistics."""
+    from gateway.triage_feedback import get_feedback_stats
+    days = params.get("days", 30)
+    stats = await get_feedback_stats(days=days)
+    return stats
+
+
+@register_method("triage.recent_feedback")
+async def handle_triage_recent_feedback(params: dict, client, ctx: MethodContext) -> dict:
+    """Get recent triage feedback entries."""
+    from gateway.triage_feedback import get_recent_feedback
+    limit = min(params.get("limit", 10), 50)
+    entries = await get_recent_feedback(limit=limit)
+    return {"feedback": entries, "count": len(entries)}
+
+
 
 def cleanup_client_streams(client_id: str):
     """Cancel all stream subscriptions for a disconnected client."""
