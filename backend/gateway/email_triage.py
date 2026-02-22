@@ -11,7 +11,7 @@ logger = logging.getLogger("gateway.email_triage")
 EMAIL_TRIAGE_TASK_ID = "email-triage"
 
 # ── Version — bump this when you change the prompt to force a DB update ──
-EMAIL_TRIAGE_PROMPT_VERSION = 2
+EMAIL_TRIAGE_PROMPT_VERSION = 3
 
 # ── The improved prompt ──────────────────────────────────────────────────
 EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your ONLY job is to find NEW emails that require the user's attention and send a concise, actionable Slack notification.
@@ -49,9 +49,9 @@ For each Tier A email, use the `gmail` tool with action "read" to get the full b
 Do NOT include background information the user already knows (project history, who people are, what their roles are). Only include what's NEW and what's NEEDED TO ACT.
 
 ## Step 4 — Compose and send ONE Slack notification
-Use the `slack_notify` tool to send a SINGLE message. Format:
+Use the `slack_notify` tool with `request_feedback` set to `true` to send a SINGLE message. This enables the user to rate the summary quality with 👍/👎 reactions.
 
-For Tier A emails (action required):
+Format for Tier A emails (action required):
 ```
 :rotating_light: *[Sender Name] — [Subject line]*
 → *Action:* [One sentence: what the user needs to do]
@@ -72,8 +72,15 @@ For Tier B emails (FYI), add a brief section at the end:
 - Maximum 3-4 lines per email. If it's longer, you're including too much context.
 - Never tell the user things they already know about their contacts or projects.
 - If ALL emails are Tier C (skip), respond "No new emails requiring attention." and do NOT send a Slack message.
-- Combine everything into ONE slack_notify call. Never send multiple messages.
+- Combine everything into ONE slack_notify call with request_feedback=true. Never send multiple messages.
 """
+
+
+async def build_triage_prompt_with_feedback(db) -> str:
+    """Build the full triage prompt with feedback context injected."""
+    from gateway.triage_feedback import build_feedback_prompt_section
+    feedback_section = await build_feedback_prompt_section()
+    return EMAIL_TRIAGE_PROMPT + feedback_section
 
 
 async def seed_email_triage_task(db):
