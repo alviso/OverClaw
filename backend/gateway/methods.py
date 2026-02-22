@@ -1354,6 +1354,27 @@ async def handle_mindmap_set_importance(params: dict, client, ctx: MethodContext
 
 
 
+# ── Debug Logs ────────────────────────────────────────────────────────────
+
+@register_method("debug.logs")
+async def handle_debug_logs(params: dict, client, ctx: MethodContext) -> dict:
+    """Fetch recent debug log entries."""
+    from gateway.debug_log import get_recent_logs
+    limit = min(params.get("limit", 100), 500)
+    level = params.get("level")
+    component = params.get("component")
+    logs = await get_recent_logs(ctx.db, limit=limit, level=level, component=component)
+    return {"logs": logs}
+
+
+@register_method("debug.clear")
+async def handle_debug_clear(params: dict, client, ctx: MethodContext) -> dict:
+    """Clear all debug logs."""
+    from gateway.debug_log import clear_logs
+    count = await clear_logs(ctx.db)
+    return {"ok": True, "cleared": count}
+
+
 
 def cleanup_client_streams(client_id: str):
     """Cancel all stream subscriptions for a disconnected client."""
