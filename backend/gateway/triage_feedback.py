@@ -17,7 +17,7 @@ def set_feedback_db(database):
 
 async def track_triage_message(channel: str, message_ts: str, summary_text: str):
     """Record a triage message so we can match reactions to it later."""
-    if not _db:
+    if _db is None:
         return
     doc = {
         "channel": channel,
@@ -32,7 +32,7 @@ async def track_triage_message(channel: str, message_ts: str, summary_text: str)
 
 async def record_feedback(channel: str, message_ts: str, reaction: str, user: str) -> bool:
     """Record a 👍/👎 reaction on a tracked triage message. Returns True if matched."""
-    if not _db:
+    if _db is None:
         return False
 
     # Map reaction names to feedback
@@ -63,7 +63,7 @@ async def record_feedback(channel: str, message_ts: str, reaction: str, user: st
 
 async def get_feedback_stats(days: int = 30) -> dict:
     """Get feedback statistics for the last N days."""
-    if not _db:
+    if _db is None:
         return {"total": 0, "positive": 0, "negative": 0, "pending": 0, "approval_rate": None}
 
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
@@ -98,7 +98,7 @@ async def get_feedback_stats(days: int = 30) -> dict:
 
 async def get_recent_feedback(limit: int = 10) -> list[dict]:
     """Get recent feedback entries for display."""
-    if not _db:
+    if _db is None:
         return []
     docs = await _db.triage_messages.find(
         {"feedback": {"$ne": None}},
