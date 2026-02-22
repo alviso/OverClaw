@@ -398,6 +398,29 @@ class SlackChannel(ChannelAdapter):
                 channel=channel, text=f"Unknown command: `{cmd}`\nType `!help` for available commands."
             )
 
+    async def _process_reaction(self, event: dict):
+        """Process a reaction_added event — check if it's on a triage message."""
+        reaction = event.get("reaction", "")
+        user = event.get("user", "")
+        item = event.get("item", {})
+        channel = item.get("channel", "")
+        message_ts = item.get("ts", "")
+
+        if not channel or not message_ts:
+            return
+
+        # Only care about thumbs up/down
+        if reaction not in ("+1", "thumbsup", "-1", "thumbsdown"):
+            return
+
+        try:
+            from gateway.triage_feedback import record_feedback
+            matched = await record_feedback(channel, message_ts, reaction, user)
+            if matched:
+                logger.info(f"Slack: triage feedback '{reaction}' recorded from {user}")
+        except Exception as e:
+            logger.debug(f"Slack: reaction processing failed: {e}")
+
     async def _maybe_send_session_reminder(self, session_id: str, channel: str):
         """Send a one-time reminder at the start of a new conversation."""
         try:
