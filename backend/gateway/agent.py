@@ -461,6 +461,9 @@ class AgentRunner:
 
         logger.info(f"Agent turn: session={session_id} agent={agent_id} model={provider}/{model_id} history={len(llm_messages)} msgs")
 
+        # Store callback so delegated subtasks can report tool calls too
+        self._active_tool_callback = on_tool_call
+
         try:
             if provider == "openai":
                 tools = filter_tools(get_tools_for_openai())
