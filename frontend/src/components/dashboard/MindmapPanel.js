@@ -37,6 +37,45 @@ export function MindmapPanel({ rpc, authenticated }) {
   const [dimensions, setDimensions] = useState(null);
   const ForceGraph = useForceGraph();
 
+  // DEMO: Fake data for screenshot — remove after
+  const DEMO_GRAPH = {
+    nodes: [
+      { id: "t1", label: "Q1 Product Launch", type: "topic", category: "work", importance: "high", summary: "Launch new SaaS product by March deadline" },
+      { id: "t2", label: "AI Integration", type: "topic", category: "learning", importance: "high", summary: "Integrate GPT-4o into customer support pipeline" },
+      { id: "t3", label: "Client Onboarding", type: "topic", category: "communication", importance: "medium", summary: "Streamline onboarding flow for enterprise clients" },
+      { id: "t4", label: "Budget Review", type: "topic", category: "planning", importance: "medium", summary: "Q2 budget allocation and cost optimization" },
+      { id: "t5", label: "Team Hiring", type: "topic", category: "urgent", importance: "high", summary: "Hire 3 senior engineers by end of February" },
+      { id: "t6", label: "Security Audit", type: "topic", category: "work", importance: "medium", summary: "SOC2 compliance review scheduled for March" },
+      { id: "t7", label: "Marketing Strategy", type: "topic", category: "planning", importance: "low", summary: "Content calendar and social media push" },
+      { id: "t8", label: "DevOps Migration", type: "topic", category: "work", importance: "medium", summary: "Migrate CI/CD to GitHub Actions" },
+      { id: "p1", label: "Sarah Chen", type: "person", role: "VP Engineering", team: "Engineering" },
+      { id: "p2", label: "Marcus Rivera", type: "person", role: "Product Manager", team: "Product" },
+      { id: "p3", label: "Aisha Patel", type: "person", role: "Head of AI", team: "Engineering" },
+      { id: "p4", label: "James O'Brien", type: "person", role: "CFO", team: "Finance" },
+      { id: "p5", label: "Lena Kowalski", type: "person", role: "CISO", team: "Security" },
+      { id: "p6", label: "David Kim", type: "person", role: "HR Director", team: "People" },
+    ],
+    edges: [
+      { source: "t1", target: "p2", label: "owns" },
+      { source: "t1", target: "p1", label: "sponsors" },
+      { source: "t2", target: "p3", label: "leads" },
+      { source: "t2", target: "t1", label: "enables" },
+      { source: "t3", target: "p2", label: "manages" },
+      { source: "t3", target: "t1", label: "part of" },
+      { source: "t4", target: "p4", label: "reviews" },
+      { source: "t4", target: "t5", label: "funds" },
+      { source: "t5", target: "p6", label: "leads" },
+      { source: "t5", target: "p1", label: "approves" },
+      { source: "t6", target: "p5", label: "leads" },
+      { source: "t6", target: "t1", label: "blocks" },
+      { source: "t7", target: "t1", label: "supports" },
+      { source: "t8", target: "p1", label: "oversees" },
+      { source: "t8", target: "t6", label: "related" },
+      { source: "p3", target: "p1", label: "reports to" },
+    ],
+    generated_at: new Date().toISOString(),
+  };
+
   const fetchMindmap = useCallback(async () => {
     if (!authenticated) return;
     setLoading(true);
@@ -46,10 +85,13 @@ export function MindmapPanel({ rpc, authenticated }) {
       if (result && (result.nodes?.length || !result.empty)) {
         setGraphData(result);
       } else {
-        setGraphData(null);
+        // Use demo data when no real data exists
+        setGraphData(DEMO_GRAPH);
       }
     } catch (err) {
       console.error("mindmap.get error:", err);
+      // Fall back to demo data on error
+      setGraphData(DEMO_GRAPH);
     } finally {
       setLoading(false);
     }
