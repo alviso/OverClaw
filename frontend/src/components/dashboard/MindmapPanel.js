@@ -77,6 +77,8 @@ export function MindmapPanel({ rpc, authenticated }) {
   };
 
   const fetchMindmap = useCallback(async () => {
+    // Load demo data immediately, then try real data
+    if (!graphData) setGraphData(DEMO_GRAPH);
     if (!authenticated) return;
     setLoading(true);
     setError(null);
@@ -84,14 +86,9 @@ export function MindmapPanel({ rpc, authenticated }) {
       const result = await rpc("mindmap.get");
       if (result && (result.nodes?.length || !result.empty)) {
         setGraphData(result);
-      } else {
-        // Use demo data when no real data exists
-        setGraphData(DEMO_GRAPH);
       }
     } catch (err) {
       console.error("mindmap.get error:", err);
-      // Fall back to demo data on error
-      setGraphData(DEMO_GRAPH);
     } finally {
       setLoading(false);
     }
