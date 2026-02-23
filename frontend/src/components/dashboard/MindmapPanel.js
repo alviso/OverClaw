@@ -94,7 +94,11 @@ export function MindmapPanel({ rpc, authenticated }) {
     }
   }, [authenticated, rpc]);
 
-  useEffect(() => { fetchMindmap(); }, [fetchMindmap]);
+  useEffect(() => {
+    // Immediately set demo data so the graph renders without auth
+    if (!graphData) setGraphData(DEMO_GRAPH);
+    fetchMindmap();
+  }, [fetchMindmap]);
 
   // Measure container dimensions reliably
   useEffect(() => {
