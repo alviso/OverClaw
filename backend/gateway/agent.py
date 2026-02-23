@@ -302,6 +302,7 @@ class AgentRunner:
         self.session_mgr = SessionManager(db)
         self.config = config
         self.db = db
+        self._active_tool_callback = None  # Shared with subtasks for Slack reporting
 
     async def get_agent_config(self, agent_id: str) -> dict:
         """Get agent definition from DB, or fall back to default config."""
