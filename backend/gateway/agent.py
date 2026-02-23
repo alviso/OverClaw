@@ -527,6 +527,11 @@ class AgentRunner:
         system_prompt = agent_def.get("system_prompt", "You are a helpful assistant.")
         tools_allowed = agent_def.get("tools_allowed", [])
 
+        # Inject current time so specialist has date context
+        from datetime import datetime, timezone as tz
+        now_utc = datetime.now(tz.utc)
+        system_prompt += f"\n\n## Current Time\nIt is currently {now_utc.strftime('%A, %B %d, %Y at %I:%M %p')} UTC."
+
         # Ensure specialist cannot delegate (prevent recursion)
         tools_allowed = [t for t in tools_allowed if t not in ("delegate", "list_agents")]
 
@@ -541,6 +546,9 @@ class AgentRunner:
             allowed_set = set(tools_allowed)
             return [t for t in tools_list if t.get("name", t.get("function", {}).get("name", "")) in allowed_set]
 
+        # Use the parent's tool callback so delegated tool calls show in Slack
+        on_tool_call = self._active_tool_callback
+
         logger.info(f"Subtask: agent={agent_id} model={provider}/{model_id} task={task[:80]}...")
 
         try:
@@ -548,11 +556,13 @@ class AgentRunner:
                 tools = filter_tools(get_tools_for_openai())
                 response_text, tool_calls = await run_openai_turn(
                     api_key, model_id, system_prompt, llm_messages, tools,
+                    on_tool_call,
                 )
             elif provider == "anthropic":
                 tools = filter_tools(get_tools_for_anthropic())
                 response_text, tool_calls = await run_anthropic_turn(
                     api_key, model_id, system_prompt, llm_messages, tools,
+                    on_tool_call,
                 )
             else:
                 return f"Error: unsupported provider '{provider}'"
