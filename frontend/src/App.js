@@ -270,8 +270,24 @@ function App() {
       <Routes>
         <Route path="/" element={<ChatPage />} />
         <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/demo/mindmap" element={<DemoMindmap />} />
       </Routes>
     </BrowserRouter>
+  );
+}
+
+function DemoMindmap() {
+  const noop = async () => ({});
+  return (
+    <div className="h-screen bg-zinc-950 flex flex-col">
+      <div className="px-6 py-4 border-b border-zinc-800/60">
+        <h1 className="text-lg font-semibold text-zinc-100">Mindmap</h1>
+        <p className="text-xs text-zinc-500">Your cognitive landscape</p>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <MindmapPanel rpc={noop} authenticated={false} />
+      </div>
+    </div>
   );
 }
 
