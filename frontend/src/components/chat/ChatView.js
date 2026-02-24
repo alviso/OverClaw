@@ -203,6 +203,15 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
     // Listen for real-time Slack/cross-channel events
     const handleChatEvent = (params) => {
       if (params?.session_id === sessionId) {
+        // Capture live tool calls during agent execution
+        if (params.type === "tool_call" && params.status === "executing") {
+          setLiveToolCalls((prev) => [...prev, {
+            tool: params.tool,
+            args: params.args,
+          }]);
+          setTimeout(scrollToBottom, 50);
+          return;
+        }
         // Immediate refresh when activity on the current session
         rpc("chat.history", { session_id: sessionId }).then((r) => {
           if (r?.messages) {
