@@ -17,7 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY backend/requirements.txt backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt && playwright install chromium && playwright install-deps
+RUN pip install --no-cache-dir -r backend/requirements.txt && playwright install chromium \
+    && apt-get update && playwright install-deps \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 COPY backend/ backend/
 COPY --from=frontend-build /app/frontend/build /app/frontend-static
