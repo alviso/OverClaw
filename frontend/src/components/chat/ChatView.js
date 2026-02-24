@@ -248,12 +248,15 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
         }));
       }
       setAttachments([]);
+      setLiveToolCalls([]);
       const r = await rpc("chat.send", payload);
+      setLiveToolCalls([]);
       if (r?.messages) {
         setMessages(r.messages);
       }
     } catch (err) {
       console.error("Send error:", err);
+      setLiveToolCalls([]);
     } finally {
       setSending(false);
       inputRef.current?.focus();
