@@ -319,6 +319,13 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
         {messages.map((msg, i) => (
           <MessageBubble key={`${i}-${msg.role}`} msg={msg} />
         ))}
+        {sending && liveToolCalls.length > 0 && (
+          <div className="animate-fade-in">
+            <div className="px-4 md:px-16 py-1">
+              {liveToolCalls.map((tc, i) => <ToolCallBadge key={i} call={tc} />)}
+            </div>
+          </div>
+        )}
         {sending && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
