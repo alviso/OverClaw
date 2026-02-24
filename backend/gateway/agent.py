@@ -507,6 +507,10 @@ class AgentRunner:
             await self.session_mgr.set_status(session_id, "error")
             logger.exception(f"Agent turn error: session={session_id}")
             raise
+        finally:
+            # Clear callback so it doesn't leak to other callers
+            # (e.g., scheduler tasks using the same delegate runner)
+            self._active_tool_callback = None
 
 
     async def run_subtask(self, agent_id: str, task: str) -> str:
