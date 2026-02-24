@@ -152,6 +152,7 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [attachments, setAttachments] = useState([]);
+  const [liveToolCalls, setLiveToolCalls] = useState([]);
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const inputRef = useRef(null);
