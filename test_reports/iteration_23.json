@@ -1,0 +1,81 @@
+{
+  "summary": "Scrapling integration testing complete. All 19 backend tests passed. Verified: (1) health endpoint healthy, (2) scrapling[fetchers] in requirements.txt, (3) browse_webpage tool registered with Scrapling Fetcher + StealthyFetcher fallback, (4) Yahoo Finance returns 8217 chars with Tesla data, (5) Stock Analysis (previously failing) now returns 8811 chars with Tesla data, (6) Wikipedia returns article text, (7) Google Finance returns price data, (8) CNBC returns stock info, (9) Robinhood returns page content, (10) invalid URL error handling works, (11) email-triage has prompt_version=4 in MongoDB, (12) email-triage has notify=never, (13) EMAIL_TRIAGE_PROMPT contains 'be STRICT' and 'Silence is better', (14) AgentRunner has _active_tool_callback, (15) run_subtask propagates on_tool_call callback, (16) run_turn stores callback for subtask propagation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Health endpoint returns healthy status",
+    "scrapling[fetchers] found in requirements.txt",
+    "browse_webpage tool registered in gateway",
+    "browse_webpage imports Scrapling Fetcher and StealthyFetcher",
+    "browse_webpage has Cloudflare detection (403/503, 'just a moment')",
+    "browse_webpage has stealth fallback escalation",
+    "Invalid URL error handling (returns helpful error message)",
+    "Yahoo Finance: 8217 chars, contains Tesla/TSLA stock data",
+    "Stock Analysis (previously failing with Playwright): 8811 chars, now works with Scrapling",
+    "Wikipedia: Long article text with Tesla content",
+    "Google Finance: Returns Tesla/TSLA/NASDAQ content",
+    "CNBC: Returns Tesla stock info",
+    "Robinhood: Returns page content (passed stealth mode)",
+    "email-triage task has prompt_version=4 in MongoDB",
+    "email-triage task has notify=never in MongoDB",
+    "EMAIL_TRIAGE_PROMPT contains 'be STRICT'",
+    "EMAIL_TRIAGE_PROMPT contains 'Silence is better'",
+    "EMAIL_TRIAGE_PROMPT_VERSION constant is 4",
+    "AgentRunner has _active_tool_callback attribute",
+    "run_subtask propagates on_tool_call to specialist runs via _active_tool_callback",
+    "run_turn stores on_tool_call in _active_tool_callback for subtask propagation"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_scrapling_integration.py",
+    "/app/test_reports/pytest/test_scrapling_integration.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Scrapling integration is well-implemented with proper fallback chain: Fetcher (fast, stealth headers) → StealthyFetcher (headless browser for Cloudflare)",
+    "Text extraction uses get_all_text() method which is the correct Scrapling API",
+    "The 403/503 status detection and 'just a moment' title check properly identifies Cloudflare blocks",
+    "Content length < 100 chars triggers stealth fallback — good heuristic for JS-rendered pages",
+    "The on_tool_call callback propagation via _active_tool_callback enables Slack reporting for subtask tool calls"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_scrapling_integration.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "N/A (backend only testing)"
+  },
+  "seed_data_creation": "No new seed data created. Tests used live URLs and existing email-triage task in MongoDB.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Scrapling integration verified working. The browse_webpage tool now uses Scrapling Fetcher with stealth headers (fast path) and automatically falls back to StealthyFetcher (headless browser) when blocked. Key sites tested: Yahoo Finance, Stock Analysis (previously failing), Wikipedia, Google Finance, CNBC, Robinhood — all returning substantial content. Email triage prompt v4 with 'be STRICT' classification and notify=never verified in MongoDB. Agent subtask callback propagation verified.",
+  "scrapling_integration_verification": {
+    "fetcher_chain": ["Fetcher (stealthy_headers=True)", "StealthyFetcher (headless=True, solve_cloudflare=True)"],
+    "text_extraction_method": "get_all_text()",
+    "cloudflare_detection": ["status 403/503", "'just a moment' in title", "content < 100 chars"],
+    "sites_verified": {
+      "yahoo_finance": "8217 chars - working",
+      "stock_analysis": "8811 chars - NOW WORKING (was failing with Playwright)",
+      "wikipedia": "working - long article text",
+      "google_finance": "working - price data",
+      "cnbc": "working - stock info",
+      "robinhood": "working - page content"
+    }
+  },
+  "email_triage_v4_verification": {
+    "prompt_version": 4,
+    "notify_setting": "never",
+    "strict_classification": "Contains 'be STRICT' and 'Silence is better'"
+  },
+  "callback_propagation_verification": {
+    "attribute": "_active_tool_callback",
+    "stored_in": "run_turn() sets self._active_tool_callback = on_tool_call",
+    "used_in": "run_subtask() reads on_tool_call = self._active_tool_callback"
+  }
+}
