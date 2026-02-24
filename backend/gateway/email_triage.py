@@ -11,68 +11,68 @@ logger = logging.getLogger("gateway.email_triage")
 EMAIL_TRIAGE_TASK_ID = "email-triage"
 
 # ── Version — bump this when you change the prompt to force a DB update ──
-EMAIL_TRIAGE_PROMPT_VERSION = 3
+EMAIL_TRIAGE_PROMPT_VERSION = 4
 
 # ── The improved prompt ──────────────────────────────────────────────────
-EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your ONLY job is to find NEW emails that require the user's attention and send a concise, actionable Slack notification.
+EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your ONLY job is to find emails where someone is explicitly asking the user to DO something, and notify via Slack ONLY for those.
 
 ## Step 1 — Fetch recent unread emails
 Use the `gmail` tool with action "search" and query "is:unread newer_than:1h" to find recent unread emails. If nothing is found, try "is:unread newer_than:3h".
 
-If there are NO new unread emails, do NOT send any Slack message. Simply respond: "No new emails requiring attention."
+If there are NO new unread emails, respond with exactly: "No new emails." and STOP. Do NOT call slack_notify.
 
-## Step 2 — Classify each email
-For each unread email, classify it into one of three tiers:
+## Step 2 — Classify each email (be STRICT)
+For each unread email, classify it. Default to SKIP unless the email clearly fits Tier A.
 
-**Tier A — Action Required** (notify immediately):
-- A person is asking the user to DO something (reply, send a document, schedule a call, approve, review, etc.)
-- Contains a deadline or time-sensitive request
-- From a known important contact (boss, client, direct collaborator)
-- Contains financial/legal information requiring action
+**Tier A — Direct Action Request** (the ONLY tier that triggers a Slack notification):
+An email is Tier A ONLY if ALL of these are true:
+- A real person (not an automated system) wrote the email
+- They are explicitly asking the user to perform a specific action (reply, send something, approve, review, schedule, sign, etc.)
+- The action has a clear deadline OR is time-sensitive
+Examples that ARE Tier A: "Can you send me the invoice by Friday?", "Please review this PR before our 3pm meeting", "Need your approval on the budget doc"
+Examples that are NOT Tier A: "FYI — the deployment is done", "Here's the meeting summary", "Your order has shipped", GitHub PR notifications, calendar invites with no action needed
 
-**Tier B — FYI / Informational** (mention briefly):
-- Status updates, meeting notes, shared documents
-- Newsletters or digests the user subscribed to and might care about
-- Automated notifications from important tools (GitHub, Jira, etc.)
+**Tier B — FYI** (mention only as a footnote, never by itself):
+- Emails from real people that are informational but don't require action
+- Only include if there are also Tier A emails. Do NOT notify for Tier B alone.
 
-**Tier C — Skip entirely** (do NOT include in notification):
-- Marketing/promotional emails
-- Automated notifications from low-priority tools
-- Spam, social media alerts, generic newsletters
+**Skip entirely** (the DEFAULT — most emails go here):
+- ALL automated/system emails (GitHub, Jira, CI/CD, order confirmations, shipping, calendar, newsletters)
+- Marketing, promotions, social media
+- Informational emails that don't request action
+- CC'd emails where the user is not the primary recipient
 
-## Step 3 — Read Tier A emails in full
-For each Tier A email, use the `gmail` tool with action "read" to get the full body. Extract:
-- **The specific action requested** (e.g., "Send the Q4 invoice to finance@acme.com by Friday")
-- **Any deadline or urgency signal**
-- **Key details the user needs** (amounts, names, dates, links)
+## Step 3 — If there are Tier A emails, read them in full
+For each Tier A email only, use the `gmail` tool with action "read" to get the full body. Extract:
+- **The specific action requested** (one sentence, e.g., "Send the Q4 invoice to finance@acme.com")
+- **The deadline** (if stated)
+- **One key detail** (if critical for the action)
 
-Do NOT include background information the user already knows (project history, who people are, what their roles are). Only include what's NEW and what's NEEDED TO ACT.
+If after reading the full email you realize it's not actually asking for action, downgrade it to Skip.
 
-## Step 4 — Compose and send ONE Slack notification
-Use the `slack_notify` tool with `request_feedback` set to `true` to send a SINGLE message. This enables the user to rate the summary quality with 👍/👎 reactions.
+## Step 4 — Send Slack notification ONLY if Tier A emails exist
+If there are ZERO Tier A emails: respond "No actionable emails." and STOP. Do NOT call slack_notify.
 
-Format for Tier A emails (action required):
+If there ARE Tier A emails, use `slack_notify` with `request_feedback` set to `true`:
+
 ```
-:rotating_light: *[Sender Name] — [Subject line]*
-→ *Action:* [One sentence: what the user needs to do]
-→ *Deadline:* [If any, otherwise omit this line]
-→ *Key detail:* [One critical piece of info, if relevant]
+:rotating_light: *[Sender Name] — [Subject]*
+→ *Action:* [What you need to do]
+→ *Deadline:* [If any, otherwise omit]
 ```
 
-For Tier B emails (FYI), add a brief section at the end:
+If there are also Tier B emails, append briefly:
 ```
 ---
-:inbox_tray: Also received:
-• [Sender] — [Subject] (FYI)
-• [Sender] — [Subject] (FYI)
+:inbox_tray: FYI: [Sender] — [Subject] | [Sender] — [Subject]
 ```
 
-## Rules
-- Lead with the ACTION, not the context. Wrong: "John, your colleague from the finance team, has sent you an email about the Q4 invoice project that was discussed in last week's meeting." Right: "→ Action: Send Q4 invoice to finance@acme.com"
-- Maximum 3-4 lines per email. If it's longer, you're including too much context.
-- Never tell the user things they already know about their contacts or projects.
-- If ALL emails are Tier C (skip), respond "No new emails requiring attention." and do NOT send a Slack message.
-- Combine everything into ONE slack_notify call with request_feedback=true. Never send multiple messages.
+## Hard Rules
+- When in doubt, SKIP the email. Only notify for clear, direct action requests from real people.
+- NEVER call slack_notify if there are no Tier A emails. Silence is better than noise.
+- Maximum 3 lines per email in the notification. If it's longer, cut it.
+- Never include context the user already knows (project history, who people are, roles).
+- ONE slack_notify call maximum. Never send multiple messages.
 """
 
 
@@ -93,28 +93,29 @@ async def seed_email_triage_task(db):
         if current_version >= EMAIL_TRIAGE_PROMPT_VERSION:
             logger.debug("Email triage task already at latest prompt version")
             return
-        # Update the prompt
+        # Update the prompt AND fix notify mode
         await db.tasks.update_one(
             {"id": EMAIL_TRIAGE_TASK_ID},
             {"$set": {
                 "prompt": EMAIL_TRIAGE_PROMPT,
                 "prompt_version": EMAIL_TRIAGE_PROMPT_VERSION,
+                "notify": "never",  # Agent handles Slack via slack_notify tool
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }},
         )
-        logger.info(f"Email triage prompt updated to version {EMAIL_TRIAGE_PROMPT_VERSION}")
+        logger.info(f"Email triage prompt updated to version {EMAIL_TRIAGE_PROMPT_VERSION} (notify=never)")
     else:
         # Create the task
         task = {
             "id": EMAIL_TRIAGE_TASK_ID,
             "name": "Email Triage",
-            "description": "Checks Gmail for new emails, classifies by importance, and sends actionable Slack summaries.",
+            "description": "Checks Gmail for new emails and notifies via Slack only when someone explicitly requests action.",
             "prompt": EMAIL_TRIAGE_PROMPT,
             "prompt_version": EMAIL_TRIAGE_PROMPT_VERSION,
             "agent_id": "default",
             "interval_seconds": 300,  # 5 minutes
             "enabled": False,  # User enables when Gmail is connected
-            "notify": "always",
+            "notify": "never",  # Agent handles Slack via slack_notify tool
             "notify_level": "info",
             "running": False,
             "last_run": None,
