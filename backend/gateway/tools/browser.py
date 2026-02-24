@@ -1,38 +1,21 @@
 """
 Browser Control Tool — Navigate, extract content, and screenshot web pages.
-Uses Playwright for headless Chromium automation.
+Uses Scrapling's StealthyFetcher for anti-bot bypass (Cloudflare, etc.)
+and falls back to Fetcher for speed on simple sites.
 """
 import logging
-import base64
 import asyncio
 from gateway.tools import Tool, register_tool
 
 logger = logging.getLogger("gateway.tools.browser")
-
-# Shared browser instance
-_browser = None
-_playwright = None
-
-
-async def _get_browser():
-    global _browser, _playwright
-    if _browser and _browser.is_connected():
-        return _browser
-    from playwright.async_api import async_playwright
-    _playwright = await async_playwright().start()
-    _browser = await _playwright.chromium.launch(
-        headless=True,
-        args=["--no-sandbox", "--disable-dev-shm-usage"],
-    )
-    logger.info("Browser launched")
-    return _browser
 
 
 class BrowseTool(Tool):
     name = "browse_webpage"
     description = (
         "Navigate to a URL and extract the page content as text. "
-        "Use this to read articles, documentation, or any web page. "
+        "Uses stealth mode to bypass Cloudflare and other anti-bot systems. "
+        "Use this to read articles, documentation, financial data, or any web page. "
         "Returns the visible text content of the page."
     )
     parameters = {
@@ -44,14 +27,14 @@ class BrowseTool(Tool):
             },
             "extract": {
                 "type": "string",
-                "enum": ["text", "html", "screenshot"],
-                "description": "What to extract: 'text' (default, visible text), 'html' (raw HTML), or 'screenshot' (base64 image description).",
+                "enum": ["text", "html"],
+                "description": "What to extract: 'text' (default, visible text) or 'html' (raw HTML).",
                 "default": "text",
             },
-            "wait_seconds": {
-                "type": "integer",
-                "description": "Seconds to wait for page to load (default 3, max 15).",
-                "default": 3,
+            "stealth": {
+                "type": "boolean",
+                "description": "Use stealth browser mode (slower but bypasses anti-bot). Default true.",
+                "default": True,
             },
         },
         "required": ["url"],
@@ -60,49 +43,121 @@ class BrowseTool(Tool):
     async def execute(self, params: dict) -> str:
         url = params.get("url", "")
         extract = params.get("extract", "text")
-        wait = min(params.get("wait_seconds", 3), 15)
+        use_stealth = params.get("stealth", True)
 
         if not url.startswith(("http://", "https://")):
             return "Error: URL must start with http:// or https://"
 
+        # Try stealth first, fall back to simple fetch
+        if use_stealth:
+            result = await self._fetch_stealth(url, extract)
+        else:
+            result = await self._fetch_simple(url, extract)
+
+        # If stealth fails, try simple (or vice versa)
+        if result.startswith("Error:") and use_stealth:
+            logger.info(f"Stealth fetch failed for {url}, trying simple fetch")
+            result = await self._fetch_simple(url, extract)
+        elif result.startswith("Error:") and not use_stealth:
+            logger.info(f"Simple fetch failed for {url}, trying stealth fetch")
+            result = await self._fetch_stealth(url, extract)
+
+        return result
+
+    async def _fetch_stealth(self, url: str, extract: str) -> str:
+        """Fetch with Scrapling StealthyFetcher — bypasses Cloudflare etc."""
         try:
-            browser = await _get_browser()
-            page = await browser.new_page()
-            page.set_default_timeout(20000)
+            from scrapling.fetchers import StealthyFetcher
 
-            try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                if wait > 0:
-                    await asyncio.sleep(wait)
+            page = await asyncio.to_thread(
+                StealthyFetcher.fetch,
+                url,
+                headless=True,
+                network_idle=True,
+            )
 
-                if extract == "html":
-                    content = await page.content()
-                    return f"HTML content of {url} ({len(content)} chars):\n\n{content[:8000]}"
+            if extract == "html":
+                html = page.body.html if hasattr(page, 'body') else str(page)
+                return f"HTML content of {url} ({len(html)} chars):\n\n{html[:8000]}"
 
-                elif extract == "screenshot":
-                    screenshot_bytes = await page.screenshot(type="jpeg", quality=40)
-                    b64 = base64.b64encode(screenshot_bytes).decode()
-                    title = await page.title()
-                    return f"Screenshot taken of '{title}' ({url}). Base64 JPEG ({len(b64)} chars). Page title: {title}"
+            # Extract text — try main content area first, fall back to body
+            title = ""
+            if hasattr(page, 'css'):
+                title_els = page.css('title::text')
+                if title_els:
+                    title = title_els.get() or ""
 
-                else:
-                    title = await page.title()
-                    text = await page.evaluate("""
-                        () => {
-                            const sel = document.querySelectorAll('article, main, [role="main"], .content, #content, body');
-                            const el = sel[0] || document.body;
-                            return el.innerText;
-                        }
-                    """)
-                    text = text.strip()[:10000]
-                    return f"Page: {title}\nURL: {url}\n\n{text}"
+            # Try to get main content text
+            text = ""
+            for selector in ['article', 'main', '[role="main"]', '.content', '#content']:
+                try:
+                    els = page.css(selector)
+                    if els:
+                        text = els[0].text.strip() if hasattr(els[0], 'text') else ""
+                        if len(text) > 100:
+                            break
+                except Exception:
+                    continue
 
-            finally:
-                await page.close()
+            if not text or len(text) < 100:
+                # Fall back to body text
+                try:
+                    text = page.body.text.strip() if hasattr(page, 'body') else page.text.strip()
+                except Exception:
+                    text = str(page)[:10000]
+
+            text = text[:10000]
+            return f"Page: {title}\nURL: {url}\n\n{text}"
 
         except Exception as e:
-            logger.exception(f"Browser error: {url}")
-            return f"Browser error navigating to {url}: {str(e)}"
+            logger.warning(f"Stealth fetch error for {url}: {e}")
+            return f"Error: Stealth fetch failed for {url}: {str(e)[:200]}"
+
+    async def _fetch_simple(self, url: str, extract: str) -> str:
+        """Fetch with Scrapling Fetcher — fast, no browser overhead."""
+        try:
+            from scrapling.fetchers import Fetcher
+
+            page = await asyncio.to_thread(
+                Fetcher.get,
+                url,
+                stealthy_headers=True,
+                follow_redirects=True,
+            )
+
+            if extract == "html":
+                html = page.body.html if hasattr(page, 'body') else str(page)
+                return f"HTML content of {url} ({len(html)} chars):\n\n{html[:8000]}"
+
+            title = ""
+            if hasattr(page, 'css'):
+                title_els = page.css('title::text')
+                if title_els:
+                    title = title_els.get() or ""
+
+            text = ""
+            for selector in ['article', 'main', '[role="main"]', '.content', '#content']:
+                try:
+                    els = page.css(selector)
+                    if els:
+                        text = els[0].text.strip() if hasattr(els[0], 'text') else ""
+                        if len(text) > 100:
+                            break
+                except Exception:
+                    continue
+
+            if not text or len(text) < 100:
+                try:
+                    text = page.body.text.strip() if hasattr(page, 'body') else page.text.strip()
+                except Exception:
+                    text = str(page)[:10000]
+
+            text = text[:10000]
+            return f"Page: {title}\nURL: {url}\n\n{text}"
+
+        except Exception as e:
+            logger.warning(f"Simple fetch error for {url}: {e}")
+            return f"Error: Simple fetch failed for {url}: {str(e)[:200]}"
 
 
 register_tool(BrowseTool())
