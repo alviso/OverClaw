@@ -25,7 +25,6 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: { cursor: "always" },
         audio: false,
-        preferCurrentTab: true,
       });
       streamRef.current = stream;
       if (videoRef.current) {
