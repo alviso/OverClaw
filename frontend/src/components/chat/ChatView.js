@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Paperclip, Loader2, ChevronDown, ChevronUp, Bot, User, Wrench } from "lucide-react";
-import { ScreenShare } from "./ScreenShare";
+import { ScreenShare, ScreenShareButton } from "./ScreenShare";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
