@@ -350,7 +350,7 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
 
       {/* Screen share preview (above input when active) */}
       <div className="px-4 md:px-16">
-        <ScreenShare onCapture={handleScreenCapture} disabled={sending} isInputButton={false} />
+        <ScreenShare ref={screenShareRef} onCapture={handleScreenCapture} />
       </div>
 
       {/* Attachments preview */}
