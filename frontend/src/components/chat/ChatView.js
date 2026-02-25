@@ -281,6 +281,21 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
     e.target.value = "";
   };
 
+  const handleScreenCapture = useCallback(async (blob) => {
+    // Upload the captured frame as an attachment
+    const formData = new FormData();
+    formData.append("file", blob, `screen-capture-${Date.now()}.jpg`);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/upload`, { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.ok) {
+        setAttachments((prev) => [...prev, { ...data, original_name: "Screen Capture" }]);
+      }
+    } catch (err) {
+      console.error("Screen capture upload error:", err);
+    }
+  }, []);
+
   if (!sessionId) {
     return (
       <div className="h-full flex items-center justify-center">
