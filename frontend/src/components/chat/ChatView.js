@@ -346,6 +346,11 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Screen share preview */}
+      <div className="px-4 md:px-16">
+        <ScreenShare onCapture={handleScreenCapture} disabled={sending} />
+      </div>
+
       {/* Attachments preview */}
       {attachments.length > 0 && (
         <div className="px-4 md:px-16 py-2 flex gap-2 flex-wrap">
