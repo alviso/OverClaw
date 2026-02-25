@@ -48,6 +48,12 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
     const canvas = canvasRef.current;
     if (!video || !canvas || !sharing) return;
 
+    // Wait for video to have dimensions
+    if (!video.videoWidth || !video.videoHeight) {
+      console.warn("Video not ready yet, retrying...");
+      return;
+    }
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
@@ -57,6 +63,12 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
       (blob) => {
         if (blob && onCapture) {
           onCapture(blob);
+          // Flash effect on the preview to confirm capture
+          const el = document.querySelector('[data-testid="screen-share-preview"]');
+          if (el) {
+            el.style.boxShadow = "0 0 0 2px #f59e0b";
+            setTimeout(() => { el.style.boxShadow = ""; }, 300);
+          }
         }
       },
       "image/jpeg",
