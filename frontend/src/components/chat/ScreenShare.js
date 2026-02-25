@@ -8,6 +8,18 @@ export function ScreenShare({ onCapture, disabled }) {
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
 
+  const stopSharing = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setSharing(false);
+    setMinimized(false);
+  }, []);
+
   const startSharing = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -31,19 +43,7 @@ export function ScreenShare({ onCapture, disabled }) {
         console.error("Screen share error:", err);
       }
     }
-  }, []);
-
-  const stopSharing = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setSharing(false);
-    setMinimized(false);
-  }, []);
+  }, [stopSharing]);
 
   const captureFrame = useCallback(() => {
     const video = videoRef.current;
