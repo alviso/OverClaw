@@ -159,6 +159,8 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
   const inputRef = useRef(null);
   const isAtBottomRef = useRef(true);
   const fileInputRef = useRef(null);
+  const screenShareRef = useRef(null);
+  const [screenSharing, setScreenSharing] = useState(false);
 
   const scrollToBottom = useCallback(() => {
     if (isAtBottomRef.current) {
