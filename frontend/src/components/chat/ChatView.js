@@ -379,6 +379,19 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
           >
             <Paperclip className="w-4 h-4" />
           </button>
+          <ScreenShareButton
+            onClick={async () => {
+              if (screenSharing) {
+                screenShareRef.current?.stop();
+                setScreenSharing(false);
+              } else {
+                await screenShareRef.current?.start();
+                setScreenSharing(true);
+              }
+            }}
+            disabled={sending}
+            active={screenSharing}
+          />
           <input
             ref={fileInputRef}
             type="file"
