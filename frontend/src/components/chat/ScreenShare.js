@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Monitor, MonitorOff, Camera } from "lucide-react";
 
-export function ScreenShare({ onCapture, disabled }) {
+export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
   const [sharing, setSharing] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const videoRef = useRef(null);
@@ -34,7 +34,6 @@ export function ScreenShare({ onCapture, disabled }) {
       setSharing(true);
       setMinimized(false);
 
-      // Stop when user ends share via browser UI
       stream.getVideoTracks()[0].onended = () => {
         stopSharing();
       };
@@ -66,7 +65,14 @@ export function ScreenShare({ onCapture, disabled }) {
     );
   }, [sharing, onCapture]);
 
-  // Cleanup on unmount
+  // Expose start/stop to parent via ref
+  useImperativeHandle(ref, () => ({
+    start: startSharing,
+    stop: stopSharing,
+    capture: captureFrame,
+    isSharing: sharing,
+  }), [startSharing, stopSharing, captureFrame, sharing]);
+
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -75,79 +81,77 @@ export function ScreenShare({ onCapture, disabled }) {
     };
   }, []);
 
+  if (!sharing) return null;
+
   return (
     <>
-      {/* Hidden canvas for frame capture */}
       <canvas ref={canvasRef} className="hidden" />
-
-      {/* Floating preview when sharing */}
-      {sharing && (
-        <div
-          className={`border border-zinc-800/80 bg-zinc-950 rounded-xl overflow-hidden transition-all ${
-            minimized ? "h-10" : ""
-          }`}
-          data-testid="screen-share-preview"
-        >
-          {/* Header bar */}
-          <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900/80 border-b border-zinc-800/60">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] text-zinc-400 font-medium">Screen Share</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={captureFrame}
-                className="p-1 rounded text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
-                title="Capture frame and send to agent"
-                data-testid="capture-frame-btn"
-              >
-                <Camera className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setMinimized(!minimized)}
-                className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors text-[11px] font-mono"
-                data-testid="minimize-share-btn"
-              >
-                {minimized ? "+" : "−"}
-              </button>
-              <button
-                onClick={stopSharing}
-                className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 transition-colors"
-                title="Stop sharing"
-                data-testid="stop-share-btn"
-              >
-                <MonitorOff className="w-3.5 h-3.5" />
-              </button>
-            </div>
+      <div
+        className="border border-zinc-800/80 bg-zinc-950 rounded-xl overflow-hidden transition-all"
+        data-testid="screen-share-preview"
+      >
+        <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900/80 border-b border-zinc-800/60">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] text-zinc-400 font-medium">Screen Share</span>
           </div>
-
-          {/* Video preview */}
-          {!minimized && (
-            <div className="relative bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full max-h-[200px] object-contain"
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={captureFrame}
+              className="p-1 rounded text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
+              title="Capture frame and send to agent"
+              data-testid="capture-frame-btn"
+            >
+              <Camera className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMinimized(!minimized)}
+              className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors text-[11px] font-mono"
+              data-testid="minimize-share-btn"
+            >
+              {minimized ? "+" : "\u2212"}
+            </button>
+            <button
+              onClick={stopSharing}
+              className="p-1 rounded text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 transition-colors"
+              title="Stop sharing"
+              data-testid="stop-share-btn"
+            >
+              <MonitorOff className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Toggle button (shown in input area) */}
-      {!sharing && (
-        <button
-          data-testid="screen-share-btn"
-          onClick={startSharing}
-          disabled={disabled}
-          className="p-2 text-zinc-600 hover:text-zinc-400 transition-colors flex-shrink-0"
-          title="Share screen"
-        >
-          <Monitor className="w-4 h-4" />
-        </button>
-      )}
+        {!minimized && (
+          <div className="relative bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full max-h-[200px] object-contain"
+            />
+          </div>
+        )}
+      </div>
     </>
+  );
+});
+
+export function ScreenShareButton({ onClick, disabled, active }) {
+  return (
+    <button
+      data-testid="screen-share-btn"
+      onClick={onClick}
+      disabled={disabled}
+      className={`p-2 transition-colors flex-shrink-0 ${
+        active
+          ? "text-emerald-400 hover:text-emerald-300"
+          : "text-zinc-600 hover:text-zinc-400"
+      }`}
+      title={active ? "Stop sharing" : "Share screen"}
+    >
+      {active ? <MonitorOff className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+    </button>
   );
 }
