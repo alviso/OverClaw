@@ -657,6 +657,15 @@ async def serve_proposal(filename: str):
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
+@api_router.get("/cast/receiver")
+async def cast_receiver():
+    """Google Cast custom receiver page."""
+    filepath = ROOT_DIR / "static" / "cast_receiver.html"
+    if filepath.exists():
+        return FileResponse(filepath, media_type="text/html")
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
 # ── Brain Export/Import ──────────────────────────────────────────────────
 @api_router.get("/brain/stats")
 async def brain_stats():
