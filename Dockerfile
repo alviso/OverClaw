@@ -9,15 +9,22 @@ RUN yarn build
 
 FROM python:3.11-slim
 
-# Install system deps: nginx, tesseract for OCR
+# Install system deps: nginx, tesseract for OCR, Firefox libs for Camoufox (stealth browser)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx curl tesseract-ocr tesseract-ocr-eng \
+    libgtk-3-0 libasound2 libx11-xcb1 libxcomposite1 libxdamage1 \
+    libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libatk1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
+
+# Install Camoufox browser for Scrapling's StealthyFetcher (no Playwright needed)
+RUN SITE_PACKAGES=$(python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])") && \
+    sed -i '/Cleaning up cache/{N;d;}' $SITE_PACKAGES/camoufox/pkgman.py 2>/dev/null; \
+    python -m camoufox fetch
 
 COPY backend/ backend/
 COPY --from=frontend-build /app/frontend/build /app/frontend-static
