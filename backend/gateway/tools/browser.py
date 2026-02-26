@@ -78,7 +78,8 @@ class BrowseTool(Tool):
             return {"error": str(e)[:200], "blocked": False}
 
     async def _fetch_stealth(self, url: str) -> dict:
-        """Stealth browser fetch — handles Cloudflare and JS-heavy sites."""
+        """Stealth browser fetch — handles Cloudflare and JS-heavy sites.
+        Requires Playwright browsers to be installed; degrades gracefully if missing."""
         try:
             from scrapling.fetchers import StealthyFetcher
 
@@ -100,8 +101,11 @@ class BrowseTool(Tool):
             return {"content": text, "blocked": False}
 
         except Exception as e:
+            err = str(e)[:200]
+            if "playwright" in err.lower() or "browser" in err.lower():
+                return {"error": f"Site {url} requires a stealth browser (Playwright not installed). Fast fetch was blocked."}
             logger.warning(f"Stealth fetch error for {url}: {e}")
-            return {"error": str(e)[:200], "blocked": False}
+            return {"error": err, "blocked": False}
 
     def _extract_text(self, page, url: str, title: str) -> str:
         """Extract readable text from a Scrapling response/selector."""
