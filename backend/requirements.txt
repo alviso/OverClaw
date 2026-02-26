@@ -36,7 +36,6 @@ docstring_parser==0.17.0
 duckduckgo_search==8.1.1
 ecdsa==0.19.1
 email-validator==2.3.0
-emergentintegrations==0.1.0
 fake-useragent==2.2.0
 fastapi==0.110.1
 fastuuid==0.14.0
