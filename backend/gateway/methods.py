@@ -204,7 +204,10 @@ async def handle_chat_send(params: dict, client, ctx: MethodContext) -> dict:
 
     try:
         try:
-            response, tool_calls = await runner.run_turn(session_id, text, on_tool_call=on_tool_call, agent_id=agent_id)
+            attachments = params.get("attachments", [])
+            response, tool_calls = await runner.run_turn(
+                session_id, text, on_tool_call=on_tool_call, agent_id=agent_id, attachments=attachments
+            )
         finally:
             keepalive_running = False
             keepalive_task.cancel()
