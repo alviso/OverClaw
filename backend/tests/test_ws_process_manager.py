@@ -7,7 +7,7 @@ import json
 import websockets
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://smart-workflow-71.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://task-orchestration.preview.emergentagent.com')
 WS_URL = BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/gateway'
 GATEWAY_TOKEN = "dev-token-change-me"
 
