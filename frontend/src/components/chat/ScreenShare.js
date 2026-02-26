@@ -29,6 +29,8 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Ensure video is playing before allowing capture
+        await videoRef.current.play().catch(() => {});
       }
       setSharing(true);
       setMinimized(false);
