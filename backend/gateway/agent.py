@@ -65,10 +65,18 @@ PROVIDER_MAP = {
     "anthropic/claude-haiku-4.5": ("anthropic", "claude-haiku-4-5-20251001", "ANTHROPIC_API_KEY"),
 }
 
+# Legacy aliases — old config keys that should map to new names
+_MODEL_ALIASES = {
+    "anthropic/claude-sonnet": "anthropic/claude-sonnet-4.5",
+    "anthropic/claude-haiku": "anthropic/claude-haiku-4.5",
+    "anthropic/claude-4-sonnet": "anthropic/claude-sonnet-4.5",
+}
+
 DEFAULT_MODEL = "openai/gpt-4o"
 
 
 def resolve_model(model_str: str) -> tuple:
+    model_str = _MODEL_ALIASES.get(model_str, model_str)
     if model_str in PROVIDER_MAP:
         return PROVIDER_MAP[model_str]
     if "/" in model_str:
