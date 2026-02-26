@@ -26,13 +26,18 @@ Write in plain text, not bullet points. Include as many specific terms and names
 
 
 def extract_text_ocr(file_path: str) -> str:
-    """Extract text from an image using Tesseract OCR.
+    """Extract text from an image using Tesseract OCR with preprocessing.
     Returns the raw extracted text, or empty string on failure."""
     try:
         import pytesseract
-        from PIL import Image
+        from PIL import Image, ImageFilter
         img = Image.open(file_path)
-        text = pytesseract.image_to_string(img)
+        # Convert to grayscale for better OCR accuracy
+        img = img.convert("L")
+        # Sharpen to improve edge clarity on screen text
+        img = img.filter(ImageFilter.SHARPEN)
+        # Use PSM 6 (uniform block of text) and OEM 3 (LSTM + legacy)
+        text = pytesseract.image_to_string(img, config="--psm 6 --oem 3")
         cleaned = text.strip()
         if cleaned:
             logger.info(f"OCR extracted {len(cleaned)} chars from {file_path}")
