@@ -228,7 +228,11 @@ async def handle_chat_send(params: dict, client, ctx: MethodContext) -> dict:
         if image_attachments:
             from gateway.screen_memory import schedule_screen_analysis
             for att in image_attachments:
-                schedule_screen_analysis(ctx.db, att.get("file_path", ""), session_id, text)
+                # Store the agent's own response as memory — it's richer than a separate analysis
+                schedule_screen_analysis(
+                    ctx.db, att.get("file_path", ""), session_id, text,
+                    agent_response=response,
+                )
 
         ctx.activity_log.append({
             "type": "chat.response",
