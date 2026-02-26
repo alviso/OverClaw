@@ -289,6 +289,10 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
     formData.append("file", blob, `screen-capture-${Date.now()}.jpg`);
     try {
       const res = await fetch(`${BACKEND_URL}/api/upload`, { method: "POST", body: formData });
+      if (!res.ok) {
+        console.error("Screen capture upload failed:", res.status);
+        return;
+      }
       const data = await res.json();
       if (data.ok) {
         setAttachments((prev) => [...prev, { ...data, original_name: "Screen Capture" }]);
