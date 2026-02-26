@@ -29,7 +29,7 @@ export function ModelSelector({ rpc, authenticated }) {
   };
 
   const currentModel = models.find(m => m.id === current);
-  const displayName = currentModel ? `${currentModel.provider}/${currentModel.model}` : current || "Loading...";
+  const displayName = currentModel?.label || current || "Loading...";
   const providerColor = current?.startsWith("anthropic") ? "text-orange-400" : "text-emerald-400";
 
   return (
@@ -62,7 +62,7 @@ export function ModelSelector({ rpc, authenticated }) {
                 >
                   <div className="flex items-center gap-2">
                     <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-400" : "bg-zinc-600"}`} />
-                    <span className={`text-xs font-mono ${color}`}>{m.id}</span>
+                    <span className={`text-xs font-mono ${color}`}>{m.label || m.id}</span>
                   </div>
                   <span className="text-[10px] text-zinc-600 uppercase">{m.provider}</span>
                 </button>
