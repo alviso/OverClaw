@@ -242,9 +242,26 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
     setSending(true);
 
     try {
+      // Auto-capture screen if sharing
+      let currentAttachments = [...attachments];
+      if (screenSharing && screenShareRef.current) {
+        const blob = await screenShareRef.current.captureFrame();
+        if (blob) {
+          const formData = new FormData();
+          formData.append("file", blob, `screen-capture-${Date.now()}.jpg`);
+          const res = await fetch(`${BACKEND_URL}/api/upload`, { method: "POST", body: formData });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.ok) {
+              currentAttachments.push({ ...data, original_name: "Screen Capture" });
+            }
+          }
+        }
+      }
+
       const payload = { session_id: sessionId, message: text };
-      if (attachments.length > 0) {
-        payload.attachments = attachments.map((a) => ({
+      if (currentAttachments.length > 0) {
+        payload.attachments = currentAttachments.map((a) => ({
           file_path: a.file_path,
           original_name: a.original_name,
           type: a.type,
