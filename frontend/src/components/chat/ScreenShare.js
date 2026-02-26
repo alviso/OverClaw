@@ -56,7 +56,6 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            // Flash effect to confirm capture
             const el = document.querySelector('[data-testid="screen-share-preview"]');
             if (el) {
               el.style.boxShadow = "0 0 0 2px #f59e0b";
@@ -65,8 +64,7 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
           }
           resolve(blob);
         },
-        "image/jpeg",
-        0.85
+        "image/png"
       );
     });
   }, []);
