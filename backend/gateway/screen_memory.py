@@ -10,15 +10,17 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger("gateway.screen_memory")
 
-ANALYSIS_PROMPT = """Analyze this screen capture and extract key information. Be specific and factual.
+ANALYSIS_PROMPT = """Extract ALL key information from this screen capture for future reference.
 
-Describe:
-1. What application or website is shown
-2. Key visible data (numbers, names, dates, statuses, amounts)
-3. What the user appears to be working on
-4. Any action items or notable details visible
+You MUST include:
+1. Application name and specific page/view/tab shown
+2. ALL visible text labels, headings, column headers, menu items, and navigation breadcrumbs
+3. ALL specific data: names, numbers, dates, statuses, IDs, amounts, percentages
+4. Report names, document titles, project names, task names — anything with a specific name
+5. What the user appears to be working on and any notable details
 
-Be concise — 3-5 sentences max. Focus on facts that would be useful context later."""
+Be thorough — extract every piece of identifiable information. This will be stored as searchable context.
+Write in plain text, not bullet points. Include as many specific terms and names as possible."""
 
 
 async def analyze_and_store_screen(db, file_path: str, session_id: str, user_message: str = ""):
