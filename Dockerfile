@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY backend/requirements.txt backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt \
+    && pip install --no-cache-dir "scrapling[fetchers]==0.4"
 
 # Install Camoufox/patchright browsers for Scrapling's StealthyFetcher
 # System deps are already installed above, so we only fetch browser binaries
