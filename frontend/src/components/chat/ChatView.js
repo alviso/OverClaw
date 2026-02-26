@@ -248,7 +248,7 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
         const blob = await screenShareRef.current.captureFrame();
         if (blob) {
           const formData = new FormData();
-          formData.append("file", blob, `screen-capture-${Date.now()}.jpg`);
+          formData.append("file", blob, `screen-capture-${Date.now()}.png`);
           const res = await fetch(`${BACKEND_URL}/api/upload`, { method: "POST", body: formData });
           if (res.ok) {
             const data = await res.json();
