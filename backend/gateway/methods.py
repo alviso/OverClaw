@@ -306,9 +306,22 @@ async def handle_chat_delete(params: dict, client, ctx: MethodContext) -> dict:
 @register_method("models.list")
 async def handle_models_list(params: dict, client, ctx: MethodContext) -> dict:
     from gateway.agent import PROVIDER_MAP
+    # Friendly labels for the UI
+    _LABELS = {
+        "openai/gpt-5.2": "GPT-5.2",
+        "openai/gpt-5.2-pro": "GPT-5.2 Pro",
+        "openai/gpt-5-mini": "GPT-5 Mini",
+        "openai/gpt-4.1": "GPT-4.1",
+        "openai/gpt-4.1-mini": "GPT-4.1 Mini",
+        "openai/gpt-4o": "GPT-4o",
+        "anthropic/claude-opus-4.6": "Claude Opus 4.6",
+        "anthropic/claude-sonnet-4.6": "Claude Sonnet 4.6",
+        "anthropic/claude-sonnet-4.5": "Claude Sonnet 4.5",
+        "anthropic/claude-haiku-4.5": "Claude Haiku 4.5",
+    }
     models = []
     for key, (provider, model_id, _) in PROVIDER_MAP.items():
-        models.append({"id": key, "provider": provider, "model": model_id})
+        models.append({"id": key, "provider": provider, "model": model_id, "label": _LABELS.get(key, key)})
     return {"models": models, "current": ctx.config.agent.model}
 
 
