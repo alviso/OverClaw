@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 load_dotenv("/app/backend/.env")
 
 # Get the base URL from env - must use the full URL
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://task-orchestration.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://screen-share-ai-1.preview.emergentagent.com").rstrip("/")
 
 # MongoDB connection for direct DB checks
 from motor.motor_asyncio import AsyncIOMotorClient

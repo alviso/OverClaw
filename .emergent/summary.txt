@@ -6,78 +6,180 @@ The user's most recent focus has been on adding a screen-sharing capability to t
 **User's preferred language**: English
 
 **what currently exists?**
-The OverClaw application is a full-stack project (FastAPI, React, MongoDB) with an agentic architecture.
--   **Core Intelligence**: An orchestrator agent delegates tasks to specialists (e.g., research). It features an email RAG pipeline and a  tool. Conversation history and tool calls (including from delegated agents) are correctly propagated, improving contextual memory.
--   **Integrations**: Gmail and Slack are functional. The web search tool has been significantly upgraded from a simple  wrapper to using the  library, which can bypass most anti-bot and Cloudflare protections. Microsoft Outlook integration is coded but untested.
--   **Automated Tasks**: A scheduled task triages emails and sends actionable summaries to Slack, now featuring a user feedback mechanism (👍/👎 reactions) to auto-tune summary quality.
--   **UI/UX**: The UI includes a webchat, admin panels for config/logs, and a mindmap page.
--   **Screen Sharing Feature**: A major new feature has been added to the webchat.
-    -   A Share Screen button allows the user to share a tab, window, or full screen using the native browser  API.
-    -   When a user sends a message while sharing, a lossless PNG of the current frame is automatically captured and sent to the agent for multi-modal analysis.
-    -   The agent's detailed analysis of the screen capture is then stored as a persistent, searchable memory, allowing it to build context on the user's work over time.
+The OverClaw application is a full-stack project (FastAPI, React, MongoDB) with an agentic architecture. Key features include:
+-   **Intelligence & Memory**: An orchestrator agent delegates tasks and uses a  tool. Conversation history and tool calls are correctly propagated.
+-   **Integrations**: Functional Gmail, Slack, and an untested Microsoft Outlook integration. Web search is powered by the  library for robust scraping.
+-   **Automation**: A scheduled task triages emails and sends summaries to Slack, with a user feedback mechanism (👍/👎) for auto-tuning.
+-   **Screen Sharing & OCR**: A Share Screen feature in the webchat allows the user to share their screen. When a message is sent, a lossless PNG is captured. Tesseract OCR is used to perform pixel-perfect text extraction from the capture, and this text is provided to the LLM alongside the image for high-fidelity analysis and memory storage.
+-   **Environment**: The application runs in Docker. The build process has been recently stabilized after significant dependency issues with  and its browser requirements. An Nginx configuration issue limiting upload size has also been fixed.
 
 **Last working item**:
--   Last item agent was working: The user reported a significant OCR inaccuracy where the agent misread an email address ( vs ) from a screen capture. To fix this, the agent is integrating the Tesseract OCR library to perform pixel-perfect text extraction from screen captures before the LLM analyzes the image for context.
--   Status: IN PROGRESS
+-   Last item agent was working: The user reported that the automated email triage task was failing with a . The agent identified that the triage prompt was causing the agent to hallucinate placeholder message IDs (e.g., ) instead of using the actual IDs returned from the initial Gmail search. The agent corrected the prompt in  to be more explicit about using the correct ID and bumped the prompt version.
+-   Status: USER VERIFICATION PENDING
 -   Agent Testing Done: N
--   Which testing method agent to use? backend testing agent
+-   Which testing method agent to use? backend testing agent. The agent should trigger or wait for the scheduled email triage task and monitor the backend logs to confirm that it no longer produces the Invalid id value error and successfully reads emails.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: OCR inaccuracy in screen captures (P0)
+  - Issue 1: Email triage task fails with Invalid id value (P0)
   - Issue 2: Full End-to-End Testing of Microsoft Outlook Integration (P1)
   - Issue 3: Webchat client timeout on long-running tasks (P2)
   - Issue 4:  tool is non-functional (P2)
+  - Issue 5: Docker build process is fragile (P2)
 
   Issues Detail:
-  - Issue 1: 
-     - **Description:** The vision model misreads small text in screen captures (e.g.,  was read as ), leading to incorrect information being stored in the agent's memory. The agent already switched from JPEG to lossless PNG, but accuracy is still not perfect.
-     - Attempted fixes: Switched image capture format from lossy JPEG to lossless PNG.
-     - Next debug checklist: The agent has installed  and its dependencies. The next step is to integrate it into the  and  pipeline. The image's text should be extracted by Tesseract and provided to the LLM alongside the image itself for analysis, ensuring the LLM has the exact text while still understanding the visual context.
-     - Why fix this issue and what will be achieved with the fix? To ensure high-fidelity context is stored in memory, making the screen-sharing feature reliable for building a knowledge base of the user's work.
-     - Status:  IN PROGRESS
-     - Is recurring issue? Y
+  - Issue 1:
+     - **Description:** The email triage agent hallucinates placeholder message IDs when trying to read emails, causing a  from the Gmail API.
+     - Attempted fixes: The prompt in  was updated to explicitly instruct the agent to use the uid=0(root) gid=0(root) groups=0(root) field from the search results. The prompt version was also incremented.
+     - Next debug checklist: Monitor the backend logs to see if the scheduled triage task now runs successfully without the Invalid id value error.
+     - Why fix this issue and what will be achieved with the fix? This is a critical automated task for the application's core functionality. Fixing it will restore the agent's ability to proactively manage and summarize emails.
+     - Status: USER VERIFICATION PENDING
+     - Is recurring issue? N
      - Should Test frontend/backend/both after fix? backend
      - Blocked on other issue: None
-  - Issue 2: 
+  - Issue 2:
      - **Description:** The code for Microsoft Outlook integration was implemented but has never been tested with a real account. This is a major unverified feature.
      - Attempted fixes: None.
      - Next debug checklist: The user needs to create an Azure App, configure secrets, connect it via the admin panel, and test an email-related command.
      - Why fix this issue and what will be achieved with the fix? This will complete a major user-requested feature, expanding the app's integration capabilities.
-     - Status:  NOT STARTED
+     - Status: NOT STARTED
      - Is recurring issue? N
      - Should Test frontend/backend/both after fix? both
      - Blocked on other issue: User action (Azure setup).
-  - Issue 3: 
+  - Issue 3:
      - **Description:** The webchat client disconnects during long-running agent tasks (e.g., deep research) that take more than ~30 seconds. The backend completes the task successfully, but the user sees a timed-out or blank response.
      - Attempted fixes: None.
-     - Next debug checklist: Investigate the WebSocket timeout configuration on the frontend or implement a keep-alive/ping-pong mechanism between the frontend and backend to prevent the connection from being dropped during long-running tasks.
+     - Next debug checklist: Investigate the WebSocket timeout configuration on the frontend () or implement a keep-alive/ping-pong mechanism between the frontend and backend.
      - Why fix this issue and what will be achieved with the fix? It will ensure users receive responses for complex queries that require longer processing times.
-     - Status:  NOT STARTED
+     - Status: NOT STARTED
      - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? frontend
      - Blocked on other issue: None
-  - Issue 4: 
+  - Issue 4:
      - **Description:** The advanced  tool fails with an error indicating a missing Provide a command to run with `uvx <command>`.
 
 See `uvx --help` for more information. module dependency. This tool is intended for interactive, LLM-driven browser automation.
-     - Attempted fixes: As a workaround, the tool was removed from the orchestrator agent's allowed tools list to prevent it from being called. The underlying issue was not resolved.
+     - Attempted fixes: As a workaround, the tool was removed from the orchestrator agent's allowed tools list. The root cause remains.
      - Next debug checklist: Investigate the Provide a command to run with `uvx <command>`.
 
 See `uvx --help` for more information. dependency, determine how to install it, and add the necessary steps to the  and .
-     - Why fix this issue and what will be achieved with the fix? It will unlock more advanced, interactive web browsing capabilities for the agent beyond the current  tool.
-     - Status:  NOT STARTED
+     - Why fix this issue and what will be achieved with the fix? It will unlock more advanced, interactive web browsing capabilities for the agent.
+     - Status: NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? backend
+     - Blocked on other issue: None
+  - Issue 5:
+     - **Description:** The Docker build process was failing repeatedly due to complex dependency interactions between , 
+Usage:   
+  pip <command> [options]
+
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible 
+dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package 
+indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-
+                              index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) hash enforcement, and apt cache cleaning.
+     - Attempted fixes: The agent went through a long debugging loop, finally resolving it by splitting the dependency installation into two steps in the :  first, followed by a separate Looking in indexes: https://pypi.org/simple, https://d33sy5i8bnduwe.cloudfront.net/simple/
+Requirement already satisfied: scrapling==0.4 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (0.4)
+Requirement already satisfied: lxml>=6.0.2 in /root/.venv/lib/python3.11/site-packages (from scrapling==0.4->scrapling[fetchers]==0.4) (6.0.2)
+Requirement already satisfied: cssselect>=1.4.0 in /root/.venv/lib/python3.11/site-packages (from scrapling==0.4->scrapling[fetchers]==0.4) (1.4.0)
+Requirement already satisfied: orjson>=3.11.7 in /root/.venv/lib/python3.11/site-packages (from scrapling==0.4->scrapling[fetchers]==0.4) (3.11.7)
+Requirement already satisfied: tld>=0.13.1 in /root/.venv/lib/python3.11/site-packages (from scrapling==0.4->scrapling[fetchers]==0.4) (0.13.1)
+Requirement already satisfied: w3lib>=2.4.0 in /root/.venv/lib/python3.11/site-packages (from scrapling==0.4->scrapling[fetchers]==0.4) (2.4.0)
+Requirement already satisfied: typing_extensions in /root/.venv/lib/python3.11/site-packages (from scrapling==0.4->scrapling[fetchers]==0.4) (4.15.0)
+Requirement already satisfied: click>=8.3.0 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (8.3.1)
+Requirement already satisfied: curl_cffi>=0.14.0 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (0.14.0)
+Requirement already satisfied: playwright==1.56.0 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (1.56.0)
+Requirement already satisfied: patchright==1.56.0 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (1.56.0)
+Requirement already satisfied: browserforge>=1.2.4 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (1.2.4)
+Requirement already satisfied: msgspec>=0.20.0 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (0.20.0)
+Requirement already satisfied: anyio>=4.12.1 in /root/.venv/lib/python3.11/site-packages (from scrapling[fetchers]==0.4) (4.12.1)
+Requirement already satisfied: pyee<14,>=13 in /root/.venv/lib/python3.11/site-packages (from patchright==1.56.0->scrapling[fetchers]==0.4) (13.0.0)
+Requirement already satisfied: greenlet<4.0.0,>=3.1.1 in /root/.venv/lib/python3.11/site-packages (from patchright==1.56.0->scrapling[fetchers]==0.4) (3.3.1)
+Requirement already satisfied: idna>=2.8 in /root/.venv/lib/python3.11/site-packages (from anyio>=4.12.1->scrapling[fetchers]==0.4) (3.11)
+Requirement already satisfied: apify_fingerprint_datapoints in /root/.venv/lib/python3.11/site-packages (from browserforge>=1.2.4->scrapling[fetchers]==0.4) (0.10.0)
+Requirement already satisfied: cffi>=1.12.0 in /root/.venv/lib/python3.11/site-packages (from curl_cffi>=0.14.0->scrapling[fetchers]==0.4) (2.0.0)
+Requirement already satisfied: certifi>=2024.2.2 in /root/.venv/lib/python3.11/site-packages (from curl_cffi>=0.14.0->scrapling[fetchers]==0.4) (2026.1.4)
+Requirement already satisfied: pycparser in /root/.venv/lib/python3.11/site-packages (from cffi>=1.12.0->curl_cffi>=0.14.0->scrapling[fetchers]==0.4) (3.0) to handle the extras.
+     - Next debug checklist: The build is currently stable, but any changes to  or the  should be made with caution.
+     - Why fix this issue and what will be achieved with the fix? A stable build environment is critical for any further development.
+     - Status: RESOLVED
      - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? backend
      - Blocked on other issue: None
 
 **In progress Task List**:
-- Task 1: Integrate Tesseract OCR into Screen Capture Pipeline (P0)
-   - Where to resume: The dependencies (, ) are installed. The agent needs to modify  and . When an image is received, it should first be processed by Tesseract to extract raw text. This raw text should then be passed to the LLM along with the image and the user's prompt.
-   - What will be achieved with this? Pixel-perfect text extraction from screen captures, preventing OCR errors and ensuring the agent's memory is accurate.
-   - Status: IN PROGRESS
-   - Should Test frontend/backend/both after fix? backend
-   - Blocked on something: None
+- There are no tasks currently in progress. The next action is to verify the fix for the email triage issue.
 
 **Upcoming and Future Tasks**
 Upcoming Tasks:
@@ -92,149 +194,485 @@ Future Tasks:
 -   Address the on-hold task: Interactive browser agent fails on KVM site.
 
 **Completed work in this session**
--   **Scrapling Integration:** Replaced the fragile Playwright-based  tool with the  library. This provides robust, anti-bot web scraping, significantly improving the research specialist's ability to read content from sites protected by Cloudflare.
--   **Screen Sharing Feature:** Implemented a full-featured screen sharing capability in the webchat, allowing the user to share their screen for agent analysis.
-    -   Uses the browser-native  API.
-    -   Auto-captures a lossless PNG frame when the user sends a message, providing multi-modal input to the agent.
-    -   Implemented a background process to analyze captures and create persistent, searchable memories, effectively teaching the agent about the user's work context.
--   **Agent Quality & Debugging:**
-    -   Fixed a critical bug causing shallow/poor quality responses in Slack by re-architecting the orchestrator to always delegate research tasks, removing its own browsing tools.
-    -   Fixed tool call visibility, ensuring that actions taken by delegated specialist agents are now streamed to both the Slack and webchat UIs in real-time.
-    -   Resolved a bug where scheduled task tool calls were leaking into the Slack channel.
--   **Email Triage Enhancement:**
-    -   Significantly improved the email triage prompt to focus on actionable items and reduce noise.
-    -   Implemented a Slack-based feedback system (👍/👎) to allow the triage prompt to auto-tune over time.
-    -   Fixed an issue that caused No new emails notifications.
--   **Environment & Dependency Management:**
-    -   Removed the entire Playwright dependency and its browser binaries from the Docker image, reducing the image size by 300-500MB.
-    -   Fixed a recurring Docker build failure related to apt 2.6.1 (arm64)
-Usage: apt [options] command
+-   **Tesseract OCR Integration:** Successfully integrated  to resolve screen capture OCR inaccuracies. The pipeline now preprocesses images (greyscale, upscale) and provides pixel-perfect text to the LLM, fixing the original  vs  error. The feature was validated with a testing agent run that passed all 27 tests.
+-   **Docker Build Stabilization:** Resolved a series of complex Docker build failures related to , 
+Usage:   
+  pip <command> [options]
 
-apt is a commandline package manager and provides commands for
-searching and managing as well as querying information about packages.
-It provides the same functionality as the specialized APT tools,
-like apt-get and apt-cache, but enables options more suitable for
-interactive use by default.
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible 
+dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package 
+indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-
+                              index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) hash mismatches, and apt 2.6.1 (arm64)
+Usage: apt-get [options] command
+       apt-get [options] install|remove pkg1 [pkg2 ...]
+       apt-get [options] source pkg1 [pkg2 ...]
+
+apt-get is a command line interface for retrieval of packages
+and information about them from authenticated sources and
+for installation, upgrade and removal of packages together
+with their dependencies.
 
 Most used commands:
-  list - list packages based on package names
-  search - search in package descriptions
-  show - show package details
-  install - install packages
-  reinstall - reinstall packages
-  remove - remove packages
-  autoremove - automatically remove all unused packages
-  update - update list of available packages
-  upgrade - upgrade the system by installing/upgrading packages
-  full-upgrade - upgrade the system by removing/installing/upgrading packages
-  edit-sources - edit the source information file
-  satisfy - satisfy dependency strings
+  update - Retrieve new lists of packages
+  upgrade - Perform an upgrade
+  install - Install new packages (pkg is libc6 not libc6.deb)
+  reinstall - Reinstall packages (pkg is libc6 not libc6.deb)
+  remove - Remove packages
+  purge - Remove packages and config files
+  autoremove - Remove automatically all unused packages
+  dist-upgrade - Distribution upgrade, see apt-get(8)
+  dselect-upgrade - Follow dselect selections
+  build-dep - Configure build-dependencies for source packages
+  satisfy - Satisfy dependency strings
+  clean - Erase downloaded archive files
+  autoclean - Erase old downloaded archive files
+  check - Verify that there are no broken dependencies
+  source - Download source archives
+  download - Download the binary package into the current directory
+  changelog - Download and display the changelog for the given package
 
-See apt(8) for more information about the available commands.
+See apt-get(8) for more information about the available commands.
 Configuration options and syntax is detailed in apt.conf(5).
 Information about how to configure sources can be found in sources.list(5).
 Package and version choices can be expressed via apt_preferences(5).
 Security details are available in apt-secure(8).
-                                        This APT has Super Cow Powers. cache size.
--   **UX/UI:**
-    -   Added a temporary demo-data-powered mindmap for user screenshots.
-    -   Implemented the UI for the screen sharing feature, including a preview and controls.
+                                        This APT has Super Cow Powers. cache issues. The build is now stable.
+-   **Nginx Upload Limit Fix:** Identified and fixed an issue where large screen capture uploads were being silently rejected. Increased  to  in the 's Nginx configuration.
+-   **Email Triage Prompt Fix:** Corrected the agent's tendency to hallucinate placeholder message IDs by refining the prompt in .
 
 **Earlier issues found/mentioned but not fixed**
-   - **Webchat client timeout:** The frontend WebSocket disconnects on agent tasks longer than ~30 seconds. The agent identified this in message #339 but did not implement a fix.
-     - Debug checklist: Investigate and increase the WebSocket timeout on the frontend, or implement a keep-alive/heartbeat message to prevent the connection from being closed by proxies or the browser. Check  and server-side WebSocket configuration.
-     - Why to solve this issue and what will be achieved with this? Users will reliably receive answers to complex queries that require deep research, improving the usability of the research specialist.
-     - Should Test frontend/backend/both after fix: frontend
-     - Is recurring issue? Y
+-   **Webchat client timeout:** Listed in the pending issues list.
+-   ** tool non-functional**: Listed in the pending issues list.
 
 **Known issue recurrence from previous fork**
-  - **Issue recurrence in previous fork**: The  tool was non-functional due to a missing Provide a command to run with `uvx <command>`.
+  - Issue recurrence in previous fork: The  tool was non-functional due to a missing Provide a command to run with `uvx <command>`.
 
 See `uvx --help` for more information. dependency.
-  - **Recurrence count**: 2
-  - **Status**: NOT STARTED (Workaround applied by disabling the tool for the orchestrator, but the root cause remains).
+  - Recurrence count: 2
+  - Status: NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Multi-modal LLM Interaction:** Handling mixed image (screen capture) and text input, with provider-aware formatting for OpenAI (image_url) vs. Anthropic (base64 source).
--   **Advanced Web Scraping:** Using  library with its  to bypass anti-bot measures (like Cloudflare), replacing the less reliable Playwright implementation.
--   **Browser-Native Screen Sharing:** Using the  JavaScript API to capture screen/tab content without browser extensions.
--   **Asynchronous Context Building:** Using background tasks to analyze screen captures and enrich the agent's memory without blocking the primary chat response.
--   **State Management in Agentic Systems:** Debugging and fixing state leakage, specifically an  callback persisting on a shared agent runner instance and causing scheduled task logs to appear in Slack.
--   **OCR Integration (In-Progress):** Adding Tesseract for high-fidelity, pixel-perfect text extraction to augment the vision model's understanding of screen content.
+-   **OCR Integration:** Using  to extract text from images.
+-   **Image Preprocessing for OCR:** Applying greyscale and upscaling with Pillow to improve Tesseract's accuracy.
+-   **Docker Dependency Management:** Managing apt 2.6.1 (arm64)
+Usage: apt-get [options] command
+       apt-get [options] install|remove pkg1 [pkg2 ...]
+       apt-get [options] source pkg1 [pkg2 ...]
+
+apt-get is a command line interface for retrieval of packages
+and information about them from authenticated sources and
+for installation, upgrade and removal of packages together
+with their dependencies.
+
+Most used commands:
+  update - Retrieve new lists of packages
+  upgrade - Perform an upgrade
+  install - Install new packages (pkg is libc6 not libc6.deb)
+  reinstall - Reinstall packages (pkg is libc6 not libc6.deb)
+  remove - Remove packages
+  purge - Remove packages and config files
+  autoremove - Remove automatically all unused packages
+  dist-upgrade - Distribution upgrade, see apt-get(8)
+  dselect-upgrade - Follow dselect selections
+  build-dep - Configure build-dependencies for source packages
+  satisfy - Satisfy dependency strings
+  clean - Erase downloaded archive files
+  autoclean - Erase old downloaded archive files
+  check - Verify that there are no broken dependencies
+  source - Download source archives
+  download - Download the binary package into the current directory
+  changelog - Download and display the changelog for the given package
+
+See apt-get(8) for more information about the available commands.
+Configuration options and syntax is detailed in apt.conf(5).
+Information about how to configure sources can be found in sources.list(5).
+Package and version choices can be expressed via apt_preferences(5).
+Security details are available in apt-secure(8).
+                                        This APT has Super Cow Powers. packages, nginx configuration, and complex 
+Usage:   
+  pip <command> [options]
+
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible 
+dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package 
+indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-
+                              index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) installations with extras in a multi-stage build.
+-   **Prompt Engineering:** Refining agent instructions to prevent hallucination and ensure correct tool usage.
+-   **Nginx Configuration:** Debugging and setting  to handle large file uploads.
 
 **key DB schema**
--   **triage_feedback**:  (Stores user feedback on email triage quality).
--   **memories**: Now stores screen capture analysis results, tagged with  and containing the agent's detailed textual analysis of the visual information.
+-   No changes to the DB schema were made in this session.
 
 **changes in tech stack**
--   **Added**:  (Python),  (Python),  (system dependency).
--   **Removed**:  (Python) and its associated browser dependencies.
+-   **Added**:  (Python),  (system dependency).
+-   **Modified**: The installation method for  was changed in the Dockerfile to ensure a stable build.
 
 **All files of reference**
--   : Handles background analysis and storage of screen captures. Needs to be modified for Tesseract integration.
--   : Core agent runner logic. Modified to handle multi-modal inputs, and will need further changes for Tesseract.
--   : The new React component for the screen sharing UI and capture logic.
--   : The main chat component, heavily modified to integrate the  component and its auto-capture-on-send logic.
--   : Rewritten to use the  library.
--   : Contains critical dependency changes (Playwright removed, Scrapling and Tesseract added).
+-   : Contains the prompt logic for the email triage task.
+-   : Contains the OCR and image processing logic.
+-   : Integrates the OCR output into the agent's main processing loop.
+-   : Defines the application's build environment, including system dependencies, Nginx config, and Python package installation.
+-   : Lists the Python dependencies for the backend.
+-   : The React component where the screen capture upload is initiated.
+
+**Areas that need refactoring**:
+-   The , while now functional, is complex due to the workarounds needed for  dependencies. It could be a source of future maintenance overhead.
 
 **key api endpoints**
--   : Handles file uploads, now used for lossless PNG screen captures.
--   : A temporary, unauthenticated route serving a mindmap with demo data.
+-   : This endpoint for file uploads was a key part of debugging the screen sharing feature. Its successful operation depends on the Nginx  setting.
 
 **Critical Info for New Agent**
--   Your immediate priority is to complete the Tesseract OCR integration. The dependencies are installed; you need to modify the Python code in  and  to use Tesseract to extract text from the captured PNG and pass it to the LLM.
--   The web scraping capabilities have been significantly upgraded with . The old  tool, which used Playwright, is gone. The new tool is much more robust against anti-bot measures.
--   The architectural decision to force the orchestrator agent to  research tasks is intentional. Do not give the orchestrator browsing or web search tools directly.
--   The webchat UI has a known timeout issue for long-running tasks. Be aware that the user might report missing responses for complex research queries, even if the backend log shows success.
--   The temporary mindmap demo route () and its hardcoded data should be removed once the user confirms they are no longer needed.
+-   Your first action should be to verify the fix for the email triage task. Check the backend logs after startup for errors related to Invalid id value.
+-   The OCR integration for screen captures is complete and has been tested. The main P0 task from the previous session is resolved.
+-   The Docker build process has been a major pain point. Be extremely careful if you need to modify  or . The current stable solution involves a two-step .
+-   The user has previously experienced environment issues like no space left on device and MongoDB corruption. These were due to the local Docker environment, not application code, but be aware that the user's environment can be a factor in reported issues.
 
 **documents and test reports created in this job**
 -   
--   
--   
--    (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. User confirms yes, build that instead for the screen sharing feature over the Google Cast idea. (Completed)
-9.  User reports the screen share feature doesn't allow picking any tab. (Completed, fixed )
-8.  User reports clicking the capture button does nothing. (Completed, fixed with Promise-based capture)
-7.  User provides a screenshot showing capture still not working and a UX gap. (Completed, implemented auto-capture on send)
-6.  User reports the agent still can't see the captured screen. (Completed, fixed backend to pass attachments to agent)
-5.  User reports the agent gives no answer after the fix. (Completed, fixed multi-modal formatting for Anthropic model)
-4.  User asks if screen captures become memories and approves building the memory feature. (Completed)
-3.  User reports a  failure for empties report. (Completed, improved memory analysis prompt)
-2.  User provides two screenshots showing the agent correctly answering a question but then failing a  for the same info. (Completed, changed memory to store agent's rich response)
-1.  User reports a significant OCR error ( vs ) and asks if Tesseract is a library or service, then approves its integration. (PENDING - This is the current active task)
+10. User confirms the Nginx 413 error, validating the agent's diagnosis.
+9.  User reports a 
+Usage:   
+  pip <command> [options]
+
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible 
+dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package 
+indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-
+                              index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) hash mismatch error during the Docker build.
+8.  User provides another 
+Usage:   
+  pip <command> [options]
+
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible 
+dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package 
+indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-
+                              index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) error:  is not a valid option for the installed pip version.
+7.  User reports a new issue: the email triage task is failing with an Invalid id value error and provides logs. (PENDING VERIFICATION)
+6.  User reports  module not found during Docker build.
+5.  User states they need  to work without degradation, rejecting a graceful fallback plan.
+4.  User reports  is not needed anymore.
+3.  User reports  is causing a build failure and asks for it to be removed.
+2.  User asks the agent not to forget to update the Docker build with new dependencies.
+1.  User gives the go-ahead to work on the P0 task (OCR inaccuracy).
 
 **Project Health Check:**
--   **Broken**:  tool (underlying Provide a command to run with `uvx <command>`.
+-   **Broken**:  tool (missing Provide a command to run with `uvx <command>`.
 
-See `uvx --help` for more information. dependency is missing).
+See `uvx --help` for more information. dependency).
 -   **Mocked**: Microsoft Outlook integration remains untested.
--   **Needs Attention**: The webchat client has a WebSocket timeout issue for long-running agent tasks.
+-   **Needs Attention**:
+    - The webchat client has a WebSocket timeout issue for long-running agent tasks.
+    - The email triage task fix requires verification.
+    - The Docker build process is complex and brittle.
 
 **3rd Party Integrations**
--   **Scrapling**: Advanced web scraping and anti-bot bypass.
--   OpenAI: LLM completions.
--   Anthropic: LLM completions.
+-   **Scrapling**: Advanced web scraping. Requires  and browser binaries for .
+-   OpenAI & Anthropic: LLM completions.
 -   Slack:  for messaging.
 -   Google OAuth 2.0: For Gmail integration.
 -   Microsoft Graph API: For Outlook integration (untested).
--   **Tesseract**: For OCR (being integrated).
+-   **Tesseract**: For OCR on screen captures.
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: YES (for the OCR feature)
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: []
+  - Test files created: A temporary test script  was created and deleted within the session.
   - Known regressions: None.
 
 **Credentials to test flow:**
-The user configures credentials in their local Docker instance via the  UI.
+Credentials are user-configured via the  UI in their local environment.
 
 **What agent forgot to execute**
--   The agent did not address the webchat WebSocket timeout issue after identifying it.
--   The agent did not remove the temporary demo data and route for the mindmap ( and hardcoded data in ) after the user was finished with the screenshot.</analysis>
+-   The agent did not verify the email triage fix after implementing it. The task was failing, the agent pushed a code change to , but did not confirm if the scheduled task now runs successfully.
+-   The items from the previous handoff remain unaddressed: fixing the WebSocket timeout and removing the demo mindmap data.</analysis>
