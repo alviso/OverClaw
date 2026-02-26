@@ -150,6 +150,13 @@ async def startup():
     # Seed specialist agents
     await seed_specialist_agents(db)
 
+    # Migrate legacy model names in agents collection
+    from gateway.agent import _MODEL_ALIASES
+    async for agent_doc in db.agents.find({"model": {"$in": list(_MODEL_ALIASES.keys())}}):
+        new_model = _MODEL_ALIASES[agent_doc["model"]]
+        await db.agents.update_one({"_id": agent_doc["_id"]}, {"$set": {"model": new_model}})
+        logger.info(f"Migrated agent '{agent_doc.get('id')}' model: {agent_doc['model']} -> {new_model}")
+
     # ── Enforce orchestrator tools and prompt (versioned) ────────────────
     # The orchestrator should NOT have web_search or browser_use:
     # - web_search: delegates to research specialist
