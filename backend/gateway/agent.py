@@ -456,6 +456,7 @@ class AgentRunner:
         # If there are image attachments, convert the last user message to multi-modal
         # Format differs between providers, so we store the raw data and format later
         _image_data = []
+        _ocr_texts = []
         if attachments:
             image_attachments = [a for a in attachments if a.get("type") == "image"]
             for att in image_attachments:
@@ -469,12 +470,32 @@ class AgentRunner:
                     mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "gif": "image/gif"}
                     mime = mime_map.get(ext, "image/jpeg")
                     _image_data.append({"b64": img_b64, "mime": mime})
+
+                    # Run Tesseract OCR for pixel-perfect text extraction
+                    try:
+                        from gateway.screen_memory import extract_text_ocr
+                        ocr_text = await asyncio.to_thread(extract_text_ocr, file_path)
+                        if ocr_text:
+                            _ocr_texts.append(ocr_text)
+                    except Exception as e:
+                        logger.debug(f"OCR extraction skipped for {file_path}: {e}")
+
                 except Exception as e:
                     logger.warning(f"Failed to read image attachment {file_path}: {e}")
 
         if _image_data:
+            # Build the text portion: original message + OCR context
+            text_for_llm = user_text
+            if _ocr_texts:
+                ocr_block = "\n\n".join(_ocr_texts)
+                text_for_llm = (
+                    f"{user_text}\n\n"
+                    "## OCR-Extracted Text from Screen (pixel-perfect, use as ground truth for names/emails/IDs/numbers):\n"
+                    f"```\n{ocr_block[:4000]}\n```"
+                )
+
             if provider == "openai":
-                content_parts = [{"type": "text", "text": user_text}]
+                content_parts = [{"type": "text", "text": text_for_llm}]
                 for img in _image_data:
                     content_parts.append({
                         "type": "image_url",
@@ -482,7 +503,7 @@ class AgentRunner:
                     })
                 llm_messages[-1] = {"role": "user", "content": content_parts}
             elif provider == "anthropic":
-                content_parts = [{"type": "text", "text": user_text}]
+                content_parts = [{"type": "text", "text": text_for_llm}]
                 for img in _image_data:
                     content_parts.append({
                         "type": "image",
