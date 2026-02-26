@@ -255,6 +255,8 @@ export function ChatView({ rpc, authenticated, sessionId, connected, onEvent, of
             if (data.ok) {
               currentAttachments.push({ ...data, original_name: "Screen Capture" });
             }
+          } else {
+            console.error("Screen capture upload failed:", res.status, res.statusText);
           }
         }
       }
