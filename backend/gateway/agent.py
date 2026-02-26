@@ -453,6 +453,29 @@ class AgentRunner:
                     llm_messages.append({"role": "assistant", "content": content})
         llm_messages.append({"role": "user", "content": user_text})
 
+        # If there are image attachments, convert the last user message to multi-modal
+        if attachments:
+            image_attachments = [a for a in attachments if a.get("type") == "image"]
+            if image_attachments:
+                content_parts = [{"type": "text", "text": user_text}]
+                for att in image_attachments:
+                    file_path = att.get("file_path", "")
+                    try:
+                        import base64
+                        with open(file_path, "rb") as f:
+                            img_data = base64.b64encode(f.read()).decode("utf-8")
+                        # Detect mime type
+                        ext = file_path.rsplit(".", 1)[-1].lower() if "." in file_path else "jpeg"
+                        mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "gif": "image/gif"}
+                        mime = mime_map.get(ext, "image/jpeg")
+                        content_parts.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime};base64,{img_data}"},
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to read image attachment {file_path}: {e}")
+                llm_messages[-1] = {"role": "user", "content": content_parts}
+
         # Filter tools by agent's allowlist
         def filter_tools(tools_list):
             if not tools_allowed:
