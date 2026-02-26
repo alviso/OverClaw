@@ -78,7 +78,13 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
     );
   }, [sharing, onCapture]);
 
-  // Expose start/stop to parent via ref
+  // When the component renders (sharing=true), attach stream to the new video element
+  useEffect(() => {
+    if (sharing && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [sharing]);
   useImperativeHandle(ref, () => ({
     start: startSharing,
     stop: stopSharing,
