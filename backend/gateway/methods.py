@@ -223,6 +223,13 @@ async def handle_chat_send(params: dict, client, ctx: MethodContext) -> dict:
             "tool_calls": tool_calls,
         }))
 
+        # Background: index screen captures as searchable memories
+        image_attachments = [a for a in attachments if a.get("type") == "image"]
+        if image_attachments:
+            from gateway.screen_memory import schedule_screen_analysis
+            for att in image_attachments:
+                schedule_screen_analysis(ctx.db, att.get("file_path", ""), session_id, text)
+
         ctx.activity_log.append({
             "type": "chat.response",
             "detail": f"Response for '{session_id}' ({len(tool_calls)} tools): {response[:60]}{'...' if len(response) > 60 else ''}",
