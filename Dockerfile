@@ -8,8 +8,13 @@ ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 RUN yarn build
 
 FROM python:3.11-slim
+
+# Install all system deps in one layer: nginx, tesseract, and Playwright/Scrapling browser deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx curl tesseract-ocr tesseract-ocr-eng \
+    libnspr4 libnss3 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 \
+    libcups2 libxkbcommon0 libatspi2.0-0 libxcomposite1 libxdamage1 \
+    libxfixes3 libxrandr2 libgbm1 libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -17,7 +22,7 @@ WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt \
     && scrapling install \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && rm -rf /root/.cache
 
 COPY backend/ backend/
 COPY --from=frontend-build /app/frontend/build /app/frontend-static
