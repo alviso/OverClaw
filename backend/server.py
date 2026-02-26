@@ -193,6 +193,17 @@ async def startup():
             if added:
                 logger.info(f"Added to orchestrator tools: {added}")
 
+        # Migrate legacy model names to new naming scheme
+        from gateway.agent import _MODEL_ALIASES
+        stored_model = stored_cfg.get("agent", {}).get("model", "")
+        if stored_model in _MODEL_ALIASES:
+            new_model = _MODEL_ALIASES[stored_model]
+            await db.gateway_config.update_one(
+                {"_id": "main"}, {"$set": {"agent.model": new_model}}
+            )
+            gateway_config.agent.model = new_model
+            logger.info(f"Migrated default agent model: {stored_model} -> {new_model}")
+
         # Versioned prompt update — always applies when version changes
         stored_version = stored_cfg.get("agent", {}).get("prompt_version", 1)
         if stored_version < ORCHESTRATOR_PROMPT_VERSION:
