@@ -1,0 +1,85 @@
+{
+  "summary": "Tesseract OCR integration testing complete. All 27 backend tests passed. Verified: (1) Tesseract binary installed at /usr/bin/tesseract v5.3.0, (2) pytesseract and Pillow in requirements.txt, (3) Dockerfile includes tesseract-ocr and tesseract-ocr-eng, (4) extract_text_ocr() correctly extracts text with 2x LANCZOS upscaling, grayscale conversion, and --psm 6 --oem 3 config, (5) extract_text_ocr() handles edge cases (non-existent files, corrupted images, empty images), (6) _analyze_image() includes OCR text in LLM prompt with 'ground truth' indication, (7) analyze_and_store_screen() appends OCR text to memory content for searchability, (8) agent.py run_turn() extracts OCR for image attachments and prepends to user message for both OpenAI and Anthropic providers, (9) All OCR calls use asyncio.to_thread to avoid blocking event loop, (10) Direct OCR accuracy test: 'ext_mikova@mattoni.cz' extracted perfectly (the original bug report email).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Tesseract binary exists at /usr/bin/tesseract",
+    "Tesseract version is 5.x (5.3.0)",
+    "pytesseract import succeeds",
+    "Pillow (PIL) import succeeds with Image, ImageDraw, ImageFont",
+    "extract_text_ocr() extracts text from PNG image",
+    "extract_text_ocr() detects email addresses accurately",
+    "extract_text_ocr() returns empty string for non-existent file",
+    "extract_text_ocr() returns empty string for corrupted image",
+    "extract_text_ocr() returns minimal text for blank image",
+    "extract_text_ocr() uses 2x LANCZOS upscaling",
+    "extract_text_ocr() converts image to grayscale",
+    "extract_text_ocr() uses --psm 6 --oem 3 Tesseract config",
+    "_analyze_image() calls extract_text_ocr",
+    "_analyze_image() includes OCR text in prompt with ground truth indication",
+    "_analyze_image() uses asyncio.to_thread for non-blocking OCR",
+    "analyze_and_store_screen() extracts OCR text",
+    "analyze_and_store_screen() appends OCR text to stored memory content",
+    "analyze_and_store_screen() uses asyncio.to_thread",
+    "agent.py run_turn() imports extract_text_ocr",
+    "agent.py extracts OCR text for image attachments",
+    "agent.py prepends OCR text to user message with ground truth indication",
+    "agent.py handles OCR for both OpenAI and Anthropic providers",
+    "agent.py uses asyncio.to_thread for OCR",
+    "Dockerfile includes tesseract-ocr",
+    "Dockerfile includes tesseract-ocr-eng",
+    "requirements.txt includes pytesseract",
+    "requirements.txt includes Pillow",
+    "End-to-end OCR accuracy on screen capture-like image"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_ocr_integration.py",
+    "/app/test_reports/pytest/test_ocr_integration.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "OCR implementation is well-structured with proper error handling (returns empty string on failure)",
+    "2x LANCZOS upscaling is appropriate for screen captures (~96 DPI → ~192 DPI closer to Tesseract's optimal 300 DPI)",
+    "Grayscale conversion improves OCR accuracy and reduces processing time",
+    "--psm 6 (assume uniform block of text) is good for screen captures; --oem 3 (default) uses best available engine",
+    "asyncio.to_thread usage prevents blocking the event loop during OCR processing",
+    "The 'ground truth for names/emails/IDs' prompt instruction helps LLM prefer OCR text over vision interpretation"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ocr_integration.py"
+  ],
+  "success_rate": {
+    "backend": "100% (27/27 tests passed)",
+    "frontend": "N/A (backend only testing)"
+  },
+  "seed_data_creation": "No seed data needed. Tests use synthetic images generated with PIL.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Tesseract OCR integration verified working. The extract_text_ocr() function in screen_memory.py does 2x LANCZOS upscaling + grayscale conversion before running Tesseract. OCR text is included in: (1) _analyze_image() prompt to LLM, (2) analyze_and_store_screen() stored memory content, (3) agent.py run_turn() user message for image attachments. Direct test shows OCR perfectly extracts 'ext_mikova@mattoni.cz' - the email from the original bug report. All async operations use to_thread.",
+  "ocr_integration_verification": {
+    "tesseract_binary": "/usr/bin/tesseract v5.3.0",
+    "python_packages": ["pytesseract==0.3.13", "pillow==12.1.0"],
+    "dockerfile_packages": ["tesseract-ocr", "tesseract-ocr-eng"],
+    "preprocessing": {
+      "grayscale": "img.convert('L')",
+      "upscaling": "2x with LANCZOS",
+      "tesseract_config": "--psm 6 --oem 3"
+    },
+    "integration_points": {
+      "screen_memory.py": ["extract_text_ocr()", "_analyze_image()", "analyze_and_store_screen()"],
+      "agent.py": ["run_turn() - image attachment processing with OCR for OpenAI and Anthropic"]
+    },
+    "accuracy_test": {
+      "input": "ext_mikova@mattoni.cz",
+      "output": "ext_mikova@mattoni.cz",
+      "result": "PERFECT MATCH"
+    }
+  }
+}
