@@ -21,10 +21,9 @@ WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# Install Camoufox browser for Scrapling's StealthyFetcher (no Playwright needed)
-RUN SITE_PACKAGES=$(python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])") && \
-    sed -i '/Cleaning up cache/{N;d;}' $SITE_PACKAGES/camoufox/pkgman.py 2>/dev/null; \
-    python -m camoufox fetch
+# Install Camoufox/patchright browsers for Scrapling's StealthyFetcher
+# System deps are already installed above, so we only fetch browser binaries
+RUN python -m patchright install chromium
 
 COPY backend/ backend/
 COPY --from=frontend-build /app/frontend/build /app/frontend-static
