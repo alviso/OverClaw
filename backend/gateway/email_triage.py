@@ -43,7 +43,7 @@ Examples that are NOT Tier A: "FYI — the deployment is done", "Here's the meet
 - CC'd emails where the user is not the primary recipient
 
 ## Step 3 — If there are Tier A emails, read them in full
-For each Tier A email only, use the `gmail` tool with action "read" to get the full body. Extract:
+For each Tier A email only, use the `gmail` tool with action "read" and the ACTUAL `message_id` value (the `id` field returned from the search results in Step 1 — it looks like "18e4a2b3c4d5e6f7"). Do NOT invent or guess message IDs. Extract:
 - **The specific action requested** (one sentence, e.g., "Send the Q4 invoice to finance@acme.com")
 - **The deadline** (if stated)
 - **One key detail** (if critical for the action)
