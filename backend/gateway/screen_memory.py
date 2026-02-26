@@ -1,6 +1,7 @@
 """
-Screen Memory — Analyzes screen captures and stores them as searchable memories.
-Runs as a background task after each screen share capture.
+Screen Memory — Stores screen capture context as searchable memories.
+Uses the agent's own response when available (richer), falls back to
+GPT-4o-mini vision analysis for captures without agent context.
 """
 import os
 import logging
@@ -23,59 +24,65 @@ Be thorough — extract every piece of identifiable information. This will be st
 Write in plain text, not bullet points. Include as many specific terms and names as possible."""
 
 
-async def analyze_and_store_screen(db, file_path: str, session_id: str, user_message: str = ""):
-    """Analyze a screen capture and store the analysis as a memory."""
+async def _analyze_image(db, file_path: str) -> str:
+    """Use GPT-4o-mini vision to analyze a screen capture."""
+    with open(file_path, "rb") as f:
+        img_bytes = f.read()
+    img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+
+    ext = file_path.rsplit(".", 1)[-1].lower() if "." in file_path else "jpeg"
+    mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+    mime = mime_map.get(ext, "image/jpeg")
+
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
+        secrets = await db.setup_secrets.find_one({"_id": "main"}, {"_id": 0})
+        if secrets:
+            api_key = secrets.get("openai_api_key", "")
+
+    if not api_key:
+        return ""
+
+    from openai import AsyncOpenAI
+    client = AsyncOpenAI(api_key=api_key)
+
+    response = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": ANALYSIS_PROMPT},
+                {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
+            ],
+        }],
+        max_tokens=600,
+    )
+    return response.choices[0].message.content.strip()
+
+
+async def analyze_and_store_screen(
+    db, file_path: str, session_id: str,
+    user_message: str = "", agent_response: str = "",
+):
+    """Store screen capture context as a searchable memory."""
     try:
-        # Read the image
-        with open(file_path, "rb") as f:
-            img_bytes = f.read()
-        img_b64 = base64.b64encode(img_bytes).decode("utf-8")
-
-        ext = file_path.rsplit(".", 1)[-1].lower() if "." in file_path else "jpeg"
-        mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
-        mime = mime_map.get(ext, "image/jpeg")
-
-        # Use OpenAI for vision analysis (reliable, always available for embeddings)
-        api_key = os.environ.get("OPENAI_API_KEY", "")
-        if not api_key:
-            # Try loading from DB secrets
-            secrets = await db.setup_secrets.find_one({"_id": "main"}, {"_id": 0})
-            if secrets:
-                api_key = secrets.get("openai_api_key", "")
-
-        if not api_key:
-            logger.warning("No OpenAI API key for screen analysis")
-            return
-
-        from openai import AsyncOpenAI
-        client = AsyncOpenAI(api_key=api_key)
-
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": ANALYSIS_PROMPT},
-                    {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
-                ],
-            }],
-            max_tokens=600,
-        )
-
-        analysis = response.choices[0].message.content.strip()
-        if not analysis:
-            return
-
-        # Build memory content with timestamp and context
         now = datetime.now(timezone.utc)
         timestamp = now.strftime("%B %d, %Y at %I:%M %p UTC")
 
+        # Prefer the agent's own response — it's usually richer and more accurate
+        if agent_response and len(agent_response) > 50:
+            analysis = agent_response
+        else:
+            # Fall back to vision analysis
+            analysis = await _analyze_image(db, file_path)
+            if not analysis:
+                return
+
         content = f"[Screen capture — {timestamp}]\n"
         if user_message:
-            content += f"User's question about this screen: {user_message[:200]}\n"
-        content += f"What was on screen: {analysis}"
+            content += f"User asked: {user_message[:300]}\n"
+        content += f"Screen content: {analysis}"
 
-        # Store as memory
         from gateway.memory import MemoryManager
         mgr = MemoryManager(db)
         await mgr.store_memory(
@@ -95,8 +102,11 @@ async def analyze_and_store_screen(db, file_path: str, session_id: str, user_mes
         logger.warning(f"Screen analysis failed: {e}")
 
 
-def schedule_screen_analysis(db, file_path: str, session_id: str, user_message: str = ""):
+def schedule_screen_analysis(
+    db, file_path: str, session_id: str,
+    user_message: str = "", agent_response: str = "",
+):
     """Fire-and-forget background task for screen analysis."""
     asyncio.create_task(
-        analyze_and_store_screen(db, file_path, session_id, user_message)
+        analyze_and_store_screen(db, file_path, session_id, user_message, agent_response)
     )
