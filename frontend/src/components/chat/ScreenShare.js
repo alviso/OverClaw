@@ -27,17 +27,10 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
         audio: false,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Ensure video is playing before allowing capture
-        await videoRef.current.play().catch(() => {});
-      }
       setSharing(true);
       setMinimized(false);
 
-      stream.getVideoTracks()[0].onended = () => {
-        stopSharing();
-      };
+      stream.getVideoTracks()[0].onended = () => stopSharing();
     } catch (err) {
       if (err.name !== "NotAllowedError") {
         console.error("Screen share error:", err);
@@ -45,53 +38,56 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
     }
   }, [stopSharing]);
 
+  // Capture a frame and return the blob as a Promise
   const captureFrame = useCallback(() => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas || !sharing) return;
+    return new Promise((resolve) => {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
+        resolve(null);
+        return;
+      }
 
-    // Wait for video to have dimensions
-    if (!video.videoWidth || !video.videoHeight) {
-      console.warn("Video not ready yet, retrying...");
-      return;
-    }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0);
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
-
-    canvas.toBlob(
-      (blob) => {
-        if (blob && onCapture) {
-          onCapture(blob);
-          // Flash effect on the preview to confirm capture
-          const el = document.querySelector('[data-testid="screen-share-preview"]');
-          if (el) {
-            el.style.boxShadow = "0 0 0 2px #f59e0b";
-            setTimeout(() => { el.style.boxShadow = ""; }, 300);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            // Flash effect to confirm capture
+            const el = document.querySelector('[data-testid="screen-share-preview"]');
+            if (el) {
+              el.style.boxShadow = "0 0 0 2px #f59e0b";
+              setTimeout(() => { el.style.boxShadow = ""; }, 300);
+            }
           }
-        }
-      },
-      "image/jpeg",
-      0.85
-    );
-  }, [sharing, onCapture]);
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.85
+      );
+    });
+  }, []);
 
-  // When the component renders (sharing=true), attach stream to the new video element
+  // Attach stream to video when component renders
   useEffect(() => {
     if (sharing && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
       videoRef.current.play().catch(() => {});
     }
   }, [sharing]);
+
+  // Expose to parent
   useImperativeHandle(ref, () => ({
     start: startSharing,
     stop: stopSharing,
-    capture: captureFrame,
+    captureFrame,
     isSharing: sharing,
   }), [startSharing, stopSharing, captureFrame, sharing]);
 
+  // Cleanup
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -116,9 +112,12 @@ export const ScreenShare = forwardRef(function ScreenShare({ onCapture }, ref) {
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={captureFrame}
+              onClick={async () => {
+                const blob = await captureFrame();
+                if (blob && onCapture) onCapture(blob);
+              }}
               className="p-1 rounded text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
-              title="Capture frame and send to agent"
+              title="Capture frame and add as attachment"
               data-testid="capture-frame-btn"
             >
               <Camera className="w-3.5 h-3.5" />
