@@ -201,14 +201,18 @@ function AgentForm({ rpc, existing, onSave, onCancel }) {
           data-testid="agent-model-select"
         >
           <optgroup label="OpenAI">
-            <option value="openai/gpt-4o">openai/gpt-4o</option>
-            <option value="openai/gpt-4.1-mini">openai/gpt-4.1-mini</option>
-            <option value="openai/gpt-4.1">openai/gpt-4.1</option>
+            <option value="openai/gpt-5.2">GPT-5.2</option>
+            <option value="openai/gpt-5.2-pro">GPT-5.2 Pro</option>
+            <option value="openai/gpt-5-mini">GPT-5 Mini</option>
+            <option value="openai/gpt-4.1">GPT-4.1</option>
+            <option value="openai/gpt-4.1-mini">GPT-4.1 Mini</option>
+            <option value="openai/gpt-4o">GPT-4o</option>
           </optgroup>
           <optgroup label="Anthropic">
-            <option value="anthropic/claude-sonnet">anthropic/claude-sonnet</option>
-            <option value="anthropic/claude-haiku">anthropic/claude-haiku</option>
-            <option value="anthropic/claude-4-sonnet">anthropic/claude-4-sonnet</option>
+            <option value="anthropic/claude-opus-4.6">Claude Opus 4.6</option>
+            <option value="anthropic/claude-sonnet-4.6">Claude Sonnet 4.6</option>
+            <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+            <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
           </optgroup>
         </select>
       </div>

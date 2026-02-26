@@ -51,12 +51,18 @@ async def _safe_extract_relationships(db, user_text):
 
 # ── Provider mapping ─────────────────────────────────────────────────────
 PROVIDER_MAP = {
-    "openai/gpt-4o": ("openai", "gpt-4o", "OPENAI_API_KEY"),
-    "openai/gpt-4.1-mini": ("openai", "gpt-4.1-mini", "OPENAI_API_KEY"),
+    # OpenAI — newest first
+    "openai/gpt-5.2": ("openai", "gpt-5.2", "OPENAI_API_KEY"),
+    "openai/gpt-5.2-pro": ("openai", "gpt-5.2-pro", "OPENAI_API_KEY"),
+    "openai/gpt-5-mini": ("openai", "gpt-5-mini", "OPENAI_API_KEY"),
     "openai/gpt-4.1": ("openai", "gpt-4.1", "OPENAI_API_KEY"),
-    "anthropic/claude-sonnet": ("anthropic", "claude-sonnet-4-5-20250929", "ANTHROPIC_API_KEY"),
-    "anthropic/claude-haiku": ("anthropic", "claude-haiku-4-5-20251001", "ANTHROPIC_API_KEY"),
-    "anthropic/claude-4-sonnet": ("anthropic", "claude-4-sonnet-20250514", "ANTHROPIC_API_KEY"),
+    "openai/gpt-4.1-mini": ("openai", "gpt-4.1-mini", "OPENAI_API_KEY"),
+    "openai/gpt-4o": ("openai", "gpt-4o", "OPENAI_API_KEY"),
+    # Anthropic — newest first
+    "anthropic/claude-opus-4.6": ("anthropic", "claude-opus-4-6", "ANTHROPIC_API_KEY"),
+    "anthropic/claude-sonnet-4.6": ("anthropic", "claude-sonnet-4-6", "ANTHROPIC_API_KEY"),
+    "anthropic/claude-sonnet-4.5": ("anthropic", "claude-sonnet-4-5-20250929", "ANTHROPIC_API_KEY"),
+    "anthropic/claude-haiku-4.5": ("anthropic", "claude-haiku-4-5-20251001", "ANTHROPIC_API_KEY"),
 }
 
 DEFAULT_MODEL = "openai/gpt-4o"
