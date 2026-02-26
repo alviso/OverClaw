@@ -2,6 +2,7 @@
 Screen Memory — Stores screen capture context as searchable memories.
 Uses the agent's own response when available (richer), falls back to
 GPT-4o-mini vision analysis for captures without agent context.
+Integrates Tesseract OCR for pixel-perfect text extraction.
 """
 import os
 import logging
@@ -24,8 +25,25 @@ Be thorough — extract every piece of identifiable information. This will be st
 Write in plain text, not bullet points. Include as many specific terms and names as possible."""
 
 
+def extract_text_ocr(file_path: str) -> str:
+    """Extract text from an image using Tesseract OCR.
+    Returns the raw extracted text, or empty string on failure."""
+    try:
+        import pytesseract
+        from PIL import Image
+        img = Image.open(file_path)
+        text = pytesseract.image_to_string(img)
+        cleaned = text.strip()
+        if cleaned:
+            logger.info(f"OCR extracted {len(cleaned)} chars from {file_path}")
+        return cleaned
+    except Exception as e:
+        logger.warning(f"Tesseract OCR failed for {file_path}: {e}")
+        return ""
+
+
 async def _analyze_image(db, file_path: str) -> str:
-    """Use GPT-4o-mini vision to analyze a screen capture."""
+    """Use GPT-4o-mini vision to analyze a screen capture, augmented with OCR text."""
     with open(file_path, "rb") as f:
         img_bytes = f.read()
     img_b64 = base64.b64encode(img_bytes).decode("utf-8")
@@ -43,6 +61,16 @@ async def _analyze_image(db, file_path: str) -> str:
     if not api_key:
         return ""
 
+    # Run OCR in a thread to avoid blocking the event loop
+    ocr_text = await asyncio.to_thread(extract_text_ocr, file_path)
+
+    prompt = ANALYSIS_PROMPT
+    if ocr_text:
+        prompt += (
+            "\n\n## OCR-Extracted Text (pixel-perfect, use as ground truth for names/emails/IDs):\n"
+            f"```\n{ocr_text[:3000]}\n```"
+        )
+
     from openai import AsyncOpenAI
     client = AsyncOpenAI(api_key=api_key)
 
@@ -51,7 +79,7 @@ async def _analyze_image(db, file_path: str) -> str:
         messages=[{
             "role": "user",
             "content": [
-                {"type": "text", "text": ANALYSIS_PROMPT},
+                {"type": "text", "text": prompt},
                 {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
             ],
         }],
