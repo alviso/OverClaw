@@ -11,7 +11,7 @@ logger = logging.getLogger("gateway.email_triage")
 EMAIL_TRIAGE_TASK_ID = "email-triage"
 
 # ── Version — bump this when you change the prompt to force a DB update ──
-EMAIL_TRIAGE_PROMPT_VERSION = 4
+EMAIL_TRIAGE_PROMPT_VERSION = 5
 
 # ── The improved prompt ──────────────────────────────────────────────────
 EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your ONLY job is to find emails where someone is explicitly asking the user to DO something, and notify via Slack ONLY for those.
