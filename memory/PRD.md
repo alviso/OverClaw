@@ -1,85 +1,65 @@
-# OverClaw — PRD
+# OverClaw — Product Requirements Document
 
-## Problem Statement
-Build a streamlined work assistant, "OverClaw", with an orchestration architecture where a primary agent delegates tasks to specialists. The project should be open-source-ready with intelligence features for learning about the user and their work context.
+## Original Problem Statement
+Build a streamlined work assistant "OverClaw" inspired by the openclaw repository. The project uses an orchestration architecture where a primary agent delegates tasks to specialists. Key integrations include Gmail, Slack, Microsoft Outlook (untested), and a screen-sharing capability for the webchat UI.
 
-## Core Architecture
+## Architecture
 - **Backend**: FastAPI + MongoDB
 - **Frontend**: React
-- **Agent**: LLM-powered orchestrator with specialist delegation
-- **Channels**: Webchat, Slack
-- **Integrations**: Gmail, Microsoft Outlook (scaffolded), Slack
+- **Agent**: Orchestrator delegates to specialists (research, etc.)
+- **Integrations**: Gmail, Slack, Outlook (untested), Scrapling (web scraping)
+- **Screen Sharing**: Browser-native getDisplayMedia API, auto-capture PNG on send, background memory storage with Tesseract OCR
 
 ## What's Been Implemented
 
 ### Core Intelligence
-- Passive User Profile extraction from conversations
-- Relationship Memory — auto-discovers org chart from conversations and emails
-- Email Memory — RAG pipeline that indexes email content for searchable context
-- Multi-pass deduplication for people (name, email, accent normalization)
-- Proactive Context Awareness — agent auto cross-references email/calendar for time-sensitive events
-
-### Scheduled Tasks
-- **Email Triage Task** (5 min interval): 3-tier email classification with improved prompt v3
-  - Tier A (Action Required): Read full email, extract specific action + deadline, Slack notify
-  - Tier B (FYI): Mention briefly in Slack summary
-  - Tier C (Skip): Marketing/spam/low-priority — ignored entirely
-  - Format: Leads with ACTION, not context. Concise Slack-ready bullet points.
-  - **Feedback loop**: Appends 👍/👎 reaction prompt, tracks responses, auto-tunes prompt
-
-### Triage Feedback System (Feb 2026)
-- **Reaction Tracking**: After each triage Slack message, appends "React 👍 or 👎 to rate this summary"
-- **Feedback Storage**: `triage_messages` MongoDB collection tracks sent messages and reactions
-- **Auto-Tuning**: Before each triage run, injects feedback context into the prompt
-- **RPC endpoints**: `triage.feedback_stats`, `triage.recent_feedback`
-
-### Slack/Webchat Quality Parity Fix (Feb 2026)
-- **Root Cause**: Orchestrator had `web_search` in tools_allowed, did shallow searches instead of delegating to research specialist
-- **Fix**: Removed `web_search` from orchestrator tools (declarative set, not additive)
-- **Versioned Prompts**: `ORCHESTRATOR_PROMPT_VERSION=3` ensures prompt improvements propagate to existing installs
-- **!debug Command**: Users can type `!debug` in Slack to inspect active agent config (tools, model, prompt version)
-- **Diagnostic Logging**: `run_turn` now logs session/agent/tools for every request
-
-### Configuration & Management
-- Onboarding Wizard (`/admin/setup`)
-- Credentials Editor (`/admin/config`)
-- Brain Export/Import (`/admin/brain`)
-- People Management (`/admin/people`) with merge, delete, inline email editing
-- Tasks UI (`/admin/tasks`)
-- Live Debug Logs (`/admin/logs`)
-- Mindmap Visualization (`/admin/mindmap`)
+- Orchestrator agent with delegation to specialist agents
+- Email RAG pipeline, memory_search tool
+- Conversation history and tool call propagation
 
 ### Integrations
-- Gmail: Fully functional
-- Microsoft Outlook: Scaffolded, untested
-- Slack: Connected with proactive notification support + reaction feedback + !debug
+- Gmail and Slack functional
+- Scrapling-based web scraping (replaced Playwright)
+- Microsoft Outlook coded but untested
 
-## Key API Endpoints
-- `POST /api/brain/export` / `POST /api/brain/import`
-- `POST /api/people/merge` / `DELETE /api/people/{id}` / `PATCH /api/people/{id}`
-- RPC: `people.list`, `people.merge`, `people.delete`
-- RPC: `workspace.cleanup_processes`
-- RPC: `mindmap.generate`, `mindmap.get`, `mindmap.set_importance`
-- RPC: `debug.logs`, `debug.clear`, `debug.test`
-- RPC: `triage.feedback_stats`, `triage.recent_feedback`
+### Automated Tasks
+- Email triage with Slack summaries
+- User feedback mechanism (thumbs up/down reactions)
 
-## DB Schema
-- **relationships**: `{ name, name_key, email_address, role, team, relationship, mention_count, context_history, aliases, last_seen }`
-- **settings**: `{ key, value }` — includes `slack_last_active_channel`
-- **tasks**: `{ id, name, prompt, prompt_version, interval_seconds, enabled, ... }`
-- **setup_secrets**: `{ _id: "main", openai_api_key, anthropic_api_key, gateway_token, ... }`
-- **debug_logs**: `{ timestamp, level, name, pathname, lineno, msg, exc_text }`
-- **triage_messages**: `{ channel, message_ts, summary_preview, sent_at, feedback, feedback_reaction, feedback_user, feedback_at }`
-- **gateway_config**: `{ agent: { tools_allowed, system_prompt, prompt_version, model } }`
+### Screen Sharing + OCR (Feb 2026)
+- Screen sharing via getDisplayMedia API in webchat
+- Auto-capture lossless PNG on message send
+- Background analysis and persistent memory storage
+- **Tesseract OCR integration** (P0 fix): 2x LANCZOS upscaling + grayscale preprocessing
+  - OCR text passed to LLM alongside image for multi-modal analysis
+  - OCR text appended to stored memories for searchability
+  - Fixes misread of `ext_mikova@mattoni.cz` as `ext_mkoval@mattoni.cz`
 
-## P1 — Upcoming
-- Microsoft Outlook E2E testing (blocked on Azure creds)
+### UI/UX
+- Webchat, admin panels (config/logs), mindmap page
+- Screen sharing preview and controls
+
+## Prioritized Backlog
+
+### P1
 - Microsoft Teams integration
+- Full E2E testing of Microsoft Outlook integration (blocked on user Azure setup)
+
+### P2
+- Webchat WebSocket timeout fix (long-running tasks >30s)
+- Verify Webchat/Slack sync (omni-channel)
 - Fix `browser_use` tool (missing `uvx` dependency)
 
-## P2 — Backlog
-- Webchat/Slack sync verification
-- Local setup scripts verification
-- Demo GIF/recording for README
+### P3
+- Verify local setup scripts (install_local.sh, run_local.sh)
+- Remove demo mindmap route and hardcoded data
+
+### Future
+- Demo recording/GIF for README
 - GitHub social preview image
-- Interactive browser agent fix (KVM site)
+- Interactive browser agent on KVM site
+
+## Known Issues
+- `browser_use` tool: non-functional (missing uvx dependency, workaround: disabled)
+- Webchat client: WebSocket disconnects on tasks >30s
+- Microsoft Outlook: coded but never tested with real account
