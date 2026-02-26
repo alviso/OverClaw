@@ -59,7 +59,7 @@ async def analyze_and_store_screen(db, file_path: str, session_id: str, user_mes
                     {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
                 ],
             }],
-            max_tokens=300,
+            max_tokens=600,
         )
 
         analysis = response.choices[0].message.content.strip()
