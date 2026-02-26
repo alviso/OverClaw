@@ -380,6 +380,22 @@ class AgentRunner:
         skills_prompt = await skill_mgr.build_skills_prompt(agent_id)
         system_prompt = base_prompt + (skills_prompt or "")
 
+        # Inject model identity so the agent can accurately self-identify
+        _MODEL_LABELS = {
+            "openai/gpt-5.2": "GPT-5.2 (OpenAI)",
+            "openai/gpt-5.2-pro": "GPT-5.2 Pro (OpenAI)",
+            "openai/gpt-5-mini": "GPT-5 Mini (OpenAI)",
+            "openai/gpt-4.1": "GPT-4.1 (OpenAI)",
+            "openai/gpt-4.1-mini": "GPT-4.1 Mini (OpenAI)",
+            "openai/gpt-4o": "GPT-4o (OpenAI)",
+            "anthropic/claude-opus-4.6": "Claude Opus 4.6 (Anthropic)",
+            "anthropic/claude-sonnet-4.6": "Claude Sonnet 4.6 (Anthropic)",
+            "anthropic/claude-sonnet-4.5": "Claude Sonnet 4.5 (Anthropic)",
+            "anthropic/claude-haiku-4.5": "Claude Haiku 4.5 (Anthropic)",
+        }
+        model_label = _MODEL_LABELS.get(model_str, model_str)
+        system_prompt += f"\n\n## Your Model\nYou are powered by **{model_label}**. If asked about your model or version, state this accurately."
+
         # Inject current time so the agent can reason about time
         from datetime import datetime, timezone as tz
         import zoneinfo
