@@ -92,16 +92,19 @@ async def analyze_and_store_screen(
     db, file_path: str, session_id: str,
     user_message: str = "", agent_response: str = "",
 ):
-    """Store screen capture context as a searchable memory."""
+    """Store screen capture context as a searchable memory, enriched with OCR text."""
     try:
         now = datetime.now(timezone.utc)
         timestamp = now.strftime("%B %d, %Y at %I:%M %p UTC")
+
+        # Extract OCR text for accurate storage (run in thread to avoid blocking)
+        ocr_text = await asyncio.to_thread(extract_text_ocr, file_path)
 
         # Prefer the agent's own response — it's usually richer and more accurate
         if agent_response and len(agent_response) > 50:
             analysis = agent_response
         else:
-            # Fall back to vision analysis
+            # Fall back to vision analysis (already includes OCR internally)
             analysis = await _analyze_image(db, file_path)
             if not analysis:
                 return
@@ -110,6 +113,9 @@ async def analyze_and_store_screen(
         if user_message:
             content += f"User asked: {user_message[:300]}\n"
         content += f"Screen content: {analysis}"
+        # Append raw OCR text so exact names/emails/IDs are searchable
+        if ocr_text:
+            content += f"\n\nOCR-extracted text (verbatim):\n{ocr_text[:2000]}"
 
         from gateway.memory import MemoryManager
         mgr = MemoryManager(db)
@@ -124,7 +130,7 @@ async def analyze_and_store_screen(
                 "file_path": file_path,
             },
         )
-        logger.info(f"Screen memory stored: {analysis[:80]}...")
+        logger.info(f"Screen memory stored (OCR: {len(ocr_text)} chars): {analysis[:80]}...")
 
     except Exception as e:
         logger.warning(f"Screen analysis failed: {e}")
