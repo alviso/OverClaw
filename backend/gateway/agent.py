@@ -326,6 +326,7 @@ class AgentRunner:
         user_text: str,
         on_tool_call: Optional[callable] = None,
         agent_id: str = None,
+        attachments: list = None,
     ) -> tuple[str, list[dict]]:
         """
         Run an agent turn with tool calling.
