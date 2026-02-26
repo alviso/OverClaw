@@ -454,26 +454,40 @@ class AgentRunner:
         llm_messages.append({"role": "user", "content": user_text})
 
         # If there are image attachments, convert the last user message to multi-modal
+        # Format differs between providers, so we store the raw data and format later
+        _image_data = []
         if attachments:
             image_attachments = [a for a in attachments if a.get("type") == "image"]
-            if image_attachments:
+            for att in image_attachments:
+                file_path = att.get("file_path", "")
+                try:
+                    import base64
+                    with open(file_path, "rb") as f:
+                        img_bytes = f.read()
+                    img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+                    ext = file_path.rsplit(".", 1)[-1].lower() if "." in file_path else "jpeg"
+                    mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "gif": "image/gif"}
+                    mime = mime_map.get(ext, "image/jpeg")
+                    _image_data.append({"b64": img_b64, "mime": mime})
+                except Exception as e:
+                    logger.warning(f"Failed to read image attachment {file_path}: {e}")
+
+        if _image_data:
+            if provider == "openai":
                 content_parts = [{"type": "text", "text": user_text}]
-                for att in image_attachments:
-                    file_path = att.get("file_path", "")
-                    try:
-                        import base64
-                        with open(file_path, "rb") as f:
-                            img_data = base64.b64encode(f.read()).decode("utf-8")
-                        # Detect mime type
-                        ext = file_path.rsplit(".", 1)[-1].lower() if "." in file_path else "jpeg"
-                        mime_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "gif": "image/gif"}
-                        mime = mime_map.get(ext, "image/jpeg")
-                        content_parts.append({
-                            "type": "image_url",
-                            "image_url": {"url": f"data:{mime};base64,{img_data}"},
-                        })
-                    except Exception as e:
-                        logger.warning(f"Failed to read image attachment {file_path}: {e}")
+                for img in _image_data:
+                    content_parts.append({
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{img['mime']};base64,{img['b64']}"},
+                    })
+                llm_messages[-1] = {"role": "user", "content": content_parts}
+            elif provider == "anthropic":
+                content_parts = [{"type": "text", "text": user_text}]
+                for img in _image_data:
+                    content_parts.append({
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": img["mime"], "data": img["b64"]},
+                    })
                 llm_messages[-1] = {"role": "user", "content": content_parts}
 
         # Filter tools by agent's allowlist
