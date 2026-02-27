@@ -11,7 +11,7 @@ logger = logging.getLogger("gateway.email_triage")
 EMAIL_TRIAGE_TASK_ID = "email-triage"
 
 # ── Version — bump this when you change the prompt to force a DB update ──
-EMAIL_TRIAGE_PROMPT_VERSION = 5
+EMAIL_TRIAGE_PROMPT_VERSION = 6
 
 # ── The improved prompt ──────────────────────────────────────────────────
 EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your job is to find emails that matter to the user — either requiring action OR containing personally relevant information — and handle them appropriately.
