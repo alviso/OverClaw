@@ -589,7 +589,8 @@ class AgentRunner:
             )
             await self.session_mgr.set_status(session_id, "idle")
 
-            # Extract and store memories — skip automated task sessions
+            # Extract and store memories — skip automated task prompts (triage, etc.)
+            # but allow conversation-driven memory from regular sessions
             if not session_id.startswith("task:"):
                 asyncio.create_task(
                     _safe_extract_memories(self.db, session_id, agent_id, user_text, response_text)
