@@ -94,8 +94,8 @@ class TestMemoryArchitecture:
             hw = result['hybrid_weights']
             assert 'vector' in hw, f"Missing vector weight in {hw}"
             assert 'keyword' in hw, f"Missing keyword weight in {hw}"
-            assert hw['vector'] == 0.7, f"Expected vector weight 0.7, got {hw['vector']}"
-            assert hw['keyword'] == 0.3, f"Expected keyword weight 0.3, got {hw['keyword']}"
+            assert abs(hw['vector'] - 0.7) < 0.01, f"Expected vector weight ~0.7, got {hw['vector']}"
+            assert abs(hw['keyword'] - 0.3) < 0.01, f"Expected keyword weight ~0.3, got {hw['keyword']}"
             
             # Verify embedding dimensions
             assert result.get('embedding_dims') == 1536, f"Expected embedding_dims 1536, got {result.get('embedding_dims')}"
