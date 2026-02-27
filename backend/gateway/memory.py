@@ -328,36 +328,7 @@ class MemoryManager:
         }
 
 
-# ── Convenience Functions (used by agent.py, email_memory.py, etc.) ──
-
-async def extract_and_store_memories(
-    db,
-    session_id: str,
-    agent_id: str,
-    user_message: str,
-    assistant_response: str,
-):
-    """
-    After an agent turn, extract key facts and store them as memories.
-    Simple heuristic: store the Q&A pair as a single memory if it's substantive.
-    """
-    if len(assistant_response) < 100:
-        return
-
-    mgr = MemoryManager(db)
-    content = f"Q: {user_message}\nA: {assistant_response[:1000]}"
-
-    try:
-        await mgr.store_memory(
-            content=content,
-            session_id=session_id,
-            agent_id=agent_id,
-            source="conversation",
-            metadata={"user_message_len": len(user_message), "response_len": len(assistant_response)},
-        )
-    except Exception as e:
-        logger.warning(f"Failed to store memory: {e}")
-
+# ── Convenience Functions ──
 
 async def build_memory_context(db, query: str, agent_id: str, max_results: int = 3) -> str:
     """Search memory and build context to inject into the system prompt."""
@@ -369,8 +340,10 @@ async def build_memory_context(db, query: str, agent_id: str, max_results: int =
 
         sections = ["\n\n---\n## Relevant Memory (from past conversations)\n"]
         for i, r in enumerate(results, 1):
+            fact_type = r.get("metadata", {}).get("type", "")
+            type_label = f" [{fact_type}]" if fact_type else ""
             sections.append(
-                f"**Memory {i}** (relevance: {r['similarity']}, source: {r['source']}):\n"
+                f"**Memory {i}** (relevance: {r['similarity']}{type_label}):\n"
                 f"{r['content'][:500]}\n"
             )
         return "\n".join(sections)
