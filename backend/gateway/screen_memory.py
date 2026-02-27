@@ -158,7 +158,7 @@ async def analyze_and_store_screen(
                 source="screen_capture",
                 metadata={"type": "summary", "extracted_from": "screen_capture", "timestamp": now.isoformat()},
             )
-            logger.info(f"Screen capture stored as brief summary")
+            logger.info("Screen capture stored as brief summary")
 
     except Exception as e:
         logger.warning(f"Screen analysis failed: {e}")
