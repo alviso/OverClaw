@@ -37,6 +37,8 @@ class MemorySearchTool(Tool):
     async def execute(self, params: dict) -> str:
         query = params.get("query", "")
         max_results = params.get("max_results", 5)
+        # Agent context injected by the runner — enforces memory isolation
+        agent_id = params.get("_agent_id")
 
         if not query:
             return "Error: query is required"
@@ -47,19 +49,21 @@ class MemorySearchTool(Tool):
         try:
             from gateway.memory import MemoryManager
             mgr = MemoryManager(_db)
-            results = await mgr.search_memory(query, top_k=max_results)
+            results = await mgr.search_memory(query, agent_id=agent_id, top_k=max_results)
 
             if not results:
                 return f"No memories found matching: {query}"
 
             output = f"Found {len(results)} relevant memories:\n\n"
             for i, r in enumerate(results, 1):
-                output += f"--- Memory {i} (similarity: {r['similarity']}) ---\n"
-                output += f"Session: {r['session_id']} | Agent: {r['agent_id']}\n"
+                source_tag = f" [{r['source']}]" if r.get('source') else ""
+                meta_type = r.get('metadata', {}).get('type', '')
+                type_tag = f" ({meta_type})" if meta_type else ""
+                output += f"--- Memory {i} (relevance: {r['similarity']}{type_tag}{source_tag}) ---\n"
                 output += f"Date: {r['created_at'][:10] if r.get('created_at') else 'unknown'}\n"
                 output += f"{r['content'][:600]}\n\n"
 
-            logger.info(f"Memory search: '{query}' -> {len(results)} results")
+            logger.info(f"Memory search: '{query}' agent={agent_id} -> {len(results)} results")
             return output.strip()
 
         except Exception as e:
