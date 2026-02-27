@@ -65,7 +65,7 @@ class FactExtractor:
             max_tokens=1024,
             messages=[{
                 "role": "user",
-                "content": EXTRACTION_PROMPT.format(content=content[:2000]),
+                "content": EXTRACTION_PROMPT.format(content=content[:4500]),
             }],
         )
 
