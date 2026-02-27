@@ -98,7 +98,7 @@ async def analyze_and_store_screen(
     db, file_path: str, session_id: str,
     user_message: str = "", agent_response: str = "",
 ):
-    """Store screen capture context as a searchable memory, enriched with OCR text."""
+    """Store screen capture context as a searchable memory, distilled via Haiku."""
     try:
         now = datetime.now(timezone.utc)
         timestamp = now.strftime("%B %d, %Y at %I:%M %p UTC")
@@ -115,28 +115,50 @@ async def analyze_and_store_screen(
             if not analysis:
                 return
 
-        content = f"[Screen capture — {timestamp}]\n"
+        # Build raw content for distillation
+        raw_content = f"[Screen capture — {timestamp}]\n"
         if user_message:
-            content += f"User asked: {user_message[:300]}\n"
-        content += f"Screen content: {analysis}"
-        # Append raw OCR text so exact names/emails/IDs are searchable
+            raw_content += f"User asked: {user_message[:300]}\n"
+        raw_content += f"Screen content: {analysis}"
         if ocr_text:
-            content += f"\n\nOCR-extracted text (verbatim):\n{ocr_text[:2000]}"
+            raw_content += f"\nOCR text: {ocr_text[:1500]}"
 
+        # Distill through Haiku — only store extracted facts
+        from gateway.fact_extraction import FactExtractor
         from gateway.memory import MemoryManager
+
+        extractor = FactExtractor()
         mgr = MemoryManager(db)
-        await mgr.store_memory(
-            content=content,
-            session_id=session_id,
-            agent_id="default",
-            source="screen_capture",
-            metadata={
-                "type": "screen_capture",
-                "timestamp": now.isoformat(),
-                "file_path": file_path,
-            },
-        )
-        logger.info(f"Screen memory stored (OCR: {len(ocr_text)} chars): {analysis[:80]}...")
+        facts = await extractor.extract_facts(raw_content)
+
+        if facts:
+            for fact in facts:
+                existing = await mgr.search_memory(fact["text"], agent_id="default", top_k=1, threshold=0.92)
+                if existing:
+                    continue
+                await mgr.store_memory(
+                    content=fact["text"],
+                    session_id=session_id,
+                    agent_id="default",
+                    source="screen_capture",
+                    metadata={
+                        "type": fact["type"],
+                        "extracted_from": "screen_capture",
+                        "timestamp": now.isoformat(),
+                    },
+                )
+            logger.info(f"Screen capture distilled into {len(facts)} facts")
+        else:
+            # Fallback: store a brief summary if Haiku found nothing extractable
+            brief = f"Screen capture ({timestamp}): {analysis[:200]}"
+            await mgr.store_memory(
+                content=brief,
+                session_id=session_id,
+                agent_id="default",
+                source="screen_capture",
+                metadata={"type": "summary", "extracted_from": "screen_capture", "timestamp": now.isoformat()},
+            )
+            logger.info(f"Screen capture stored as brief summary")
 
     except Exception as e:
         logger.warning(f"Screen analysis failed: {e}")
