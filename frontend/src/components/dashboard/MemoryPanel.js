@@ -17,6 +17,7 @@ const TYPE_COLORS = {
   decision: "bg-amber-500/20 text-amber-300",
   action_item: "bg-rose-500/20 text-rose-300",
   preference: "bg-violet-500/20 text-violet-300",
+  summary: "bg-teal-500/20 text-teal-300",
 };
 
 export function MemoryPanel({ rpc, authenticated }) {
