@@ -36,6 +36,8 @@ docstring_parser==0.17.0
 duckduckgo_search==8.1.1
 ecdsa==0.19.1
 email-validator==2.3.0
+emergentintegrations==0.1.0
+faiss-cpu==1.13.2
 fake-useragent==2.2.0
 fastapi==0.110.1
 fastuuid==0.14.0
@@ -109,6 +111,7 @@ pdfplumber==0.11.9
 pfzy==0.3.4
 pillow==12.1.0
 platformdirs==4.5.1
+playwright==1.56.0
 pluggy==1.6.0
 portalocker==2.10.1
 posthog==7.8.6
