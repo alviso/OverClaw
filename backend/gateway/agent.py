@@ -155,11 +155,23 @@ class SessionManager:
 
 
 # ── Tool Executor ────────────────────────────────────────────────────────
+# Thread-local agent context for memory isolation
+_current_agent_id: str = "default"
+
+
+def set_tool_agent_context(agent_id: str):
+    global _current_agent_id
+    _current_agent_id = agent_id
+
+
 async def execute_tool_call(name: str, arguments: dict) -> str:
     tool = get_tool(name)
     if not tool:
         return f"Error: Unknown tool '{name}'"
     try:
+        # Inject agent context for memory isolation
+        if name == "memory_search":
+            arguments["_agent_id"] = _current_agent_id
         result = await tool.execute(arguments)
         return result
     except Exception as e:
