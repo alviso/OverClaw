@@ -113,16 +113,33 @@ class TaskScheduler:
                 agent_id=agent_id,
             )
 
-            # Track gmail message IDs that were read in this run
-            for tc in tool_calls:
-                if tc.get("tool") == "gmail":
-                    mid = tc.get("args", {}).get("message_id", "")
-                    if mid:
-                        await self.db.processed_emails.update_one(
-                            {"message_id": mid, "task_id": task_id},
-                            {"$set": {"processed_at": datetime.now(timezone.utc).isoformat()}},
-                            upsert=True,
-                        )
+            # Track gmail message IDs seen in this triage run (search + read)
+            if task_id == "email-triage":
+                import re
+                for tc in tool_calls:
+                    if tc.get("tool") == "gmail":
+                        action = tc.get("args", {}).get("action", "")
+                        result_text = tc.get("result", "")
+                        ids_to_store = []
+
+                        # Extract IDs from read action args
+                        mid = tc.get("args", {}).get("message_id", "")
+                        if mid:
+                            ids_to_store.append(mid)
+
+                        # Extract IDs from search/list results (format: "   ID: abc123xyz")
+                        if action in ("search", "list"):
+                            found_ids = re.findall(r"ID:\s*(\S+)", result_text)
+                            ids_to_store.extend(found_ids)
+
+                        for eid in ids_to_store:
+                            await self.db.processed_emails.update_one(
+                                {"message_id": eid, "task_id": task_id},
+                                {"$set": {"processed_at": datetime.now(timezone.utc).isoformat()}},
+                                upsert=True,
+                            )
+                        if ids_to_store:
+                            logger.info(f"Triage: tracked {len(ids_to_store)} email IDs as processed")
 
             # Store execution result
             result_entry = {
