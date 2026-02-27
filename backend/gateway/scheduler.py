@@ -135,7 +135,7 @@ class TaskScheduler:
                         for eid in ids_to_store:
                             await self.db.processed_emails.update_one(
                                 {"message_id": eid, "task_id": task_id},
-                                {"$set": {"processed_at": datetime.now(timezone.utc).isoformat()}},
+                                {"$set": {"processed_at": datetime.now(timezone.utc)}},
                                 upsert=True,
                             )
                         if ids_to_store:
