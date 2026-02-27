@@ -84,7 +84,7 @@ class FactExtractor:
                 if bracket_end > 0:
                     category = line[1:bracket_end].strip().lower()
                     fact_text = line[bracket_end + 1:].strip()
-                    if fact_text and category in ("fact", "decision", "action_item", "preference"):
+                    if fact_text and category in ("fact", "decision", "action_item", "preference", "summary"):
                         facts.append({"text": fact_text, "type": category})
 
         return facts
