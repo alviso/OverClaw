@@ -104,7 +104,7 @@ async def extract_and_store_facts(
     if len(assistant_response) < 80:
         return
 
-    content = f"User: {user_message}\nAssistant: {assistant_response[:1500]}"
+    content = f"User: {user_message[:500]}\nAssistant: {assistant_response[:4000]}"
 
     try:
         extractor = FactExtractor()
