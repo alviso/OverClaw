@@ -157,6 +157,18 @@ async def startup():
             expireAfterSeconds=7 * 86400,
         )
 
+    # ── Cleanup: purge junk memories from task sessions ──────────────────
+    purged = await db.memories.delete_many({
+        "$or": [
+            {"session_id": {"$regex": "^task:"}},
+            {"content": {"$regex": "^Q: You are running an automated email triage"}},
+        ]
+    })
+    if purged.deleted_count > 0:
+        logger.info(f"Purged {purged.deleted_count} task-session junk memories")
+        # Rebuild FAISS index after cleanup
+        await memory_mgr.initialize_index()
+
     # Wire triage feedback to DB
     from gateway.triage_feedback import set_feedback_db
     set_feedback_db(db)
