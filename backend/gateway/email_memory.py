@@ -312,26 +312,59 @@ async def _upsert_email_contacts(db, contacts: list[dict], subject: str):
 
 
 async def _store_rag_entry(db, content: str, source: str, email: dict):
-    """Store the email as a vector memory entry."""
+    """Distill email into key facts via Haiku, then store as memory."""
     try:
+        from gateway.fact_extraction import FactExtractor
         from gateway.memory import MemoryManager
+
         mgr = MemoryManager(db)
-        await mgr.store_memory(
-            content=content,
-            session_id="email-index",
-            agent_id="default",
-            source=source,
-            metadata={
-                "type": "email",
-                "subject": email.get("subject", ""),
-                "from": email.get("from", ""),
-                "date": email.get("date", ""),
-                "email_id": email.get("id", ""),
-            },
-        )
-        logger.info(f"Email indexed into RAG: {email.get('subject', '')[:60]}")
+        extractor = FactExtractor()
+
+        # Run distillation on the email content
+        facts = await extractor.extract_facts(content)
+
+        if facts:
+            for fact in facts:
+                # Dedupe against existing memories
+                existing = await mgr.search_memory(fact["text"], agent_id="default", top_k=1, threshold=0.92)
+                if existing:
+                    continue
+                await mgr.store_memory(
+                    content=fact["text"],
+                    session_id="email-index",
+                    agent_id="default",
+                    source=source,
+                    metadata={
+                        "type": fact["type"],
+                        "extracted_from": "email",
+                        "subject": email.get("subject", ""),
+                        "from": email.get("from", ""),
+                        "date": email.get("date", ""),
+                        "email_id": email.get("id", ""),
+                    },
+                )
+            logger.info(f"Email distilled into {len(facts)} facts: {email.get('subject', '')[:60]}")
+        else:
+            # If extraction returned nothing, store a one-line summary as fallback
+            subject = email.get("subject", "(no subject)")
+            sender = email.get("from", "unknown")
+            fallback = f"Email from {sender}: {subject}"
+            await mgr.store_memory(
+                content=fallback,
+                session_id="email-index",
+                agent_id="default",
+                source=source,
+                metadata={
+                    "type": "fact",
+                    "extracted_from": "email",
+                    "subject": subject,
+                    "from": sender,
+                    "email_id": email.get("id", ""),
+                },
+            )
+            logger.info(f"Email stored as fallback summary: {subject[:60]}")
     except Exception as e:
-        logger.warning(f"Failed to index email into RAG: {e}")
+        logger.warning(f"Failed to distill email into memory: {e}")
 
 
 async def _extract_relationships_from_email(db, text: str):
