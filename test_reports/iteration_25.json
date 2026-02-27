@@ -1,0 +1,81 @@
+{
+  "summary": "Memory Architecture Upgrade testing complete. All 10 backend tests passed. Frontend UI verification complete. FAISS index with 268 vectors (matches MongoDB count), hybrid scoring (70% vector + 30% keyword), per-agent memory isolation, and UI stats panel all working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "memory.stats returns correct structure with all fields: total_memories, faiss_index_size, raw_qa_memories, extracted_facts, by_agent, hybrid_weights",
+    "FAISS index size (268) matches total memories count",
+    "memory.search returns hybrid search results with vector_score and keyword_score fields",
+    "memory.store adds new memory and updates FAISS index in real-time",
+    "memory.search with agent_id filter enforces per-agent isolation (isolation test passed)",
+    "memory.clear clears memories and rebuilds FAISS index",
+    "memory.reprocess endpoint exists and responds (status: nothing_to_reprocess since raw_qa=0)",
+    "memory.list endpoint returns recent memories with proper structure",
+    "models.list returns models with updated friendly labels (GPT-5.2, Claude Opus 4.6, etc.)",
+    "agents.list returns agents including default agent",
+    "Frontend Memory Panel shows stats: Total memories (268), FAISS indexed (268), Raw Q&A (0), Extracted facts (3)",
+    "Frontend Memory Panel shows hybrid weights: 70% vec / 30% kw",
+    "Frontend Memory Panel shows By Agent breakdown",
+    "Frontend Memory search returns results with hybrid scores visible (v:35 k:100 format)",
+    "Frontend Model selector shows all 10 updated labels: GPT-5.2, GPT-5.2 Pro, GPT-5 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, Claude Opus 4.6, Claude Sonnet 4.6, Claude Sonnet 4.5, Claude Haiku 4.5",
+    "Frontend Agent Manager shows model versions correctly (anthropic/claude-opus-4.6, anthropic/claude-sonnet-4.5, openai/gpt-4o)",
+    "Reprocess button NOT shown when raw_qa_memories=0 (expected behavior)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_memory_architecture.py",
+    "/app/test_reports/pytest/test_memory_architecture.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FAISS index implementation is correct - VectorIndex class properly handles index building, adding, and searching with L2 normalization for cosine similarity",
+    "Hybrid scoring (70% vector + 30% keyword) is correctly implemented with MongoDB text search + FAISS vector search",
+    "Per-agent isolation works correctly - set_tool_agent_context() and _agent_id injection in memory_search tool",
+    "Fact extraction properly stores facts with source='fact_extraction' and type metadata (fact, decision, action_item, preference)",
+    "Memory panel UI displays all required stats with proper formatting"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_memory_architecture.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all UI verifications passed)"
+  },
+  "seed_data_creation": "Created test memories for agent isolation testing (ISOLATION_TEST prefix)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Memory architecture upgrade fully verified. FAISS index has 268 vectors matching MongoDB. Hybrid search (70% vector + 30% keyword) working. Per-agent memory isolation enforced. Raw Q&A memories already reprocessed (raw_qa=0, extracted_facts=3). WebSocket RPC uses string IDs and gateway.ping keepalives every 20s must be filtered.",
+  "memory_architecture_verification": {
+    "faiss_index": {
+      "vectors_indexed": 268,
+      "dimensions": 1536,
+      "embedding_model": "text-embedding-3-small"
+    },
+    "hybrid_search": {
+      "vector_weight": 0.7,
+      "keyword_weight": 0.3,
+      "overfetch_factor": 5
+    },
+    "agent_isolation": {
+      "orchestrator_sees_all": true,
+      "specialists_see_own": true,
+      "isolation_test_passed": true
+    },
+    "fact_extraction": {
+      "model": "claude-haiku-4-5-20251001",
+      "raw_qa_memories": 0,
+      "extracted_facts": 3,
+      "reprocessing_available": false
+    },
+    "model_labels_verified": [
+      "GPT-5.2", "GPT-5.2 Pro", "GPT-5 Mini", "GPT-4.1", "GPT-4.1 Mini", "GPT-4o",
+      "Claude Opus 4.6", "Claude Sonnet 4.6", "Claude Sonnet 4.5", "Claude Haiku 4.5"
+    ]
+  }
+}
