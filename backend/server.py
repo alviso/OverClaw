@@ -149,6 +149,14 @@ async def startup():
     await memory_mgr.initialize_index()
     logger.info("FAISS vector index initialized")
 
+    # Ensure processed_emails has a TTL index (auto-delete after 7 days)
+    existing_indexes = await db.processed_emails.index_information()
+    if "processed_at_ttl" not in existing_indexes:
+        await db.processed_emails.create_index(
+            "processed_at", name="processed_at_ttl",
+            expireAfterSeconds=7 * 86400,
+        )
+
     # Wire triage feedback to DB
     from gateway.triage_feedback import set_feedback_db
     set_feedback_db(db)
