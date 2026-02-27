@@ -166,8 +166,17 @@ async def startup():
     })
     if purged.deleted_count > 0:
         logger.info(f"Purged {purged.deleted_count} task-session junk memories")
-        # Rebuild FAISS index after cleanup
         await memory_mgr.initialize_index()
+
+    # ── Background migration: convert raw memories to distilled facts ────
+    async def _run_migration():
+        try:
+            from gateway.fact_extraction import migrate_raw_memories_to_facts
+            await migrate_raw_memories_to_facts(db)
+        except Exception as e:
+            logger.warning(f"Memory migration failed: {e}")
+
+    asyncio.create_task(_run_migration())
 
     # Wire triage feedback to DB
     from gateway.triage_feedback import set_feedback_db
