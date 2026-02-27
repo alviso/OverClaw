@@ -17,26 +17,31 @@ logger = logging.getLogger("gateway.fact_extraction")
 
 EXTRACTION_MODEL = "claude-haiku-4-5-20251001"
 
-EXTRACTION_PROMPT = """Extract discrete, self-contained facts from this content.
-Each fact should be a single, clear statement that stands on its own.
-Categorize each as: "fact", "decision", "action_item", "preference", or "summary".
+EXTRACTION_PROMPT = """Your job is to distill useful information from this content into a few concise statements that would help someone recall what happened.
+
+Categorize each as:
+- "fact" — a concrete piece of information (names, IDs, numbers, relationships, descriptions)
+- "decision" — a choice that was made
+- "action_item" — something that needs to be done
+- "preference" — a stated preference
+- "summary" — a brief summary of what was seen, read, or discussed
 
 Rules:
-- Only extract information that is explicitly stated or clearly implied
-- Each fact must be independently understandable without the original context
-- Skip greetings, pleasantries, filler, and pure test messages ("hello", "what is 2+2")
-- If the content involves browsing a URL or reading a document, extract a concise summary of the key content as a [summary] fact. Include the URL or document name.
-- For screen captures, extract what application/page is shown and any notable data points
-- For emails, extract the key message, who it's from, and any dates/actions mentioned
-- If there is truly nothing worth remembering, return NONE
-- Keep each fact to 1-2 sentences max
+- Be INCLUSIVE. If someone was looking at a screen, working on something, reading an email, or researching a topic, that is ALWAYS worth summarizing.
+- Screen captures: describe what application/page is shown and what the user was doing. Include specific data points, project names, task statuses, people mentioned.
+- Emails: always note who sent it, what it's about, and any dates or actions mentioned.
+- Research/browsing: summarize the key findings and include the URL.
+- Conversations: extract any facts, decisions, or action items discussed.
+- Each statement should be self-contained — understandable without the original context.
+- Only return NONE if the content is truly empty or a meaningless test message (like "hello" or "test 123").
+- Keep each statement to 1-2 sentences.
 
-Format: one fact per line, prefixed with the category in brackets:
-[fact] Peter's email extension is ext_mkoval
-[decision] The team will use React for the frontend
-[action_item] Schedule a meeting with Sarah about the Q3 roadmap
-[preference] User prefers dark mode interfaces
-[summary] https://news.ycombinator.com — Top HN stories: AI code editors, PostgreSQL tuning, new Rust framework
+Format: one per line, prefixed with category in brackets:
+[summary] User was reviewing SAP Cloud ALM project dashboard showing 3 active transport requests for the Phoenix project
+[fact] Peter's email extension number is ext_mkoval
+[summary] Email from John Smith about rescheduling the Q3 review meeting to Thursday 3pm
+[action_item] Need to approve the budget document by Friday
+[summary] Researched PostgreSQL connection pooling — key finding: PgBouncer in transaction mode handles 10K+ connections
 
 Content:
 {content}"""
