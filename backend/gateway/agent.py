@@ -589,15 +589,16 @@ class AgentRunner:
             )
             await self.session_mgr.set_status(session_id, "idle")
 
-            # Extract and store memories (fire-and-forget, truly non-blocking)
-            asyncio.create_task(
-                _safe_extract_memories(self.db, session_id, agent_id, user_text, response_text)
-            )
+            # Extract and store memories — skip automated task sessions
+            if not session_id.startswith("task:"):
+                asyncio.create_task(
+                    _safe_extract_memories(self.db, session_id, agent_id, user_text, response_text)
+                )
 
-            # Extract user profile facts (fire-and-forget)
-            asyncio.create_task(
-                _safe_extract_profile(self.db, user_text)
-            )
+                # Extract user profile facts (fire-and-forget)
+                asyncio.create_task(
+                    _safe_extract_profile(self.db, user_text)
+                )
 
             # Extract relationship mentions (fire-and-forget)
             asyncio.create_task(
