@@ -1,8 +1,9 @@
 """
-Fact Extraction — converts raw Q&A memories into discrete, searchable facts.
+Fact Extraction — The sole path for storing memories.
 
-Uses Claude Haiku 4.5 (cheap/fast) to extract structured facts from conversation pairs.
-Supports reprocessing of existing memories via an API endpoint.
+All content (conversations, emails, screen captures) is distilled through
+Claude Haiku 4.5 into discrete, searchable facts before storage.
+Raw content is never stored in memory.
 """
 import os
 import logging
@@ -16,31 +17,33 @@ logger = logging.getLogger("gateway.fact_extraction")
 
 EXTRACTION_MODEL = "claude-haiku-4-5-20251001"
 
-EXTRACTION_PROMPT = """Extract discrete, self-contained facts from this conversation exchange.
+EXTRACTION_PROMPT = """Extract discrete, self-contained facts from this content.
 Each fact should be a single, clear statement that stands on its own.
-Categorize each fact as: "fact", "decision", "action_item", "preference", or "summary".
+Categorize each as: "fact", "decision", "action_item", "preference", or "summary".
 
 Rules:
 - Only extract information that is explicitly stated or clearly implied
 - Each fact must be independently understandable without the original context
 - Skip greetings, pleasantries, filler, and pure test messages ("hello", "what is 2+2")
-- If the conversation involves browsing a URL or reading a document, extract a concise summary of the key content as a [summary] fact. Include the URL or document name.
-- If there are no substantive facts, return NONE
+- If the content involves browsing a URL or reading a document, extract a concise summary of the key content as a [summary] fact. Include the URL or document name.
+- For screen captures, extract what application/page is shown and any notable data points
+- For emails, extract the key message, who it's from, and any dates/actions mentioned
+- If there is truly nothing worth remembering, return NONE
 - Keep each fact to 1-2 sentences max
 
-Format your response as one fact per line, prefixed with the category in brackets:
+Format: one fact per line, prefixed with the category in brackets:
 [fact] Peter's email extension is ext_mkoval
 [decision] The team will use React for the frontend
 [action_item] Schedule a meeting with Sarah about the Q3 roadmap
 [preference] User prefers dark mode interfaces
-[summary] https://news.ycombinator.com — Top stories include: Launch HN discussion about AI code editors, a post about PostgreSQL performance tuning, and a new Rust web framework announcement
+[summary] https://news.ycombinator.com — Top HN stories: AI code editors, PostgreSQL tuning, new Rust framework
 
-Conversation:
+Content:
 {content}"""
 
 
 class FactExtractor:
-    """Extract structured facts from raw conversation text using Haiku."""
+    """Extract structured facts from any content using Haiku 4.5."""
 
     def __init__(self):
         self._client: Optional[AsyncAnthropic] = None
@@ -54,9 +57,8 @@ class FactExtractor:
         return self._client
 
     async def extract_facts(self, content: str) -> list[dict]:
-        """Extract discrete facts from a conversation exchange.
-
-        Returns list of {"text": "...", "type": "fact|decision|action_item|preference"}
+        """Extract discrete facts from content.
+        Returns list of {"text": "...", "type": "fact|decision|action_item|preference|summary"}
         """
         client = self._get_client()
 
@@ -76,16 +78,14 @@ class FactExtractor:
         facts = []
         for line in text.split("\n"):
             line = line.strip()
-            if not line:
+            if not line or not line.startswith("["):
                 continue
-            # Parse [category] text
-            if line.startswith("["):
-                bracket_end = line.find("]")
-                if bracket_end > 0:
-                    category = line[1:bracket_end].strip().lower()
-                    fact_text = line[bracket_end + 1:].strip()
-                    if fact_text and category in ("fact", "decision", "action_item", "preference", "summary"):
-                        facts.append({"text": fact_text, "type": category})
+            bracket_end = line.find("]")
+            if bracket_end > 0:
+                category = line[1:bracket_end].strip().lower()
+                fact_text = line[bracket_end + 1:].strip()
+                if fact_text and category in ("fact", "decision", "action_item", "preference", "summary"):
+                    facts.append({"text": fact_text, "type": category})
 
         return facts
 
@@ -97,10 +97,7 @@ async def extract_and_store_facts(
     user_message: str,
     assistant_response: str,
 ):
-    """
-    After an agent turn, extract discrete facts and store each as a separate memory.
-    Replaces the old raw Q&A storage approach.
-    """
+    """After an agent turn, extract facts and store them. No raw content is saved."""
     if len(assistant_response) < 80:
         return
 
@@ -118,10 +115,9 @@ async def extract_and_store_facts(
 
         stored = 0
         for fact in facts:
-            # Dedupe: check if a very similar fact already exists
             existing = await mgr.search_memory(fact["text"], agent_id=agent_id, top_k=1, threshold=0.92)
             if existing:
-                logger.debug(f"Fact already exists (sim={existing[0]['similarity']}): {fact['text'][:60]}")
+                logger.debug(f"Dedupe skip (sim={existing[0]['similarity']}): {fact['text'][:60]}")
                 continue
 
             await mgr.store_memory(
@@ -134,81 +130,90 @@ async def extract_and_store_facts(
             stored += 1
 
         if stored:
-            logger.info(f"Extracted {stored} new facts from conversation (agent={agent_id})")
+            logger.info(f"Extracted {stored} facts from conversation (agent={agent_id})")
 
     except Exception as e:
         logger.warning(f"Fact extraction failed: {e}")
 
 
-async def reprocess_memories(db, batch_size: int = 10, progress_callback=None) -> dict:
+async def migrate_raw_memories_to_facts(db) -> dict:
     """
-    Reprocess existing raw Q&A memories into discrete facts.
-    - Finds memories with source='conversation' that contain 'Q:' and 'A:' patterns
-    - Extracts facts from each
-    - Stores new fact memories, marks originals as reprocessed
-    - Idempotent: skips already-reprocessed memories
+    One-time migration: convert all raw memories into distilled facts, then delete originals.
+    Runs as a background task on startup. Idempotent — only processes non-fact sources.
     """
     from gateway.memory import MemoryManager
 
+    # Find all raw memories (anything that isn't already a fact or manual entry)
     query = {
-        "source": "conversation",
-        "metadata.reprocessed": {"$ne": True},
-        "content": {"$regex": "^Q: "},
+        "source": {"$nin": ["fact_extraction", "manual"]},
+        "metadata.migrated_to_facts": {"$ne": True},
     }
     total = await db.memories.count_documents(query)
     if total == 0:
-        return {"total": 0, "processed": 0, "facts_created": 0, "skipped": 0, "status": "nothing_to_reprocess"}
+        return {"status": "nothing_to_migrate", "total": 0}
+
+    logger.info(f"Migrating {total} raw memories to facts...")
 
     extractor = FactExtractor()
     mgr = MemoryManager(db)
     processed = 0
     facts_created = 0
-    errors = 0
+    deleted = 0
 
-    cursor = db.memories.find(query, {"_id": 1, "content": 1, "agent_id": 1, "session_id": 1}).limit(500)
+    cursor = db.memories.find(query, {"embedding": 0}).limit(500)
     batch = await cursor.to_list(500)
 
     for doc in batch:
+        doc_id = doc["_id"]
+        content = doc.get("content", "")
+        agent_id = doc.get("agent_id", "default")
+        session_id = doc.get("session_id", "unknown")
+        source = doc.get("source", "unknown")
+
         try:
-            facts = await extractor.extract_facts(doc["content"])
+            facts = await extractor.extract_facts(content)
 
             for fact in facts:
-                # Dedupe
-                existing = await mgr.search_memory(fact["text"], agent_id=doc.get("agent_id", "default"), top_k=1, threshold=0.92)
+                existing = await mgr.search_memory(fact["text"], agent_id=agent_id, top_k=1, threshold=0.92)
                 if existing:
                     continue
 
                 await mgr.store_memory(
                     content=fact["text"],
-                    session_id=doc.get("session_id", "unknown"),
-                    agent_id=doc.get("agent_id", "default"),
+                    session_id=session_id,
+                    agent_id=agent_id,
                     source="fact_extraction",
-                    metadata={"type": fact["type"], "extracted_from": "reprocessing", "original_id": str(doc["_id"])},
+                    metadata={"type": fact["type"], "extracted_from": source, "migrated": True},
                 )
                 facts_created += 1
 
-            # Mark original as reprocessed (don't delete — keep for audit)
-            await db.memories.update_one(
-                {"_id": doc["_id"]},
-                {"$set": {"metadata.reprocessed": True, "metadata.reprocessed_at": datetime.now(timezone.utc).isoformat()}},
-            )
+            # Delete the original raw memory
+            await db.memories.delete_one({"_id": doc_id})
+            deleted += 1
             processed += 1
 
-            if progress_callback:
-                await progress_callback(processed, total, facts_created)
-
-            # Rate limit to avoid hammering the API
-            if processed % batch_size == 0:
+            # Rate limit
+            if processed % 10 == 0:
                 await asyncio.sleep(1)
+                logger.info(f"Migration progress: {processed}/{total}, {facts_created} facts created")
 
         except Exception as e:
-            logger.warning(f"Reprocessing failed for memory {doc['_id']}: {e}")
-            errors += 1
+            logger.warning(f"Migration failed for {doc_id}: {e}")
+            # Mark as attempted so we don't retry endlessly
+            await db.memories.update_one(
+                {"_id": doc_id},
+                {"$set": {"metadata.migrated_to_facts": True}},
+            )
 
-    return {
+    # Rebuild FAISS index after migration
+    await mgr.initialize_index()
+
+    result = {
+        "status": "complete",
         "total": total,
         "processed": processed,
         "facts_created": facts_created,
-        "errors": errors,
-        "status": "complete",
+        "deleted": deleted,
     }
+    logger.info(f"Migration complete: {result}")
+    return result
