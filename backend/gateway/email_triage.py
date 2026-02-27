@@ -14,41 +14,47 @@ EMAIL_TRIAGE_TASK_ID = "email-triage"
 EMAIL_TRIAGE_PROMPT_VERSION = 5
 
 # ── The improved prompt ──────────────────────────────────────────────────
-EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your ONLY job is to find emails where someone is explicitly asking the user to DO something, and notify via Slack ONLY for those.
+EMAIL_TRIAGE_PROMPT = """You are running an automated email triage check. Your job is to find emails that matter to the user — either requiring action OR containing personally relevant information — and handle them appropriately.
 
 ## Step 1 — Fetch recent unread emails
 Use the `gmail` tool with action "search" and query "is:unread newer_than:1h" to find recent unread emails. If nothing is found, try "is:unread newer_than:3h".
 
-If there are NO new unread emails, respond with exactly: "No new emails." and STOP. Do NOT call slack_notify.
+If there are NO new unread emails, respond with exactly: "No new emails." and STOP.
 
 ## Step 2 — Classify each email (be STRICT)
-For each unread email, classify it. Default to SKIP unless the email clearly fits Tier A.
+For each unread email, classify it. Default to SKIP unless it clearly fits a tier.
 
-**Tier A — Direct Action Request** (the ONLY tier that triggers a Slack notification):
-An email is Tier A ONLY if ALL of these are true:
+**Tier A — Direct Action Request** (triggers Slack notification):
+ALL of these must be true:
 - A real person (not an automated system) wrote the email
 - They are explicitly asking the user to perform a specific action (reply, send something, approve, review, schedule, sign, etc.)
 - The action has a clear deadline OR is time-sensitive
-Examples that ARE Tier A: "Can you send me the invoice by Friday?", "Please review this PR before our 3pm meeting", "Need your approval on the budget doc"
-Examples that are NOT Tier A: "FYI — the deployment is done", "Here's the meeting summary", "Your order has shipped", GitHub PR notifications, calendar invites with no action needed
+Examples: "Can you send me the invoice by Friday?", "Please review this PR before our 3pm meeting"
 
-**Tier B — FYI** (mention only as a footnote, never by itself):
-- Emails from real people that are informational but don't require action
-- Only include if there are also Tier A emails. Do NOT notify for Tier B alone.
+**Tier B — Personal / Notable** (read for memory, NO Slack notification):
+An email is Tier B if:
+- It's from a real person (colleague, manager, client, partner — not a system)
+- It contains information the user might want to recall later (project updates, meeting notes, decisions, personal messages, shared documents, org changes)
+- OR it's a meaningful automated email about the user's own work (CI/CD results for their project, calendar changes to their meetings, etc.)
+Examples: "FYI the deployment is done", "Meeting summary from today's standup", "Your PR was merged", personal messages from colleagues
 
 **Skip entirely** (the DEFAULT — most emails go here):
-- ALL automated/system emails (GitHub, Jira, CI/CD, order confirmations, shipping, calendar, newsletters)
-- Marketing, promotions, social media
-- Informational emails that don't request action
-- CC'd emails where the user is not the primary recipient
+- ALL marketing, promotions, newsletters, social media notifications
+- Bulk automated emails not specific to user's work (GitHub digest, general announcements)
+- Spam, surveys, subscription confirmations
+- Order confirmations, shipping notifications, receipts
 
-## Step 3 — If there are Tier A emails, read them in full
-For each Tier A email only, use the `gmail` tool with action "read" and the ACTUAL `message_id` value (the `id` field returned from the search results in Step 1 — it looks like "18e4a2b3c4d5e6f7"). Do NOT invent or guess message IDs. Extract:
-- **The specific action requested** (one sentence, e.g., "Send the Q4 invoice to finance@acme.com")
+## Step 3 — Read Tier A AND Tier B emails in full
+For each Tier A and Tier B email, use the `gmail` tool with action "read" and the ACTUAL `message_id` value (the `id` field returned from search results in Step 1). Do NOT invent or guess message IDs.
+
+For Tier A, extract:
+- **The specific action requested** (one sentence)
 - **The deadline** (if stated)
 - **One key detail** (if critical for the action)
 
-If after reading the full email you realize it's not actually asking for action, downgrade it to Skip.
+For Tier B, simply read the full email. The system will automatically distill and remember the key content.
+
+If after reading, you realize an email doesn't fit its tier, downgrade it.
 
 ## Step 4 — Send Slack notification ONLY if Tier A emails exist
 If there are ZERO Tier A emails: respond "No actionable emails." and STOP. Do NOT call slack_notify.
@@ -68,11 +74,10 @@ If there are also Tier B emails, append briefly:
 ```
 
 ## Hard Rules
-- When in doubt, SKIP the email. Only notify for clear, direct action requests from real people.
-- NEVER call slack_notify if there are no Tier A emails. Silence is better than noise.
-- Maximum 3 lines per email in the notification. If it's longer, cut it.
-- Never include context the user already knows (project history, who people are, roles).
-- ONE slack_notify call maximum. Never send multiple messages.
+- When in doubt, SKIP the email. Only notify for clear, direct action requests.
+- NEVER call slack_notify if there are no Tier A emails.
+- Maximum 3 lines per email in the notification.
+- ONE slack_notify call maximum.
 """
 
 
