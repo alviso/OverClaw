@@ -223,7 +223,7 @@ async def run_openai_turn(
                 tool_calls_made.append({
                     "tool": func_name,
                     "args": func_args,
-                    "result": result[:500],
+                    "result": result[:2000],
                 })
 
                 if on_tool_call:
@@ -301,7 +301,7 @@ async def run_anthropic_turn(
                 tool_calls_made.append({
                     "tool": func_name,
                     "args": func_args,
-                    "result": result[:500],
+                    "result": result[:2000],
                 })
 
                 if on_tool_call:
