@@ -17,7 +17,8 @@ import uuid
 
 # Use the external frontend URL for testing
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://screen-share-ai-1.preview.emergentagent.com')
-WS_URL = BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/gateway'
+# Use internal WebSocket for reliability
+WS_URL = 'ws://localhost:8001/api/gateway'
 GATEWAY_TOKEN = 'dev-token-change-me'
 
 
