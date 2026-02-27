@@ -372,6 +372,9 @@ class AgentRunner:
             agent_id = resolve_agent_id(session_id, self.config.routing)
         agent_def = await self.get_agent_config(agent_id)
 
+        # Set agent context for memory isolation in tool calls
+        set_tool_agent_context(agent_id)
+
         model_str = agent_def.get("model", self.config.agent.model)
         base_prompt = agent_def.get("system_prompt", self.config.agent.system_prompt)
         max_ctx = agent_def.get("max_context_messages", self.config.agent.max_context_messages)
