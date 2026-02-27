@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Brain, Search, Trash2, Plus, X, RefreshCw, BarChart3, Zap } from "lucide-react";
+import { Brain, Search, Trash2, Plus, X, BarChart3 } from "lucide-react";
 
 function timeAgo(iso) {
   if (!iso) return "";
@@ -20,6 +20,13 @@ const TYPE_COLORS = {
   summary: "bg-teal-500/20 text-teal-300",
 };
 
+const SOURCE_LABELS = {
+  fact_extraction: { label: "extracted", color: "bg-emerald-500/15 text-emerald-400" },
+  screen_capture: { label: "screen", color: "bg-violet-500/15 text-violet-400" },
+  "email/gmail": { label: "email", color: "bg-red-500/15 text-red-400" },
+  manual: { label: "manual", color: "bg-zinc-500/15 text-zinc-400" },
+};
+
 export function MemoryPanel({ rpc, authenticated }) {
   const [memories, setMemories] = useState([]);
   const [total, setTotal] = useState(0);
@@ -31,8 +38,6 @@ export function MemoryPanel({ rpc, authenticated }) {
   const [newContent, setNewContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [reprocessing, setReprocessing] = useState(false);
-  const [reprocessProgress, setReprocessProgress] = useState(null);
 
   const fetchMemories = useCallback(() => {
     if (!authenticated) return;
@@ -61,11 +66,6 @@ export function MemoryPanel({ rpc, authenticated }) {
     finally { setSearching(false); }
   };
 
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchResults(null);
-  };
-
   const handleAdd = async () => {
     if (!newContent.trim()) return;
     setSaving(true);
@@ -84,24 +84,6 @@ export function MemoryPanel({ rpc, authenticated }) {
     setSearchResults(null);
   };
 
-  const handleReprocess = async () => {
-    setReprocessing(true);
-    setReprocessProgress({ processed: 0, total: 0, facts_created: 0 });
-    try {
-      const r = await rpc("memory.reprocess", {});
-      setReprocessProgress(null);
-      setReprocessing(false);
-      if (r?.status === "nothing_to_reprocess") {
-        // noop
-      }
-      fetchMemories();
-      fetchStats();
-    } catch {
-      setReprocessing(false);
-      setReprocessProgress(null);
-    }
-  };
-
   const displayList = searchResults !== null ? searchResults : memories;
 
   return (
@@ -109,13 +91,8 @@ export function MemoryPanel({ rpc, authenticated }) {
       <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/60">
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-zinc-400" />
-          <span className="text-xs font-medium text-zinc-500 uppercase tracking-widest">Memory</span>
-          <span className="text-[10px] font-mono text-zinc-600">{total} stored</span>
-          {stats?.faiss_index_size !== undefined && (
-            <span className="text-[10px] font-mono text-emerald-600" title="FAISS indexed vectors">
-              {stats.faiss_index_size} indexed
-            </span>
-          )}
+          <span className="text-xs font-medium text-zinc-500 uppercase tracking-widest">Knowledge</span>
+          <span className="text-[10px] font-mono text-zinc-600">{total} facts</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -153,7 +130,7 @@ export function MemoryPanel({ rpc, authenticated }) {
           <div data-testid="memory-stats-panel" className="bg-zinc-800/40 border border-zinc-700/30 rounded-lg p-3 space-y-2">
             <div className="grid grid-cols-2 gap-2 text-[10px]">
               <div>
-                <span className="text-zinc-500">Total memories</span>
+                <span className="text-zinc-500">Total facts</span>
                 <span className="ml-2 text-zinc-300 font-mono">{stats.total_memories}</span>
               </div>
               <div>
@@ -161,25 +138,29 @@ export function MemoryPanel({ rpc, authenticated }) {
                 <span className="ml-2 text-emerald-400 font-mono">{stats.faiss_index_size}</span>
               </div>
               <div>
-                <span className="text-zinc-500">Raw Q&A</span>
-                <span className="ml-2 text-amber-400 font-mono">{stats.raw_qa_memories}</span>
-              </div>
-              <div>
-                <span className="text-zinc-500">Extracted facts</span>
-                <span className="ml-2 text-blue-400 font-mono">{stats.extracted_facts}</span>
-              </div>
-              <div>
                 <span className="text-zinc-500">Dimensions</span>
                 <span className="ml-2 text-zinc-300 font-mono">{stats.embedding_dims}</span>
               </div>
               <div>
-                <span className="text-zinc-500">Hybrid weights</span>
+                <span className="text-zinc-500">Search mode</span>
                 <span className="ml-2 text-zinc-300 font-mono">
-                  {Math.round(stats.hybrid_weights?.vector * 100)}% vec / {Math.round(stats.hybrid_weights?.keyword * 100)}% kw
+                  {Math.round(stats.hybrid_weights?.vector * 100)}% semantic + {Math.round(stats.hybrid_weights?.keyword * 100)}% keyword
                 </span>
               </div>
             </div>
-            {stats.by_agent && Object.keys(stats.by_agent).length > 0 && (
+            {stats.by_source && Object.keys(stats.by_source).length > 0 && (
+              <div className="border-t border-zinc-700/30 pt-2 mt-2">
+                <span className="text-[10px] text-zinc-500 uppercase tracking-wider">By Source</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {Object.entries(stats.by_source).map(([src, count]) => (
+                    <span key={src} className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-700/30 text-zinc-400">
+                      {src}: {count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {stats.by_agent && Object.keys(stats.by_agent).length > 1 && (
               <div className="border-t border-zinc-700/30 pt-2 mt-2">
                 <span className="text-[10px] text-zinc-500 uppercase tracking-wider">By Agent</span>
                 <div className="flex flex-wrap gap-2 mt-1">
@@ -191,30 +172,9 @@ export function MemoryPanel({ rpc, authenticated }) {
                 </div>
               </div>
             )}
-            {stats.raw_qa_memories > 0 && (
-              <div className="border-t border-zinc-700/30 pt-2 mt-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-3 h-3 text-amber-400" />
-                    <span className="text-[10px] text-amber-400">
-                      {stats.raw_qa_memories} raw memories can be reprocessed into discrete facts
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleReprocess}
-                    disabled={reprocessing}
-                    data-testid="memory-reprocess-btn"
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-medium hover:bg-amber-500/30 disabled:opacity-40 transition-colors"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${reprocessing ? "animate-spin" : ""}`} />
-                    {reprocessing ? "Processing..." : "Reprocess"}
-                  </button>
-                </div>
-                {reprocessing && reprocessProgress && (
-                  <div className="mt-2 text-[10px] text-zinc-500 font-mono">
-                    {reprocessProgress.processed}/{reprocessProgress.total} processed, {reprocessProgress.facts_created} facts extracted
-                  </div>
-                )}
+            {stats.pending_migration > 0 && (
+              <div className="border-t border-zinc-700/30 pt-2 mt-2 text-[10px] text-amber-400">
+                {stats.pending_migration} raw memories being migrated to facts in background...
               </div>
             )}
           </div>
@@ -228,13 +188,13 @@ export function MemoryPanel({ rpc, authenticated }) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSearch()}
-              placeholder="Search memories (hybrid: semantic + keyword)..."
+              placeholder="Search knowledge (semantic + keyword)..."
               className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
           </div>
           {searchResults !== null && (
-            <button onClick={handleClearSearch} className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors">
+            <button onClick={() => { setSearchQuery(""); setSearchResults(null); }} className="p-2 text-zinc-500 hover:text-zinc-300 transition-colors">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -248,13 +208,13 @@ export function MemoryPanel({ rpc, authenticated }) {
           </button>
         </div>
 
-        {/* Add manual memory */}
+        {/* Add manual fact */}
         {showAdd && (
           <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-3 space-y-2">
             <textarea
               value={newContent}
               onChange={e => setNewContent(e.target.value)}
-              placeholder="Add a fact or note to memory..."
+              placeholder="Add a fact or note to knowledge base..."
               rows={3}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 resize-none"
               data-testid="memory-add-content"
@@ -265,7 +225,7 @@ export function MemoryPanel({ rpc, authenticated }) {
                 disabled={saving || !newContent.trim()}
                 className="px-3 py-1.5 rounded-lg bg-zinc-100 text-zinc-900 text-xs font-semibold hover:bg-zinc-200 disabled:opacity-30 transition-colors"
               >
-                {saving ? "Saving..." : "Save to Memory"}
+                {saving ? "Saving..." : "Save"}
               </button>
               <button onClick={() => setShowAdd(false)} className="text-xs text-zinc-500 hover:text-zinc-300">Cancel</button>
             </div>
@@ -279,15 +239,15 @@ export function MemoryPanel({ rpc, authenticated }) {
           </div>
         )}
 
-        {/* Memory list */}
+        {/* Fact list */}
         <div className="space-y-2 max-h-[350px] overflow-y-auto">
           {displayList.length === 0 ? (
             <div className="text-center py-6 text-xs text-zinc-600">
-              {searchResults !== null ? "No matching memories" : "No memories stored yet. Chat with the agent to build memory."}
+              {searchResults !== null ? "No matching facts" : "No knowledge stored yet. Conversations, emails, and screen captures are automatically distilled into facts."}
             </div>
           ) : (
             displayList.map((mem, i) => (
-              <MemoryCard key={i} memory={mem} isSearch={searchResults !== null} />
+              <FactCard key={i} fact={mem} isSearch={searchResults !== null} />
             ))
           )}
         </div>
@@ -296,12 +256,13 @@ export function MemoryPanel({ rpc, authenticated }) {
   );
 }
 
-function MemoryCard({ memory, isSearch }) {
+function FactCard({ fact, isSearch }) {
   const [expanded, setExpanded] = useState(false);
-  const content = memory.content || "";
+  const content = fact.content || "";
   const preview = content.length > 150 ? content.substring(0, 150) + "..." : content;
-  const factType = memory.metadata?.type;
-  const source = memory.source || "conversation";
+  const factType = fact.metadata?.type;
+  const source = fact.source || "";
+  const sourceInfo = SOURCE_LABELS[source];
 
   return (
     <div
@@ -316,32 +277,19 @@ function MemoryCard({ memory, isSearch }) {
                 {factType.replace("_", " ")}
               </span>
             )}
-            {source === "fact_extraction" && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">extracted</span>
-            )}
-            {source === "screen_capture" && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-400">screen</span>
-            )}
-            {source === "email/gmail" && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">email</span>
+            {sourceInfo && (
+              <span className={`text-[9px] px-1.5 py-0.5 rounded ${sourceInfo.color}`}>{sourceInfo.label}</span>
             )}
           </div>
           <p className="text-xs text-zinc-300 whitespace-pre-wrap break-words">
             {expanded ? content : preview}
           </p>
           <div className="flex items-center gap-2 mt-1.5 text-[9px] text-zinc-600">
-            <span>{memory.agent_id || "default"}</span>
-            <span className="text-zinc-700">|</span>
-            <span>{timeAgo(memory.created_at)}</span>
-            {isSearch && memory.similarity && (
+            <span>{timeAgo(fact.created_at)}</span>
+            {isSearch && fact.similarity && (
               <>
                 <span className="text-zinc-700">|</span>
-                <span className="text-emerald-400">{(memory.similarity * 100).toFixed(0)}% match</span>
-                {memory.vector_score !== undefined && (
-                  <span className="text-zinc-600" title="Vector / Keyword scores">
-                    (v:{(memory.vector_score * 100).toFixed(0)} k:{(memory.keyword_score * 100).toFixed(0)})
-                  </span>
-                )}
+                <span className="text-emerald-400">{(fact.similarity * 100).toFixed(0)}% match</span>
               </>
             )}
           </div>
