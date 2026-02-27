@@ -349,7 +349,7 @@ class AgentRunner:
         """
         from gateway.routing import resolve_agent_id
         from gateway.skills import SkillManager
-        from gateway.memory import build_memory_context, extract_and_store_memories
+        from gateway.memory import build_memory_context
         from gateway.tools.browser_use import set_browser_session_id
 
         # Set browser session context for interactive browsing
