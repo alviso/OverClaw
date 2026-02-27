@@ -639,6 +639,44 @@ async def handle_memory_clear(params: dict, client, ctx: MethodContext) -> dict:
     return {"ok": True, "cleared": count}
 
 
+@register_method("memory.stats")
+async def handle_memory_stats(params: dict, client, ctx: MethodContext) -> dict:
+    from gateway.memory import MemoryManager
+    mgr = MemoryManager(ctx.db)
+    stats = await mgr.get_index_stats()
+    # Count how many are reprocessed vs raw
+    raw_count = await ctx.db.memories.count_documents({"source": "conversation", "metadata.reprocessed": {"$ne": True}, "content": {"$regex": "^Q: "}})
+    fact_count = await ctx.db.memories.count_documents({"source": "fact_extraction"})
+    stats["raw_qa_memories"] = raw_count
+    stats["extracted_facts"] = fact_count
+    stats["reprocessing_available"] = raw_count > 0
+    return stats
+
+
+@register_method("memory.reprocess")
+async def handle_memory_reprocess(params: dict, client, ctx: MethodContext) -> dict:
+    """Reprocess raw Q&A memories into discrete facts using Haiku 4.5."""
+    from gateway.fact_extraction import reprocess_memories
+
+    async def progress_cb(processed, total, facts):
+        try:
+            await client.send_json({
+                "method": "memory.reprocess.progress",
+                "params": {"processed": processed, "total": total, "facts_created": facts},
+            })
+        except Exception:
+            pass
+
+    result = await reprocess_memories(ctx.db, batch_size=10, progress_callback=progress_cb)
+
+    # Rebuild FAISS index after reprocessing
+    from gateway.memory import MemoryManager
+    mgr = MemoryManager(ctx.db)
+    await mgr.initialize_index()
+
+    return result
+
+
 
 # ── Tasks / Scheduler (Phase 8) ──────────────────────────────────────────
 
