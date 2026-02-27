@@ -143,6 +143,12 @@ async def startup():
     set_create_tool_db(db)
     await load_persisted_tools()
 
+    # Initialize FAISS vector index for memory search
+    from gateway.memory import MemoryManager
+    memory_mgr = MemoryManager(db)
+    await memory_mgr.initialize_index()
+    logger.info("FAISS vector index initialized")
+
     # Wire triage feedback to DB
     from gateway.triage_feedback import set_feedback_db
     set_feedback_db(db)
