@@ -18,12 +18,13 @@ EXTRACTION_MODEL = "claude-haiku-4-5-20251001"
 
 EXTRACTION_PROMPT = """Extract discrete, self-contained facts from this conversation exchange.
 Each fact should be a single, clear statement that stands on its own.
-Categorize each fact as: "fact", "decision", "action_item", or "preference".
+Categorize each fact as: "fact", "decision", "action_item", "preference", or "summary".
 
 Rules:
 - Only extract information that is explicitly stated or clearly implied
 - Each fact must be independently understandable without the original context
-- Skip greetings, pleasantries, and filler
+- Skip greetings, pleasantries, filler, and pure test messages ("hello", "what is 2+2")
+- If the conversation involves browsing a URL or reading a document, extract a concise summary of the key content as a [summary] fact. Include the URL or document name.
 - If there are no substantive facts, return NONE
 - Keep each fact to 1-2 sentences max
 
@@ -32,6 +33,7 @@ Format your response as one fact per line, prefixed with the category in bracket
 [decision] The team will use React for the frontend
 [action_item] Schedule a meeting with Sarah about the Q3 roadmap
 [preference] User prefers dark mode interfaces
+[summary] https://news.ycombinator.com — Top stories include: Launch HN discussion about AI code editors, a post about PostgreSQL performance tuning, and a new Rust web framework announcement
 
 Conversation:
 {content}"""
