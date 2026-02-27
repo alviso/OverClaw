@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="10" time="100.481" timestamp="2026-02-27T00:30:13.107962+00:00" hostname="agent-env-499a1707-99ca-4e9c-bc40-2034bb0d897d"><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_stats_returns_correct_structure" time="10.029"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="10" time="100.497" timestamp="2026-02-27T00:32:18.132276+00:00" hostname="agent-env-499a1707-99ca-4e9c-bc40-2034bb0d897d"><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_stats_returns_correct_structure" time="10.025"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -17,15 +17,15 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:81: in test_memory_stats_returns_correct_structure
+backend/tests/test_memory_architecture.py:82: in test_memory_stats_returns_correct_structure
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
     raise TimeoutError("timed out during opening handshake") from exc
-E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_faiss_index_size_matches_memories" time="10.011"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_faiss_index_size_matches_memories" time="10.012"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -44,15 +44,15 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:112: in test_faiss_index_size_matches_memories
+backend/tests/test_memory_architecture.py:113: in test_faiss_index_size_matches_memories
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
     raise TimeoutError("timed out during opening handshake") from exc
-E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_search_returns_hybrid_scores" time="10.009"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_search_returns_hybrid_scores" time="10.012"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -71,10 +71,10 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:133: in test_memory_search_returns_hybrid_scores
+backend/tests/test_memory_architecture.py:134: in test_memory_search_returns_hybrid_scores
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
@@ -98,10 +98,10 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:163: in test_memory_store_adds_to_faiss_index
+backend/tests/test_memory_architecture.py:164: in test_memory_store_adds_to_faiss_index
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
@@ -125,10 +125,10 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:197: in test_memory_search_with_agent_filter
+backend/tests/test_memory_architecture.py:198: in test_memory_search_with_agent_filter
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
@@ -152,15 +152,15 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:237: in test_memory_clear_rebuilds_faiss_index
+backend/tests/test_memory_architecture.py:238: in test_memory_clear_rebuilds_faiss_index
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
     raise TimeoutError("timed out during opening handshake") from exc
-E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_reprocess_endpoint_exists" time="10.008"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_reprocess_endpoint_exists" time="10.013"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -179,15 +179,15 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:276: in test_memory_reprocess_endpoint_exists
+backend/tests/test_memory_architecture.py:277: in test_memory_reprocess_endpoint_exists
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
     raise TimeoutError("timed out during opening handshake") from exc
-E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_list_endpoint" time="10.011"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestMemoryArchitecture" name="test_memory_list_endpoint" time="10.012"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -206,15 +206,15 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:317: in test_memory_list_endpoint
+backend/tests/test_memory_architecture.py:318: in test_memory_list_endpoint
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:34: in _connect_and_auth
+backend/tests/test_memory_architecture.py:35: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
     raise TimeoutError("timed out during opening handshake") from exc
-E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestModelsAndAgentIdentity" name="test_models_list_has_updated_labels" time="10.011"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestModelsAndAgentIdentity" name="test_models_list_has_updated_labels" time="10.012"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -233,15 +233,15 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:374: in test_models_list_has_updated_labels
+backend/tests/test_memory_architecture.py:375: in test_models_list_has_updated_labels
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:340: in _connect_and_auth
+backend/tests/test_memory_architecture.py:341: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
     raise TimeoutError("timed out during opening handshake") from exc
-E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestModelsAndAgentIdentity" name="test_agents_list_returns_agents" time="10.013"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
+E   TimeoutError: timed out during opening handshake</failure></testcase><testcase classname="backend.tests.test_memory_architecture.TestModelsAndAgentIdentity" name="test_agents_list_returns_agents" time="10.008"><failure message="TimeoutError: timed out during opening handshake">/root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:543: in __await_impl__
     await self.connection.handshake(
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:104: in handshake
     await asyncio.wait(
@@ -260,10 +260,10 @@ The above exception was the direct cause of the following exception:
 E   TimeoutError
 
 The above exception was the direct cause of the following exception:
-backend/tests/test_memory_architecture.py:408: in test_agents_list_returns_agents
+backend/tests/test_memory_architecture.py:409: in test_agents_list_returns_agents
     ws = await self._connect_and_auth()
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_memory_architecture.py:340: in _connect_and_auth
+backend/tests/test_memory_architecture.py:341: in _connect_and_auth
     ws = await websockets.connect(WS_URL, ping_interval=30, ping_timeout=30)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /root/.venv/lib/python3.11/site-packages/websockets/asyncio/client.py:578: in __await_impl__
