@@ -23,12 +23,12 @@ MAX_TOOL_ITERATIONS = 25  # Browser interactions can chain many steps
 
 
 async def _safe_extract_memories(db, session_id, agent_id, user_text, response_text):
-    """Fire-and-forget wrapper for memory extraction."""
+    """Fire-and-forget wrapper for fact extraction from conversations."""
     try:
-        from gateway.memory import extract_and_store_memories
-        await extract_and_store_memories(db, session_id, agent_id, user_text, response_text)
+        from gateway.fact_extraction import extract_and_store_facts
+        await extract_and_store_facts(db, session_id, agent_id, user_text, response_text)
     except Exception as e:
-        logger.warning(f"Memory extraction failed: {e}")
+        logger.warning(f"Fact extraction failed: {e}")
 
 
 async def _safe_extract_profile(db, user_text):
